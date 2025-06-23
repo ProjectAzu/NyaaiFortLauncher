@@ -114,6 +114,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)/Dependencies/Include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,6 +133,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)/Dependencies/Include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -176,7 +178,14 @@
     <ClInclude Include="Object\IntegerTypes.h" />
     <ClInclude Include="Object\Object.h" />
     <ClInclude Include="Object\PropertySetters.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Utils\Log.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="NyaaiFortLauncher.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\NyaaiFortLauncher.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

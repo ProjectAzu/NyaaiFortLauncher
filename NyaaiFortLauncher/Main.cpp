@@ -74,6 +74,8 @@ static void StartLauncher(int32 ArgsNum, char* ArgsArrayPtr[])
         return;
     }
 
+    SetConsoleTitleW(ConfigPath.stem().c_str());
+
     Log(Info, "Launcher config used: '{}'.", ConfigPath.string());
     
     curl_global_init(CURL_GLOBAL_ALL);

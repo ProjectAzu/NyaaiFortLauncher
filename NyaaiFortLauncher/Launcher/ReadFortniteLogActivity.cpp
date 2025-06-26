@@ -25,6 +25,13 @@ void NReadFortniteLogActivity::OnCreated()
     {
         Log(Info, "Printing fortnite log is off");
     }
+
+    GetLauncher()->RegisterConsoleCommand(
+        this,
+        "fn",
+        "Forwards the command to the fortnite",
+        &NReadFortniteLogActivity::ForwardCommandToFortniteCommand
+        );
 }
 
 void NReadFortniteLogActivity::Tick(double DeltaTime)
@@ -154,11 +161,30 @@ void NReadFortniteLogActivity::Tick(double DeltaTime)
 
         if (!ColoredPrintPrefix.empty() && Line.contains(ColoredPrintPrefix))
         {
-            std::cout << "\x1B[32m" << Line << "\x1B[0m";
+            LogRaw("\x1B[32m" + Line + "\x1B[0m");
         }
         else if (!bOnlyPrintLogWithColoredPrintPrefix)
         {
-            std::cout << "\x1B[90m" << Line << "\x1B[0m";
+             LogRaw("\x1B[90m" + Line + "\x1B[0m");
         }
     }
+}
+
+void NReadFortniteLogActivity::ForwardCommandToFortniteCommand(const FCommandArguments& Args)
+{
+    std::string CommandRaw = Args.GetRawString();
+    if (CommandRaw.empty())
+    {
+        return;
+    }
+
+    DWORD BytesWritten = 0;
+    
+    WriteFile(
+        GetLauncher()->GetFortniteStdInWritePipeHandle(),
+        CommandRaw.c_str(),
+        static_cast<uint32>(CommandRaw.length()),
+        &BytesWritten,
+        nullptr
+        );
 }

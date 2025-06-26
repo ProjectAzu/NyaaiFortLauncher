@@ -9,11 +9,83 @@
 #include "Activity.h"
 #include "CreateProcessAction.h"
 
+FCommandArguments::FCommandArguments(const std::string& RawString) : RawString(RawString)
+{
+    if (RawString.empty())
+    {
+        return;
+    }
+
+    Tokens.clear();
+    
+    std::string Current;
+    bool bIsInQuotes = false;
+    bool bShouldEscapeNext = false;
+
+    for (char Char : RawString)
+    {
+        if (bShouldEscapeNext)                 // honour \" inside quotes
+        {
+            Current.push_back(Char);
+            bShouldEscapeNext = false;
+            continue;
+        }
+
+        if (Char == '\\')
+        {
+            bShouldEscapeNext = true;          // consume backslash, look at next char
+            continue;
+        }
+
+        if (Char == '"')
+        {
+            bIsInQuotes = !bIsInQuotes;       // toggle quote mode
+            continue;                   // do not include the quotes themselves
+        }
+
+        if (!bIsInQuotes && std::isspace(static_cast<unsigned char>(Char)))
+        {
+            if (!Current.empty())
+            {
+                Tokens.push_back(std::move(Current));
+                Current.clear();
+            }
+        }
+        else
+        {
+            Current.push_back(Char);
+        }
+    }
+
+    if (!Current.empty())
+    {
+        Tokens.push_back(std::move(Current));   
+    }
+}
+
+std::string FCommandArguments::GetArgumentAtIndex(uint8 Index) const
+{
+    if (Index >= static_cast<uint32>(Tokens.size()))
+    {
+        Log(Error, "Invalid command argument index");
+        return {};
+    }
+
+    return Tokens[Index];
+}
+
 GENERATE_BASE_CPP(NFortLauncher)
 
 void NFortLauncher::OnCreated()
 {
     Super::OnCreated();
+
+    RegisterConsoleCommand(
+        this,
+        "help",
+        "Lists available commands",
+        &ThisClass::HelpCommand
+    );
     
     Log(Info, "Launcher starting");
     
@@ -69,6 +141,24 @@ void NFortLauncher::RequestExit()
     bWantsToExit = true;
 }
 
+void NFortLauncher::NotifyObjectCreated(NLauncherObject* Object)
+{
+}
+
+void NFortLauncher::NotifyObjectDestroyed(NLauncherObject* Object)
+{
+    for (int32 i = static_cast<int32>(RegisteredCommands.size()) - 1; i >= 0; i--)
+    {
+        if (RegisteredCommands[i].OwningObject != Object)
+        {
+            continue;
+        }
+
+        RegisteredCommands[i] = std::move(RegisteredCommands.back());
+        RegisteredCommands.pop_back();
+    }
+}
+
 bool NFortLauncher::RunLauncher()
 {
     Log(Info, "Running pre fortnite launch actions");
@@ -106,6 +196,8 @@ bool NFortLauncher::RunLauncher()
         auto NewTime = std::chrono::high_resolution_clock::now();
         double DeltaTime = std::chrono::duration<double>(NewTime - CurrentTime).count();
         CurrentTime = NewTime;
+
+        ProcessCommands();
         
         for (const auto& Activity : ActivitiesSpawned)
         {
@@ -117,7 +209,7 @@ bool NFortLauncher::RunLauncher()
             return true;
         }
 
-        if (WaitForSingleObject(FortniteProcessHandle, 100) != WAIT_TIMEOUT)
+        if (WaitForSingleObject(FortniteProcessHandle, 50) != WAIT_TIMEOUT)
         {
             break;
         }
@@ -146,7 +238,37 @@ bool NFortLauncher::LaunchFortniteProcess()
         Log(Error, "Failed to set handle information");
         
         CloseHandle(StdOutWriteHandle);
+        StdOutWriteHandle = nullptr;
+        
         CloseHandle(FortniteStdOutReadPipeHandle);
+        FortniteStdOutReadPipeHandle = nullptr;
+        
+        return false;
+    }
+
+    HANDLE StdInReadHandle = nullptr;
+
+    if (!CreatePipe(&StdInReadHandle, &FortniteStdInWritePipeHandle, &SeciurityAtributes, 0))
+    {
+        Log(Error, "Failed to create pipe");
+        return false;
+    }
+
+    if (!SetHandleInformation(FortniteStdInWritePipeHandle, HANDLE_FLAG_INHERIT, 0))
+    {
+        Log(Error, "Failed to set handle information");
+        
+        CloseHandle(StdInReadHandle);
+        StdInReadHandle = nullptr;
+        
+        CloseHandle(FortniteStdInWritePipeHandle);
+        FortniteStdInWritePipeHandle = nullptr;
+
+        CloseHandle(StdOutWriteHandle);
+        StdOutWriteHandle = nullptr;
+        
+        CloseHandle(FortniteStdOutReadPipeHandle);
+        FortniteStdOutReadPipeHandle = nullptr;
         
         return false;
     }
@@ -159,6 +281,7 @@ bool NFortLauncher::LaunchFortniteProcess()
     CreateFortniteProcessAction->StartupInfo.dwFlags = STARTF_USESTDHANDLES;
     CreateFortniteProcessAction->StartupInfo.hStdOutput = StdOutWriteHandle;
     CreateFortniteProcessAction->StartupInfo.hStdError = StdOutWriteHandle;
+    CreateFortniteProcessAction->StartupInfo.hStdInput = StdInReadHandle;
     
     CreateFortniteProcessAction->FilePath = FortniteExePath;
     CreateFortniteProcessAction->LaunchArguments = FortniteLaunchArguments;
@@ -166,10 +289,18 @@ bool NFortLauncher::LaunchFortniteProcess()
     CreateFortniteProcessAction->FinishConstruction();
 
     CloseHandle(StdOutWriteHandle);
+    StdOutWriteHandle = nullptr;
+
+    CloseHandle(StdInReadHandle);
+    StdInReadHandle = nullptr;
 
     if (!CreateFortniteProcessAction->bResultWasSuccess)
     {
         CloseHandle(FortniteStdOutReadPipeHandle);
+        FortniteStdOutReadPipeHandle = nullptr;
+
+        CloseHandle(FortniteStdInWritePipeHandle);
+        FortniteStdInWritePipeHandle = nullptr;
         
         return false;
     }
@@ -196,8 +327,80 @@ void NFortLauncher::DoCleanup()
         CloseHandle(FortniteStdOutReadPipeHandle);
         FortniteStdOutReadPipeHandle = nullptr;
     }
+
+    if (FortniteStdInWritePipeHandle)
+    {
+        CloseHandle(FortniteStdInWritePipeHandle);
+        FortniteStdInWritePipeHandle = nullptr;
+    }
     
     KillAllChildProcesses();
+}
+
+FRegisteredCommand* NFortLauncher::FindRegisteredCommand(const std::string& Command)
+{
+    for (auto& Entry : RegisteredCommands)
+    {
+        if (Entry.Command == Command)
+        {
+            return &Entry;
+        }
+    }
+
+    return nullptr;
+}
+
+void NFortLauncher::ProcessCommands()
+{
+    while (auto RawCommand = GetPendingConsoleCommand())
+    {
+        const auto FirstSpace = std::ranges::find_if(*RawCommand,
+            [](unsigned char ch)
+            {
+                return std::isspace(ch);
+            });
+        
+        const std::string Command{ RawCommand->begin(), FirstSpace };
+        
+        if (Command.empty())
+        {
+            Log(Info, "Type 'help' to list available commands.");
+            
+            continue;
+        }
+
+        FRegisteredCommand* RegisteredCommand = FindRegisteredCommand(Command);
+        if (!RegisteredCommand)
+        {
+            Log(Error, "Unable to find command '{}'. Type 'help' to list available commands.", Command);
+            continue;
+        }
+        
+        auto ArgsBegin = std::find_if_not(
+            FirstSpace, RawCommand->end(),
+        [](unsigned char ch) { return std::isspace(ch); });
+
+        const std::string ArgString{ ArgsBegin, RawCommand->end() };
+        
+        FCommandArguments Args(ArgString);
+        RegisteredCommand->ExecuteCommandFunction(RegisteredCommand->OwningObject, Args);
+    }
+}
+
+void NFortLauncher::HelpCommand(const FCommandArguments& Args)
+{
+    Log(Info, "Available commands:");
+    
+    for (const auto& RegisteredCommand : RegisteredCommands)
+    {
+        Log(
+            Info,
+            "{}: '{}' - {}",
+            RegisteredCommand.OwningObject->GetClass()->GetName(),
+            RegisteredCommand.Command,
+            RegisteredCommand.Description
+            );
+    }
 }
 
 void NFortLauncher::KillAllChildProcesses()

@@ -10,4 +10,7 @@ class NLauncherObject : public NObject
     
 public:
     class NFortLauncher* GetLauncher() const;
+
+    virtual void OnCreated() override;
+    virtual void OnDestroyed() override;
 };

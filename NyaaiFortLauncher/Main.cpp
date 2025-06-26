@@ -7,28 +7,13 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
-#include <conio.h>
 
 #include <curl/curl.h>
-
-void FixConsoleColors()
-{
-    HANDLE OutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-
-    DWORD ConsoleMode = 0;
-    GetConsoleMode(OutputHandle, &ConsoleMode);
-
-    ConsoleMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-
-    SetConsoleMode(OutputHandle, ConsoleMode);   
-}
 
 static constexpr auto ConfigFileExtension = ".nfort";
 
 static void StartLauncher(int32 ArgsNum, char* ArgsArrayPtr[])
 {
-    FixConsoleColors();
-    
     if (ArgsNum != 2)
     {
         Log(Error, "Please a {} config file as a command line argument.", ConfigFileExtension);
@@ -93,11 +78,15 @@ static void StartLauncher(int32 ArgsNum, char* ArgsArrayPtr[])
 
 int main(int32 ArgsNum, char* ArgsArrayPtr[])
 {
+    InitializeLogging();
+    
     StartLauncher(ArgsNum, ArgsArrayPtr);
 
     Log(Info, "Press any key to exit...");
 
-    _getch();
+    // The Press any key to exit implementation is not here because I cannot get
+    // command input in logging to clean up properly and it does exactly that
+    CleanupLogging();
 
     return 0;
 }

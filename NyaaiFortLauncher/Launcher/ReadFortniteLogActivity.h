@@ -4,6 +4,8 @@
 
 #include "Action.h"
 
+struct FCommandArguments;
+
 struct FLogTriggeredAction : FStructWithProperties
 {
     NPROPERTY(TriggerString)
@@ -26,6 +28,10 @@ public:
     void OnCreated() override;
     void Tick(double DeltaTime) override;
 
+private:
+    void ForwardCommandToFortniteCommand(const FCommandArguments& Args);
+    
+public:
     NPROPERTY(LogTriggeredActions)
     std::vector<FLogTriggeredAction> LogTriggeredActions{};
 

@@ -29,7 +29,7 @@ void NReadFortniteLogActivity::OnCreated()
     GetLauncher()->RegisterConsoleCommand(
         this,
         "fn",
-        "Forwards the command to the fortnite",
+        "Forwards the command to fortnite",
         &NReadFortniteLogActivity::ForwardCommandToFortniteCommand
         );
 }

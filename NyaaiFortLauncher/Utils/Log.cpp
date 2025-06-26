@@ -1,6 +1,8 @@
-// Log.cpp engine-wide logging + interactive command line
+// Log.cpp  —  engine-wide logging + interactive command line (replxx edition)
+
 #include "Log.h"
 
+#include <replxx/replxx.hxx>                     // ▸ vcpkg install replxx
 #include <Windows.h>
 #include <format>
 #include <iostream>
@@ -9,297 +11,96 @@
 #include <queue>
 #include <string>
 #include <thread>
-#include <vector>
-#include <fcntl.h>      // _O_U16TEXT
-#include <io.h>         // _setmode
 
-// This is chat gpt generated, ugly code but it works
+// ugly chat-gpt generated code
 
-/* ---------------------------- helpers ---------------------------- */
+/* ───────────────────────────── helpers ───────────────────────────── */
 
 namespace
 {
-    // - console handles
-    HANDLE StdIn()  { return GetStdHandle(STD_INPUT_HANDLE); }
-    HANDLE StdOut() { return GetStdHandle(STD_OUTPUT_HANDLE); }
+    /* ------------- shared state ------------- */
+    replxx::Replxx              Rx;               // single replxx instance
+    std::queue<std::string>     InputQueue;       // commands ready for engine
+    std::mutex                  InputMutex;       // protects InputQueue
+    std::mutex                  ConsoleMutex;     // serialises LogRaw / Rx.print
 
-    // - globals protected by the mutexes below
-    std::queue<std::wstring> InputQueue;   // committed commands
-    std::wstring             CurrentLine;  // text being typed right now
+    std::unique_ptr<std::jthread> ReaderThread;   // background input loop
 
-    // - thread & synchronisation
-    std::unique_ptr<std::jthread> ReaderThread;
-    std::mutex                    InputMutex;      // InputQueue + CurrentLine
-    std::mutex                    ConsoleMutex;    // all writes to stdout
+    /* console mode that shows colours inside replxx-managed prompt */
+    void EnableVirtualTerminalProcessing()
+    {
+        HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD  mode = 0;
+        if (GetConsoleMode(out, &mode))
+            SetConsoleMode(out, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);  // :contentReference[oaicite:0]{index=0}
+    }
 
-    // - original console modes (restored in CleanupLogging)
-    DWORD OldInMode  = 0;
-    DWORD OldOutMode = 0;
-
-    /* history ---------------------------------------------------------------- */
-    std::vector<std::wstring> History;          // all previous commands
-    std::size_t               HistIndex = 0;    // 0 ... History.size()
-    std::wstring              DraftLine;        // what the user had typed before
-    // valid only when browsing history
-
-    /* live-editing ----------------------------------------------------------- */
-    std::size_t CursorPos = 0;                  // index inside CurrentLine
-
-    constexpr std::wstring_view Prompt = L"> ";
-
-    /* wide -> UTF-8 */
-    std::string NarrowUTF8(const std::wstring& w)
+    /* wchar->UTF-8 (for printing wide engine logs through replxx) */
+    std::string NarrowUTF8(std::wstring_view w)
     {
         if (w.empty()) return {};
-        const int bytes = WideCharToMultiByte(CP_UTF8, 0, w.data(),
-                                              static_cast<int>(w.size()),
-                                              nullptr, 0, nullptr, nullptr);
+        int bytes = WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()),
+                                        nullptr, 0, nullptr, nullptr);
         std::string out(bytes, '\0');
-        WideCharToMultiByte(CP_UTF8, 0, w.data(),
-                            static_cast<int>(w.size()),
+        WideCharToMultiByte(CP_UTF8, 0, w.data(), static_cast<int>(w.size()),
                             out.data(), bytes, nullptr, nullptr);
         return out;
     }
 
-    /* print "prompt + CurrentLine" (optionally clearing the whole line first) */
-    void RedrawInput(bool ClearLine)
+    /* safe printing that never mangles the user’s currently edited line */
+    void ConsoleWrite(std::wstring_view msg)
     {
-        // snapshot the line & cursor so we don't hold InputMutex while printing
-        std::wstring line;
-        std::size_t  pos;
-        {
-            std::scoped_lock lk(InputMutex);
-            line = CurrentLine;
-            pos  = CursorPos;
-        }
-
-        /* --------- atomic console update --------- */
-        std::lock_guard out(ConsoleMutex);
-        std::wcout.clear();
-
-        if (ClearLine)
-            std::wcout << L"\r\x1B[2K";                 // erase line
-
-        std::wcout << L"\r" << Prompt << line;
-
-        /* place caret: "nD" moves n columns left */
-        const std::size_t tail = line.size() - pos;
-        if (tail)
-            std::wcout << L"\x1B[" << tail << L"D";
-
-        std::wcout << std::flush;
+        std::string utf8 = NarrowUTF8(msg);
+        std::lock_guard lk(ConsoleMutex);          // serialise with other writers
+        Rx.print("%s", utf8.c_str());              // replxx keeps the prompt intact :contentReference[oaicite:1]{index=1}
     }
 
-    /* write a log entry, preserving whatever the user is typing *
-     * (called internally by LogRaw and also by the reader thread on commit)  */
-    void ConsoleWrite(std::wstring_view Msg)
-    {
-        {
-            std::lock_guard lock(ConsoleMutex);
-            std::wcout.clear();                           // <- added
-            std::wcout << L"\r\x1B[2K" << Msg << std::flush;
-        }
-        RedrawInput(false);
-    }
-
-    /* reader thread - raw mode, key-by-key */
+    /* ------------------ background stdin reader ------------------ */
     void InputLoop(std::stop_token st)
     {
-        constexpr DWORD  MAX_BATCH = 256;
-        INPUT_RECORD     recs[MAX_BATCH];
-        wchar_t          pendingHigh = 0;
-    
-        RedrawInput(true);        // initial prompt
-    
         while (!st.stop_requested())
         {
-            DWORD avail = 0;
-            if (!GetNumberOfConsoleInputEvents(StdIn(), &avail) || avail == 0)
-            {
-                Sleep(1);
+            /* blocking call – replxx handles editing, history, UTF-8, etc. */
+            const char* line = Rx.input("> ");
+            if (!line)                            // nullptr on Ctrl-D / Ctrl-C
+                if (st.stop_requested()) break;
+                else continue;
+
+            std::string cmd{line};
+            if (cmd.empty())                      // empty line → ignore
                 continue;
+
+            Rx.history_add(cmd);                  // in-memory; saved on shutdown
+
+            {
+                std::lock_guard lk(InputMutex);
+                InputQueue.push(std::move(cmd));
             }
-    
-            DWORD toRead = std::min<DWORD>(avail, MAX_BATCH);
-            DWORD read   = 0;
-            if (!ReadConsoleInputW(StdIn(), recs, toRead, &read) || read == 0)
-                continue;
-    
-            bool lineDirty = false;      // did we change the line?
-            bool clearLine = false;      // need full clear? (arrow / backspace)
-    
-            for (DWORD i = 0; i < read; ++i)
-            {
-                const auto& ev = recs[i].Event.KeyEvent;
-                if (recs[i].EventType != KEY_EVENT || !ev.bKeyDown)
-                    continue;
-    
-                const WORD vk  = ev.wVirtualKeyCode;
-                const wchar_t ch = ev.uChar.UnicodeChar;
-    
-                /* ---------- navigation keys (virtual key codes) ---------- */
-                if (vk == VK_LEFT)
-                {
-                    std::scoped_lock lk(InputMutex);
-                    if (CursorPos > 0) { --CursorPos; lineDirty = true; }
-                    continue;
-                }
-                if (vk == VK_RIGHT)
-                {
-                    std::scoped_lock lk(InputMutex);
-                    if (CursorPos < CurrentLine.size()) { ++CursorPos; lineDirty = true; }
-                    continue;
-                }
-                if (vk == VK_UP)
-                {
-                    std::scoped_lock lk(InputMutex);
-                    if (!History.empty() && HistIndex > 0)
-                    {
-                        if (HistIndex == History.size())
-                            DraftLine = CurrentLine;      // remember current edit
-    
-                        --HistIndex;
-                        CurrentLine = History[HistIndex];
-                        CursorPos   = CurrentLine.size();
-                        clearLine   = lineDirty = true;
-                    }
-                    continue;
-                }
-                if (vk == VK_DOWN)
-                {
-                    std::scoped_lock lk(InputMutex);
-                    if (HistIndex < History.size())
-                    {
-                        ++HistIndex;
-                        if (HistIndex == History.size())
-                            CurrentLine = DraftLine;
-                        else
-                            CurrentLine = History[HistIndex];
-    
-                        CursorPos = CurrentLine.size();
-                        clearLine = lineDirty = true;
-                    }
-                    continue;
-                }
-    
-                /* ---------- printable characters / control ---------- */
-                switch (ch)
-                {
-                    case L'\r':                                     /* ENTER */
-                    {
-                        std::wstring committed;
-                        {
-                            std::scoped_lock lk(InputMutex);
-                            if (pendingHigh) {                      // orphan high surrogate
-                                CurrentLine.insert(CursorPos++, 1, pendingHigh);
-                                pendingHigh = 0;
-                            }
-                            committed.swap(CurrentLine);
-                            CursorPos = 0;
-                        }
-    
-                        if (!committed.empty())
-                        {
-                            std::scoped_lock lk(InputMutex);
-                            History.push_back(committed);
-                            HistIndex = History.size();
-                        }
-    
-                        {
-                            std::scoped_lock lk(InputMutex);
-                            InputQueue.push(committed);
-                        }
-    
-                        ConsoleWrite(L"");
-                        clearLine = true;
-                    } break;
-    
-                    case L'\b':                                     /* BACKSPACE */
-                    {
-                        std::scoped_lock lk(InputMutex);
-                        if (pendingHigh) {
-                            pendingHigh = 0;
-                        } else if (CursorPos) {
-                            CurrentLine.erase(--CursorPos, 1);
-                        }
-                        clearLine = lineDirty = true;
-                    } break;
-    
-                    default:                                        /* text input */
-                    {
-                        if (ch < L' ') break;                       // ignore controls
-    
-                        std::scoped_lock lk(InputMutex);
-    
-                        if (ch >= 0xD800 && ch <= 0xDBFF)           // high surrogate
-                        {
-                            pendingHigh = ch;
-                            break;
-                        }
-                        if (ch >= 0xDC00 && ch <= 0xDFFF)           // low surrogate
-                        {
-                            if (pendingHigh)
-                            {
-                                CurrentLine.insert(CursorPos++, 1, pendingHigh);
-                                pendingHigh = 0;
-                                CurrentLine.insert(CursorPos++, 1, ch);
-                                lineDirty = true;
-                            }
-                            break;
-                        }
-    
-                        if (pendingHigh)                            // orphan high
-                        {
-                            CurrentLine.insert(CursorPos++, 1, pendingHigh);
-                            pendingHigh = 0;
-                        }
-                        CurrentLine.insert(CursorPos++, 1, ch);
-                        lineDirty = true;
-                    } break;
-                } // switch
-            }     // for each record
-    
-            if (lineDirty)
-                RedrawInput(clearLine);
         }
     }
+} // anon ns
 
-} // anonym-ns
-
-/* ---------------- public API expected by Log.h ---------------- */
-
-static void EnableVirtualTerminalProcessing()
-{
-    GetConsoleMode(StdOut(), &OldOutMode);
-    SetConsoleMode(StdOut(), OldOutMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-}
+/* ───────────────────────── public API ───────────────────────── */
 
 std::optional<std::string> GetPendingConsoleCommand()
 {
-    std::scoped_lock lk(InputMutex);
-
+    std::lock_guard lk(InputMutex);
     if (InputQueue.empty())
         return std::nullopt;
 
-    std::wstring w = std::move(InputQueue.front());
+    std::string cmd = std::move(InputQueue.front());
     InputQueue.pop();
-    return NarrowUTF8(w);
+    return cmd;
 }
 
 void InitializeLogging()
 {
     EnableVirtualTerminalProcessing();
 
-    _setmode(_fileno(stdout), _O_U16TEXT);
-    _setmode(_fileno(stderr), _O_U16TEXT);
+    /* optional: load persisted history */
+    //Rx.history_load(".nyaai_engine_history");      // silently ignored if file absent
 
-    /* put stdin in "raw" -- no line buffering, no echo */
-    GetConsoleMode(StdIn(), &OldInMode);
-    DWORD inMode = OldInMode &
-                   ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
-    SetConsoleMode(StdIn(), inMode);
-
-    /* launch background reader */
+    /* launch reader thread (replxx blocks inside) */
     ReaderThread = std::make_unique<std::jthread>(InputLoop);
 }
 
@@ -307,31 +108,28 @@ void CleanupLogging()
 {
     if (ReaderThread && ReaderThread->joinable())
     {
-        CancelSynchronousIo(ReaderThread->native_handle());
+        /* wake the blocking input() so the loop can observe stop_token */
+        Rx.emulate_key_press(replxx::Replxx::KEY::control('D'));      // synthetic Ctrl-D :contentReference[oaicite:2]{index=2}
         ReaderThread->request_stop();
         ReaderThread->join();
         ReaderThread.reset();
     }
 
-    /* restore console modes */
-    SetConsoleMode(StdIn(),  OldInMode);
-    SetConsoleMode(StdOut(), OldOutMode);
-    
-    _setmode(_fileno(stdout), _O_TEXT);
-    _setmode(_fileno(stderr), _O_TEXT);
+    //Rx.history_save(".nyaai_engine_history");      // persist across runs
+    /* Rx destructor restores console modes automatically */
 }
 
-void LogImplementation(ELogLevel Level, const std::wstring& Message)
+void LogImplementation(ELogLevel Level, const std::wstring& Msg)
 {
-    const std::wstring FullMessage = std::format(
+    const std::wstring decorated = std::format(
         L"[NyaaiFortLauncher] {}{}{}: {}\n",
         LogLevelToColorCode(Level), LogLevelToString(Level), L"\x1B[0m",
-        Message);
+        Msg);
 
-    LogRaw(FullMessage);  // delegate to the lower layer
+    LogRaw(decorated);
 }
 
-void LogRaw(const std::wstring& Message)
+void LogRaw(const std::wstring& Msg)
 {
-    ConsoleWrite(Message);      // keep the prompt tidy
+    ConsoleWrite(Msg);
 }

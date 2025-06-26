@@ -44,7 +44,7 @@ void NInjectDllIntoFortniteAction::Execute()
         return ;
     }
 
-    auto LoadLibraryA = reinterpret_cast<LPTHREAD_START_ROUTINE>(GetProcAddress(GetModuleHandleA("Kernel32.dll"), "LoadLibraryA"));
+    auto LoadLibraryA = reinterpret_cast<LPTHREAD_START_ROUTINE>(GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "LoadLibraryA"));
 
     HANDLE DllThreadHandle = CreateRemoteThread(ProcessHandle, 0, 0, LoadLibraryA, AllocatedMemory, CREATE_SUSPENDED, 0);
 

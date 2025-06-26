@@ -1,8 +1,8 @@
-// Log.cpp  —  engine-wide logging + interactive command line (replxx edition)
+// Log.cpp  -  engine-wide logging + interactive command line (replxx edition)
 
 #include "Log.h"
 
-#include <replxx/replxx.hxx>                     // ▸ vcpkg install replxx
+#include <replxx/replxx.hxx>
 #include <Windows.h>
 #include <format>
 #include <iostream>
@@ -14,7 +14,7 @@
 
 // ugly chat-gpt generated code
 
-/* ───────────────────────────── helpers ───────────────────────────── */
+/* -------------------------- helpers -------------------------- */
 
 namespace
 {
@@ -26,13 +26,13 @@ namespace
 
     std::unique_ptr<std::jthread> ReaderThread;   // background input loop
 
-    /* console mode that shows colours inside replxx-managed prompt */
+    /* console mode that shows colors inside replxx-managed prompt */
     void EnableVirtualTerminalProcessing()
     {
         HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
         DWORD  mode = 0;
         if (GetConsoleMode(out, &mode))
-            SetConsoleMode(out, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);  // :contentReference[oaicite:0]{index=0}
+            SetConsoleMode(out, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
     }
 
     /* wchar->UTF-8 (for printing wide engine logs through replxx) */
@@ -47,12 +47,12 @@ namespace
         return out;
     }
 
-    /* safe printing that never mangles the user’s currently edited line */
+    /* safe printing that never mangles the user's currently edited line */
     void ConsoleWrite(std::wstring_view msg)
     {
         std::string utf8 = NarrowUTF8(msg);
-        std::lock_guard lk(ConsoleMutex);          // serialise with other writers
-        Rx.print("%s", utf8.c_str());              // replxx keeps the prompt intact :contentReference[oaicite:1]{index=1}
+        std::lock_guard lk(ConsoleMutex);          // serialize with other writers
+        Rx.print("%s", utf8.c_str());              // replxx keeps the prompt intact
     }
 
     /* ------------------ background stdin reader ------------------ */
@@ -60,14 +60,14 @@ namespace
     {
         while (!st.stop_requested())
         {
-            /* blocking call – replxx handles editing, history, UTF-8, etc. */
+            /* blocking call - replxx handles editing, history, UTF-8, etc. */
             const char* line = Rx.input("> ");
             if (!line)                            // nullptr on Ctrl-D / Ctrl-C
                 if (st.stop_requested()) break;
                 else continue;
 
             std::string cmd{line};
-            if (cmd.empty())                      // empty line → ignore
+            if (cmd.empty())                      // empty line -> ignore
                 continue;
 
             Rx.history_add(cmd);                  // in-memory; saved on shutdown
@@ -80,7 +80,7 @@ namespace
     }
 } // anon ns
 
-/* ───────────────────────── public API ───────────────────────── */
+/* -------------------------- public API -------------------------- */
 
 std::optional<std::string> GetPendingConsoleCommand()
 {
@@ -109,7 +109,7 @@ void CleanupLogging()
     if (ReaderThread && ReaderThread->joinable())
     {
         /* wake the blocking input() so the loop can observe stop_token */
-        Rx.emulate_key_press(replxx::Replxx::KEY::control('D'));      // synthetic Ctrl-D :contentReference[oaicite:2]{index=2}
+        Rx.emulate_key_press(replxx::Replxx::KEY::control('D'));      // synthetic Ctrl-D
         ReaderThread->request_stop();
         ReaderThread->join();
         ReaderThread.reset();

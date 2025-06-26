@@ -15,5 +15,5 @@ public:
     std::string Message{};
 
     NPROPERTY(LogLevel)
-    std::string LogLevel{};
+    std::string LogLevel = "Info";
 };

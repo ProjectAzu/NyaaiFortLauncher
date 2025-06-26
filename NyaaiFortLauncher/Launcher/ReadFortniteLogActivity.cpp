@@ -178,13 +178,26 @@ void NReadFortniteLogActivity::ForwardCommandToFortniteCommand(const FCommandArg
         return;
     }
 
+    CommandRaw += '\n';
+
+    auto PipeHandle = GetLauncher()->GetFortniteStdInWritePipeHandle();
+
+    if (!PipeHandle)
+    {
+        Log(Error, "ForwardCommandToFortniteCommand: No pipe handle.");
+        return;
+    }
+
     DWORD BytesWritten = 0;
     
-    WriteFile(
-        GetLauncher()->GetFortniteStdInWritePipeHandle(),
+    if (!WriteFile(
+        PipeHandle,
         CommandRaw.c_str(),
         static_cast<uint32>(CommandRaw.length()),
         &BytesWritten,
         nullptr
-        );
+        ))
+    {
+        Log(Error, "ForwardCommandToFortniteCommand: WriteFile failed: {}.", GetLastError());
+    }
 }

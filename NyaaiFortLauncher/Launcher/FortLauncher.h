@@ -87,9 +87,13 @@ private:
     bool LaunchFortniteProcess();
     void DoCleanup();
 
-    FRegisteredCommand* FindRegisteredCommand(const std::string& Command);
+    FRegisteredCommand* FindRegisteredCommand(std::string Command);
     void ProcessCommands();
+    
     void HelpCommand(const FCommandArguments& Args);
+    void RestartCommand(const FCommandArguments& Args);
+    void ExitCommand(const FCommandArguments& Args);
+    void ExecuteActionCommand(const FCommandArguments& Args);
 
     void KillAllChildProcesses();
 

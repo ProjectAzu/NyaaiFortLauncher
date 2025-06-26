@@ -9,6 +9,7 @@
 #include <queue>
 #include <string>
 #include <thread>
+#include <vector>
 #include <fcntl.h>      // _O_U16TEXT
 #include <io.h>         // _setmode
 
@@ -35,6 +36,15 @@ namespace
     DWORD OldInMode  = 0;
     DWORD OldOutMode = 0;
 
+    /* history ---------------------------------------------------------------- */
+    std::vector<std::wstring> History;          // all previous commands
+    std::size_t               HistIndex = 0;    // 0 ... History.size()
+    std::wstring              DraftLine;        // what the user had typed before
+    // valid only when browsing history
+
+    /* live-editing ----------------------------------------------------------- */
+    std::size_t CursorPos = 0;                  // index inside CurrentLine
+
     constexpr std::wstring_view Prompt = L"> ";
 
     /* wide -> UTF-8 */
@@ -54,11 +64,30 @@ namespace
     /* print "prompt + CurrentLine" (optionally clearing the whole line first) */
     void RedrawInput(bool ClearLine)
     {
-        std::lock_guard lock(ConsoleMutex);
-        std::wcout.clear();                               // <- added
+        // snapshot the line & cursor so we don't hold InputMutex while printing
+        std::wstring line;
+        std::size_t  pos;
+        {
+            std::scoped_lock lk(InputMutex);
+            line = CurrentLine;
+            pos  = CursorPos;
+        }
+
+        /* --------- atomic console update --------- */
+        std::lock_guard out(ConsoleMutex);
+        std::wcout.clear();
+
         if (ClearLine)
-            std::wcout << L"\r\x1B[2K";
-        std::wcout << L"\r" << Prompt << CurrentLine << std::flush;
+            std::wcout << L"\r\x1B[2K";                 // erase line
+
+        std::wcout << L"\r" << Prompt << line;
+
+        /* place caret: "nD" moves n columns left */
+        const std::size_t tail = line.size() - pos;
+        if (tail)
+            std::wcout << L"\x1B[" << tail << L"D";
+
+        std::wcout << std::flush;
     }
 
     /* write a log entry, preserving whatever the user is typing *
@@ -76,88 +105,165 @@ namespace
     /* reader thread - raw mode, key-by-key */
     void InputLoop(std::stop_token st)
     {
-        INPUT_RECORD rec{};
-        DWORD        read = 0;
-        wchar_t      pendingHigh = 0;                 // stores an unmatched high surrogate
+        constexpr DWORD  MAX_BATCH = 256;
+        INPUT_RECORD     recs[MAX_BATCH];
+        wchar_t          pendingHigh = 0;
     
-        RedrawInput(true);                            // initial "> "
+        RedrawInput(true);        // initial prompt
     
         while (!st.stop_requested())
         {
-            if (!ReadConsoleInputW(StdIn(), &rec, 1, &read))
-                continue;
-    
-            if (rec.EventType != KEY_EVENT || !rec.Event.KeyEvent.bKeyDown)
-                continue;
-    
-            const wchar_t wch = rec.Event.KeyEvent.uChar.UnicodeChar;
-    
-            switch (wch)
+            DWORD avail = 0;
+            if (!GetNumberOfConsoleInputEvents(StdIn(), &avail) || avail == 0)
             {
-                case L'\r':                                              // ENTER
-                {
-                    {
-                        std::scoped_lock lk(InputMutex);
-                        if (pendingHigh) {                               // flush stray high surrogate
-                            CurrentLine.push_back(pendingHigh);
-                            pendingHigh = 0;
-                        }
-                        InputQueue.push(CurrentLine);
-                        CurrentLine.clear();
-                    }
+                Sleep(1);
+                continue;
+            }
     
-                    ConsoleWrite(L"");                                   // no extra blank line
-                    RedrawInput(true);
-                } break;
+            DWORD toRead = std::min<DWORD>(avail, MAX_BATCH);
+            DWORD read   = 0;
+            if (!ReadConsoleInputW(StdIn(), recs, toRead, &read) || read == 0)
+                continue;
     
-                case L'\b':                                              // BACKSPACE
+            bool lineDirty = false;      // did we change the line?
+            bool clearLine = false;      // need full clear? (arrow / backspace)
+    
+            for (DWORD i = 0; i < read; ++i)
+            {
+                const auto& ev = recs[i].Event.KeyEvent;
+                if (recs[i].EventType != KEY_EVENT || !ev.bKeyDown)
+                    continue;
+    
+                const WORD vk  = ev.wVirtualKeyCode;
+                const wchar_t ch = ev.uChar.UnicodeChar;
+    
+                /* ---------- navigation keys (virtual key codes) ---------- */
+                if (vk == VK_LEFT)
                 {
                     std::scoped_lock lk(InputMutex);
-                    if (pendingHigh) {
-                        pendingHigh = 0;                                 // just discard it
-                    } else if (!CurrentLine.empty()) {
-                        CurrentLine.pop_back();
-                    }
-                    RedrawInput(true);
-                } break;
-    
-                default:                                                 // printable
+                    if (CursorPos > 0) { --CursorPos; lineDirty = true; }
+                    continue;
+                }
+                if (vk == VK_RIGHT)
                 {
-                    if (wch < L' ')                                      // control -> ignore
-                        break;
+                    std::scoped_lock lk(InputMutex);
+                    if (CursorPos < CurrentLine.size()) { ++CursorPos; lineDirty = true; }
+                    continue;
+                }
+                if (vk == VK_UP)
+                {
+                    std::scoped_lock lk(InputMutex);
+                    if (!History.empty() && HistIndex > 0)
+                    {
+                        if (HistIndex == History.size())
+                            DraftLine = CurrentLine;      // remember current edit
     
-                    if (wch >= 0xD800 && wch <= 0xDBFF) {                // high surrogate
-                        pendingHigh = wch;
-                        break;
+                        --HistIndex;
+                        CurrentLine = History[HistIndex];
+                        CursorPos   = CurrentLine.size();
+                        clearLine   = lineDirty = true;
                     }
+                    continue;
+                }
+                if (vk == VK_DOWN)
+                {
+                    std::scoped_lock lk(InputMutex);
+                    if (HistIndex < History.size())
+                    {
+                        ++HistIndex;
+                        if (HistIndex == History.size())
+                            CurrentLine = DraftLine;
+                        else
+                            CurrentLine = History[HistIndex];
     
-                    if (wch >= 0xDC00 && wch <= 0xDFFF) {                // low surrogate
-                        if (pendingHigh) {
+                        CursorPos = CurrentLine.size();
+                        clearLine = lineDirty = true;
+                    }
+                    continue;
+                }
+    
+                /* ---------- printable characters / control ---------- */
+                switch (ch)
+                {
+                    case L'\r':                                     /* ENTER */
+                    {
+                        std::wstring committed;
+                        {
                             std::scoped_lock lk(InputMutex);
-                            CurrentLine.push_back(pendingHigh);
-                            CurrentLine.push_back(wch);
-                            pendingHigh = 0;
-                            RedrawInput(false);
+                            if (pendingHigh) {                      // orphan high surrogate
+                                CurrentLine.insert(CursorPos++, 1, pendingHigh);
+                                pendingHigh = 0;
+                            }
+                            committed.swap(CurrentLine);
+                            CursorPos = 0;
                         }
-                        /* stray low surrogate -> drop */
-                        break;
-                    }
     
-                    /* ordinary BMP char */
-                    if (pendingHigh) {                                   // flush orphan high
-                        std::scoped_lock lk(InputMutex);
-                        CurrentLine.push_back(pendingHigh);
-                        pendingHigh = 0;
-                    }
+                        if (!committed.empty())
+                        {
+                            std::scoped_lock lk(InputMutex);
+                            History.push_back(committed);
+                            HistIndex = History.size();
+                        }
+    
+                        {
+                            std::scoped_lock lk(InputMutex);
+                            InputQueue.push(committed);
+                        }
+    
+                        ConsoleWrite(L"");
+                        clearLine = true;
+                    } break;
+    
+                    case L'\b':                                     /* BACKSPACE */
                     {
                         std::scoped_lock lk(InputMutex);
-                        CurrentLine.push_back(wch);
-                    }
-                    RedrawInput(false);
-                } break;
-            }
+                        if (pendingHigh) {
+                            pendingHigh = 0;
+                        } else if (CursorPos) {
+                            CurrentLine.erase(--CursorPos, 1);
+                        }
+                        clearLine = lineDirty = true;
+                    } break;
+    
+                    default:                                        /* text input */
+                    {
+                        if (ch < L' ') break;                       // ignore controls
+    
+                        std::scoped_lock lk(InputMutex);
+    
+                        if (ch >= 0xD800 && ch <= 0xDBFF)           // high surrogate
+                        {
+                            pendingHigh = ch;
+                            break;
+                        }
+                        if (ch >= 0xDC00 && ch <= 0xDFFF)           // low surrogate
+                        {
+                            if (pendingHigh)
+                            {
+                                CurrentLine.insert(CursorPos++, 1, pendingHigh);
+                                pendingHigh = 0;
+                                CurrentLine.insert(CursorPos++, 1, ch);
+                                lineDirty = true;
+                            }
+                            break;
+                        }
+    
+                        if (pendingHigh)                            // orphan high
+                        {
+                            CurrentLine.insert(CursorPos++, 1, pendingHigh);
+                            pendingHigh = 0;
+                        }
+                        CurrentLine.insert(CursorPos++, 1, ch);
+                        lineDirty = true;
+                    } break;
+                } // switch
+            }     // for each record
+    
+            if (lineDirty)
+                RedrawInput(clearLine);
         }
     }
+
 } // anonym-ns
 
 /* ---------------- public API expected by Log.h ---------------- */
@@ -210,6 +316,9 @@ void CleanupLogging()
     /* restore console modes */
     SetConsoleMode(StdIn(),  OldInMode);
     SetConsoleMode(StdOut(), OldOutMode);
+    
+    _setmode(_fileno(stdout), _O_TEXT);
+    _setmode(_fileno(stderr), _O_TEXT);
 }
 
 void LogImplementation(ELogLevel Level, const std::wstring& Message)

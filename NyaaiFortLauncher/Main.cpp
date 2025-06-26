@@ -7,6 +7,7 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
+#include <conio.h>
 
 #include <curl/curl.h>
 
@@ -83,10 +84,10 @@ int main(int32 ArgsNum, char* ArgsArrayPtr[])
     StartLauncher(ArgsNum, ArgsArrayPtr);
 
     Log(Info, "Press any key to exit...");
-
-    // The Press any key to exit implementation is not here because I cannot get
-    // command input in logging to clean up properly and it does exactly that
+    
     CleanupLogging();
+
+    _getch();
 
     return 0;
 }

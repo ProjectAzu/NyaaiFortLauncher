@@ -8,6 +8,8 @@
 
 #include "Activity.h"
 #include "CreateProcessAction.h"
+#include "RequestExitAction.h"
+#include "RequestRelaunchAction.h"
 
 FCommandArguments::FCommandArguments(const std::string& RawString) : RawString(RawString)
 {
@@ -85,6 +87,27 @@ void NFortLauncher::OnCreated()
         "help",
         "Lists available commands",
         &ThisClass::HelpCommand
+    );
+
+    RegisterConsoleCommand(
+        this,
+        "restart",
+        "Requests a relaunch.",
+        &ThisClass::RestartCommand
+    );
+
+    RegisterConsoleCommand(
+        this,
+        "exit",
+        "Requests that the launcher exits.",
+        &ThisClass::ExitCommand
+    );
+
+    RegisterConsoleCommand(
+        this,
+        "ExecuteAction",
+        "Executes an action. Usage: ExecuteAction \"ActionTemplate\"",
+        &ThisClass::ExecuteActionCommand
     );
     
     Log(Info, "Launcher starting");
@@ -337,11 +360,18 @@ void NFortLauncher::DoCleanup()
     KillAllChildProcesses();
 }
 
-FRegisteredCommand* NFortLauncher::FindRegisteredCommand(const std::string& Command)
+FRegisteredCommand* NFortLauncher::FindRegisteredCommand(std::string Command)
 {
+    std::ranges::transform(Command, Command.begin(),
+                           [](unsigned char c){ return std::tolower(c); });
+    
     for (auto& Entry : RegisteredCommands)
     {
-        if (Entry.Command == Command)
+        std::string EntryCommandToLower = Entry.Command;
+        std::ranges::transform(EntryCommandToLower, EntryCommandToLower.begin(),
+                               [](unsigned char c){ return std::tolower(c); });
+        
+        if (EntryCommandToLower == Command)
         {
             return &Entry;
         }
@@ -401,6 +431,27 @@ void NFortLauncher::HelpCommand(const FCommandArguments& Args)
             RegisteredCommand.Description
             );
     }
+}
+
+void NFortLauncher::RestartCommand(const FCommandArguments& Args)
+{
+    NRequestRelaunchAction::StaticClass()->NewObject(this);
+}
+
+void NFortLauncher::ExitCommand(const FCommandArguments& Args)
+{
+    NRequestExitAction::StaticClass()->NewObject(this);
+}
+
+void NFortLauncher::ExecuteActionCommand(const FCommandArguments& Args)
+{
+    FObjectInitializeTemplate<NAction> ActionTemplate = Args.GetArgumentAtIndex<FObjectInitializeTemplate<NAction>>(0);
+    if (!ActionTemplate.Class)
+    {
+        return;
+    }
+
+    ActionTemplate.NewObject(this);
 }
 
 void NFortLauncher::KillAllChildProcesses()

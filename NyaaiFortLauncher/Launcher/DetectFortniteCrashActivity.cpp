@@ -173,10 +173,59 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
             continue;
         }
 
-        Log(Error, "Detected fortnite crash: 'file:///{}'",
-            CrashContextFilePath.parent_path().generic_string());
+        std::string CrashOffset{};
+        std::string CrashThread{};
+        std::string CrashThreadId{};
 
-        // Wait for fortnite to exit naturally so it can save the crash dump
+        std::vector<std::pair<std::string,std::string>> Frames{};
+
+        if (std::regex_search(Xml, M, std::regex(R"(<PCallStack>([\s\S]*?)</PCallStack>)")))
+        {
+            const std::string Pcs = M[1].str();
+
+            std::smatch Top{};
+            if (!std::regex_search(Pcs, Top,
+                                   std::regex(R"(FortniteClient[-_]?Win64[-_]?Shipping\s+0x[0-9A-Fa-f]+\s+\+\s+([0-9A-Fa-f]+))")))
+            {
+                std::regex_search(Pcs, Top,
+                                  std::regex(R"((\S+)\s+0x[0-9A-Fa-f]+\s+\+\s+([0-9A-Fa-f]+))"));
+            }
+            if (Top.size() >= 2)
+            {
+                CrashOffset = "0x" + Top[1].str();
+            }
+
+            std::regex R(R"((\S+)\s+0x([0-9A-Fa-f]+)\s+\+\s+([0-9A-Fa-f]+))");
+            for (std::sregex_iterator it(Pcs.begin(), Pcs.end(), R), end; it != end; ++it)
+            {
+                const auto& m = *it;
+                Frames.emplace_back(m[1].str(), m[3].str());
+            }
+        }
+
+        if (std::regex_search(
+                Xml,
+                M,
+                std::regex(
+                    R"(<Thread>[\s\S]*?<IsCrashed>true</IsCrashed>[\s\S]*?<ThreadID>(\d+)</ThreadID>[\s\S]*?<ThreadName>(.*?)</ThreadName>[\s\S]*?</Thread>)")))
+        {
+            CrashThreadId = M[1].str();
+            CrashThread   = M[2].str();
+        }
+
+        if (CrashOffset.empty())   CrashOffset = "?";
+        if (CrashThread.empty())   CrashThread = "?";
+        if (CrashThreadId.empty()) CrashThreadId = "?";
+
+        Log(Error, "Detected fortnite crash on thread '{}' at address '{}'.", CrashThread, CrashOffset);
+        Log(Error, "Crash info folder: 'file:///{}'", CrashContextFilePath.parent_path().generic_string());
+        
+        Log(Error, "CallStack:");
+        for (const auto& Frame : Frames)
+        {
+            Log(Error, "{}+0x{}", Frame.first, Frame.second);
+        }
+
         ::WaitForSingleObject(GetLauncher()->GetFortniteProcessHandle(), 5000);
 
         for (const auto& ActionTemplate : OnFortniteCrashActions)

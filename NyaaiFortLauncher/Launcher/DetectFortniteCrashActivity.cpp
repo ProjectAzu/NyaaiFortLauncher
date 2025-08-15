@@ -226,6 +226,7 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
             Log(Error, "{}+0x{}", Frame.first, Frame.second);
         }
 
+        // Wait for fortnite to exit naturally so it can save the crash dump
         ::WaitForSingleObject(GetLauncher()->GetFortniteProcessHandle(), 5000);
 
         for (const auto& ActionTemplate : OnFortniteCrashActions)

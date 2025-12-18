@@ -14,7 +14,7 @@ static void InitializeJobObjectIfNeeded()
         {
             DWORD LastError = GetLastError();
             Log(Error, 
-                "Failed to create Job Object (Error code {}) -- child processes won't be killed automatically.",
+                L"Failed to create Job Object (Error code {}) -- child processes won't be killed automatically.",
                 LastError);
             return;
         }
@@ -30,7 +30,7 @@ static void InitializeJobObjectIfNeeded()
         {
             DWORD LastError = GetLastError();
             Log(Error, 
-                "Failed to set JobObjectExtendedLimitInformation (Error code {})",
+                L"Failed to set JobObjectExtendedLimitInformation (Error code {})",
                 LastError);
             // We still have a job object, but it won't kill children automatically
         }
@@ -41,9 +41,9 @@ void NCreateProcessAction::Execute()
 {
     Super::Execute();
 
-    if (!exists(FilePath) || !is_regular_file(FilePath) || FilePath.extension() != ".exe")
+    if (!exists(FilePath) || !is_regular_file(FilePath) || FilePath.extension().wstring() != L".exe")
     {
-        Log(Error, "NCreateProcessAction: Bad file path");
+        Log(Error, L"NCreateProcessAction: Bad file path");
         return;
     }
 
@@ -95,7 +95,7 @@ void NCreateProcessAction::Execute()
     if (!bSuccess)
     {
         DWORD LastError = GetLastError();
-        Log(Error, "Failed to create process (Error code {})", LastError);
+        Log(Error, L"Failed to create process (Error code {})", LastError);
         return;
     }
 
@@ -106,15 +106,15 @@ void NCreateProcessAction::Execute()
         {
             DWORD LastError = GetLastError();
             Log(Error, 
-                "Failed to assign process PID {} to job object (Error code {})",
+                L"Failed to assign process PID {} to job object (Error code {})",
                 ResultProcessInfo.dwProcessId, 
                 LastError);
         }
     }
 
     Log(Info, 
-        "Launched '{}' PID: {}, TID: {}", 
-        FilePath.string(), 
+        L"Launched '{}' PID: {}, TID: {}", 
+        FilePath.wstring(), 
         ResultProcessInfo.dwProcessId, 
         ResultProcessInfo.dwThreadId);
     

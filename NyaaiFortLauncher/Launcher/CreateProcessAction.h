@@ -2,9 +2,7 @@
 
 #include "Action.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include "Utils/WindowsInclude.h"
 
 class NCreateProcessAction : public NAction
 {
@@ -17,7 +15,7 @@ public:
     std::filesystem::path FilePath{};
 
     NPROPERTY(LaunchArguments)
-    std::string LaunchArguments{};
+    std::wstring LaunchArguments{};
 
     NPROPERTY(bSuspendProcessAfterCreation)
     bool bSuspendProcessAfterCreation = false;

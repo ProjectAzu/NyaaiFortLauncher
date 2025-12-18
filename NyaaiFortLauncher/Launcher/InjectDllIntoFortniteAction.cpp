@@ -2,9 +2,7 @@
 
 #include "FortLauncher.h"
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include "Utils/WindowsInclude.h"
 
 GENERATE_BASE_CPP(NInjectDllIntoFortniteAction)
 
@@ -12,62 +10,77 @@ void NInjectDllIntoFortniteAction::Execute()
 {
     Super::Execute();
 
-    if (!exists(DllPath) || !is_regular_file(DllPath) || DllPath.extension() != ".dll")
+    if (!exists(DllPath) || !is_regular_file(DllPath) || DllPath.extension().wstring() != L".dll")
     {
-        Log(Error, "NInjectDllIntoFortniteAction failed, bad dll path");
+        Log(Error, L"NInjectDllIntoFortniteAction failed, bad dll path");
         return;
     }
 
     auto Launcher = GetLauncher();
 
-    std::string DllPathString = DllPath.string();
-    const char* DllPathCSTR = DllPathString.c_str();
-    SIZE_T Length = strlen(DllPathCSTR) + 1;
+    std::wstring DllPathString = DllPath.wstring();
+    const wchar_t* DllPathCSTR = DllPathString.c_str();
+
+    // Bytes (NOT wchar count)
+    const SIZE_T BytesToWrite = (DllPathString.size() + 1) * sizeof(wchar_t);
 
     HANDLE ProcessHandle = Launcher->GetFortniteProcessHandle();
     if (!ProcessHandle)
     {
-        Log(Error, "NInjectDllIntoFortniteAction, invalid fortnite process handle");
+        Log(Error, L"NInjectDllIntoFortniteAction, invalid fortnite process handle");
         return;
     }
 
-    LPVOID AllocatedMemory = VirtualAllocEx(ProcessHandle, 0, MAX_PATH, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    // Allocate exactly what we need (in bytes) in the remote process
+    LPVOID AllocatedMemory = VirtualAllocEx(ProcessHandle, nullptr, BytesToWrite, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!AllocatedMemory)
     {
-        Log(Error, "NInjectDllIntoFortniteAction failed to allocate memory");
+        Log(Error, L"NInjectDllIntoFortniteAction failed to allocate memory");
         return;
     }
 
-    if (!WriteProcessMemory(ProcessHandle, AllocatedMemory, DllPathCSTR, Length, 0)) {
-        
-        Log(Error, "NInjectDllIntoFortniteAction failed to write process memory");
-        return ;
+    if (!WriteProcessMemory(ProcessHandle, AllocatedMemory, DllPathCSTR, BytesToWrite, nullptr))
+    {
+        Log(Error, L"NInjectDllIntoFortniteAction failed to write process memory");
+        VirtualFreeEx(ProcessHandle, AllocatedMemory, 0, MEM_RELEASE);
+        return;
     }
 
-    auto LoadLibraryA = reinterpret_cast<LPTHREAD_START_ROUTINE>(GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), "LoadLibraryA"));
+    // Wide version, since we're passing wchar_t*
+    auto LoadLibraryWPtr = reinterpret_cast<LPTHREAD_START_ROUTINE>(
+        GetProcAddress(GetModuleHandleW(L"kernel32.dll"), "LoadLibraryW")
+        );
 
-    HANDLE DllThreadHandle = CreateRemoteThread(ProcessHandle, 0, 0, LoadLibraryA, AllocatedMemory, CREATE_SUSPENDED, 0);
+    if (!LoadLibraryWPtr)
+    {
+        Log(Error, L"NInjectDllIntoFortniteAction failed to resolve LoadLibraryW");
+        VirtualFreeEx(ProcessHandle, AllocatedMemory, 0, MEM_RELEASE);
+        return;
+    }
 
-    VirtualFree(AllocatedMemory, Length, MEM_RELEASE);
-
+    HANDLE DllThreadHandle = CreateRemoteThread(ProcessHandle, nullptr, 0, LoadLibraryWPtr, AllocatedMemory, CREATE_SUSPENDED, nullptr);
     if (!DllThreadHandle || DllThreadHandle == INVALID_HANDLE_VALUE)
     {
-        Log(Error, "NInjectDllIntoFortniteAction failed to start remote thread");
+        Log(Error, L"NInjectDllIntoFortniteAction failed to start remote thread");
+        VirtualFreeEx(ProcessHandle, AllocatedMemory, 0, MEM_RELEASE);
         return;
     }
-    
+
     if (!DllThreadDescription.empty())
     {
-        std::wstring WThreadDescription(DllThreadDescription.begin(), DllThreadDescription.end());
-
-        SetThreadDescription(DllThreadHandle, WThreadDescription.c_str());
-
-        Log(Info, "Set dll thread description to '{}'", DllThreadDescription);
+        SetThreadDescription(DllThreadHandle, DllThreadDescription.c_str());
+        Log(Info, L"Set dll thread description to '{}'", DllThreadDescription);
     }
 
     ResumeThread(DllThreadHandle);
 
+    // Wait so the remote thread can safely read the argument buffer before we free it
+    //WaitForSingleObject(DllThreadHandle, INFINITE);
+
+    // Remote free (MEM_RELEASE requires size = 0)
+    //VirtualFreeEx(ProcessHandle, AllocatedMemory, 0, MEM_RELEASE); i dont care it can leak memory im not waiting
+
     CloseHandle(DllThreadHandle);
 
-    Log(Info, "Injected dll '{}' into fortnite", DllPath.string());
+    Log(Info, L"Injected dll '{}' into fortnite", DllPathString);
 }

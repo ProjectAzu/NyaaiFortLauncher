@@ -6,9 +6,9 @@
 #include <unordered_map>
 
 static std::vector<NClass*>* AllClassesSortedByHierarchyAndName{};
-static std::unordered_map<std::string, NClass*>* AllClassesByByName{};
+static std::unordered_map<std::wstring, NClass*>* AllClassesByByName{};
 
-void FStructWithProperties::SetPropertyValue(const std::string& PropertyName, const std::string& Value)
+void FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
 {
     for (const auto Property : Properties)
     {
@@ -16,24 +16,24 @@ void FStructWithProperties::SetPropertyValue(const std::string& PropertyName, co
         {
             if (!Property->Set(this, Value))
             {
-                Log(Error, "Setting property {} to {} in a struct failed.", PropertyName, Value);
+                Log(Error, L"Setting property {} to {} in a struct failed.", PropertyName, Value);
             }
             
             return;
         }
     }
 
-    Log(Error, "SetPropertyValue: Failed to find property {} a struct.", PropertyName);
+    Log(Error, L"SetPropertyValue: Failed to find property {} a struct.", PropertyName);
 }
 
-NClass::NClass(const std::string& Name, NClass* SuperClass, NObject*(*NewObjectFactory)())
+NClass::NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObjectFactory)())
     : Name(Name)
     , SuperClass(SuperClass)
     , NewObjectFactory(NewObjectFactory)
 {
     // like this because global variables are bugged in dlls or something idk but this fixes it
     if (!AllClassesSortedByHierarchyAndName) AllClassesSortedByHierarchyAndName = new std::vector<NClass*>{};
-    if (!AllClassesByByName) AllClassesByByName = new std::unordered_map<std::string, NClass*>{};
+    if (!AllClassesByByName) AllClassesByByName = new std::unordered_map<std::wstring, NClass*>{};
 
     if (AllClassesSortedByHierarchyAndName->empty())
     {
@@ -89,7 +89,7 @@ bool NClass::IsSubclassOf(const NClass* Other) const
     return false;
 }
 
-FProperty::FProperty(const std::string& Name, NObject* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::string& Value))
+FProperty::FProperty(const std::wstring& Name, NObject* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::wstring& Value))
     : Name(Name)
     , Setter(Setter)
 {
@@ -97,8 +97,8 @@ FProperty::FProperty(const std::string& Name, NObject* OwningObject, void* Prope
     OwningObject->Properties.push_back(this);
 }
 
-FProperty::FProperty(const std::string& Name, struct FStructWithProperties* OwningObject, void* Property,
-    bool(* Setter)(void* PropertyPtr, const std::string& Value))
+FProperty::FProperty(const std::wstring& Name, struct FStructWithProperties* OwningObject, void* Property,
+    bool(* Setter)(void* PropertyPtr, const std::wstring& Value))
     : Name(Name)
     , Setter(Setter)
 {
@@ -135,14 +135,14 @@ NClass* NClass::GetClassById(uint16 Id)
     return nullptr;
 }
 
-NClass* NClass::GetClassByName(const std::string& Name)
+NClass* NClass::GetClassByName(const std::wstring& Name)
 {
     if (auto Search = AllClassesByByName->find(Name); Search != AllClassesByByName->end())
     {
         return Search->second;
     }
 
-    Log(Error, "GetClassByName: Failed to find class {}.", Name);
+    Log(Error, L"GetClassByName: Failed to find class {}.", Name);
 
     return nullptr;
 }
@@ -162,7 +162,7 @@ std::vector<NClass*> NClass::GetAllDerivedClasses() const
     return Result;
 }
 
-static NClass NObject_Class{"NObject", nullptr, []()
+static NClass NObject_Class{L"NObject", nullptr, []()
 {
     return reinterpret_cast<NObject*>(new NObject{});
 }};
@@ -171,7 +171,7 @@ void NObject::FinishConstruction()
 {
     if (bHasFinishedConstruction)
     {
-        Log(Error, "Finish construction was called on an object that has already finished construction {}.", GetClass()->GetName());
+        Log(Error, L"Finish construction was called on an object that has already finished construction {}.", GetClass()->GetName());
         return;
     }
     
@@ -179,7 +179,7 @@ void NObject::FinishConstruction()
     bHasFinishedConstruction = true;
 }
 
-void NObject::SetPropertyValue(const std::string& PropertyName, const std::string& Value)
+void NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
 {
     for (const auto Property : Properties)
     {
@@ -187,7 +187,7 @@ void NObject::SetPropertyValue(const std::string& PropertyName, const std::strin
         {
             if (!Property->Set(this, Value))
             {
-                Log(Error, "Setting property {} to {} in an object of class {} failed.",
+                Log(Error, L"Setting property {} to {} in an object of class {} failed.",
                     PropertyName, Value, GetClass()->GetName());
             }
             
@@ -195,7 +195,7 @@ void NObject::SetPropertyValue(const std::string& PropertyName, const std::strin
         }
     }
 
-    Log(Error, "SetPropertyValue: Failed to find property {} in class {}.",
+    Log(Error, L"SetPropertyValue: Failed to find property {} in class {}.",
         PropertyName, GetClass()->GetName());
 }
 

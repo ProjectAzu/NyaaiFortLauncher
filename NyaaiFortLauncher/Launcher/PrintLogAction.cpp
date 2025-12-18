@@ -12,21 +12,21 @@ void NPrintLogAction::Execute()
     Super::Execute();
 
     ELogLevel ParsedLogLevel = Info;
-    if (LogLevel == "Info")
+    if (LogLevel == L"Info")
     {
         ParsedLogLevel = Info;
     }
-    else if (LogLevel == "Warning")
+    else if (LogLevel == L"Warning")
     {
         ParsedLogLevel = Warning;
     }
-    else if (LogLevel == "Error")
+    else if (LogLevel == L"Error")
     {
         ParsedLogLevel = Error;
     }
     else
     {
-        Log(Error, "NPrintLogAction, Bad log level specified '{}'", LogLevel);
+        Log(Error, L"NPrintLogAction, Bad log level specified '{}'", LogLevel);
     }
 
     Log(ParsedLogLevel, Message.c_str());

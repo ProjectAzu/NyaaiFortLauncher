@@ -17,7 +17,7 @@ public: \
 private:
 
 #define GENERATE_BASE_CPP(ClassName) \
-static NClass ClassName##_Class{#ClassName, ClassName::Super::StaticClass(), []()\
+static NClass ClassName##_Class{L#ClassName, ClassName::Super::StaticClass(), []()\
     { \
         return reinterpret_cast<NObject*>(new ClassName{}); \
     }}; \
@@ -25,7 +25,7 @@ NClass* ClassName::StaticClass() { return &ClassName##_Class; } \
 NClass* ClassName::GetClass() const { return &ClassName##_Class; }
 
 #define NPROPERTY(Name) \
-FProperty Name##_Property{#Name, this, &Name, reinterpret_cast<bool(*)(void*, const std::string&)>(&FPropertySetterFunction<decltype(Name)>::Set)};
+FProperty Name##_Property{L#Name, this, &Name, reinterpret_cast<bool(*)(void*, const std::wstring&)>(&FPropertySetterFunction<decltype(Name)>::Set)};
 
 class NObject;
 class NClass;
@@ -33,25 +33,25 @@ class NClass;
 class FProperty
 {
 public:
-    FProperty(const std::string& Name, NObject* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::string& Value));
-    FProperty(const std::string& Name, struct FStructWithProperties* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::string& Value));
+    FProperty(const std::wstring& Name, NObject* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::wstring& Value));
+    FProperty(const std::wstring& Name, struct FStructWithProperties* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::wstring& Value));
 
-    inline std::string GetName() const { return Name; }
+    inline std::wstring GetName() const { return Name; }
 
-    inline bool Set(void* Object, const std::string& Value) 
+    inline bool Set(void* Object, const std::wstring& Value) 
     {
         return Setter(reinterpret_cast<void*>(reinterpret_cast<uint64>(Object) + Offset), Value);
     }
     
 private:
-    std::string Name;
+    std::wstring Name;
     uint16 Offset;
-    bool(*Setter)(void* PropertyPtr, const std::string& Value);
+    bool(*Setter)(void* PropertyPtr, const std::wstring& Value);
 };
 
 struct FStructWithProperties
 {
-    void SetPropertyValue(const std::string& PropertyName, const std::string& Value);
+    void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
     
 private:
     friend class FProperty;
@@ -67,14 +67,14 @@ struct FPropertySetData;
 class NClass
 {
 public:
-    NClass(const std::string& Name, NClass* SuperClass, NObject*(*NewObjectFactory)());
+    NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObjectFactory)());
 
     NClass(const NClass&) = delete;
     NClass&operator=(const NClass&) = delete;
     NClass(NClass&& Other) = delete;
     NClass&operator=(NClass&& Other) = delete;
     
-    inline std::string GetName() const { return Name; }
+    inline std::wstring GetName() const { return Name; }
     inline uint16 GetId() const { return Id; }
     inline NClass* GetSuper() const { return SuperClass; }
 
@@ -87,11 +87,11 @@ public:
     }
 
     static NClass* GetClassById(uint16 Id);
-    static NClass* GetClassByName(const std::string& Name);
+    static NClass* GetClassByName(const std::wstring& Name);
     std::vector<NClass*> GetAllDerivedClasses() const;
 
 private:
-    std::string Name;
+    std::wstring Name;
     uint16 Id = 0;
     NClass* SuperClass;
     NObject*(*NewObjectFactory)();
@@ -232,7 +232,7 @@ public:
 
     void FinishConstruction();
 
-    void SetPropertyValue(const std::string& PropertyName, const std::string& Value);
+    void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
 
     static NClass* StaticClass();
     virtual NClass* GetClass() const;
@@ -266,8 +266,8 @@ template<class T> inline T* Cast(NObject* Object)
 
 struct FPropertySetData
 {
-    std::string PropertyName{};
-    std::string SetValue;
+    std::wstring PropertyName{};
+    std::wstring SetValue;
 };
 
 template<class T>
@@ -286,7 +286,7 @@ struct FObjectInitializeTemplate : FStructWithProperties
     {
         if (!Class)
         {
-            Log(Error, "Cannot initialize template, no class.");
+            Log(Error, L"Cannot initialize template, no class.");
             return nullptr;
         }
         

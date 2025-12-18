@@ -10,5 +10,5 @@ public:
     void Execute() override;
     
     NPROPERTY(Url)
-    std::string Url{};
+    std::wstring Url{};
 };

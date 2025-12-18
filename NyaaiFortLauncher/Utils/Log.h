@@ -38,25 +38,14 @@ constexpr const wchar_t* LogLevelToColorCode(ELogLevel Level)
     }
 }
 
-std::optional<std::string> GetPendingConsoleCommand();
+std::optional<std::wstring> GetPendingConsoleCommand();
 
 void InitializeLogging();
 void CleanupLogging();
 
 void LogRaw(const std::wstring& Message);
-inline void LogRaw(const std::string& Message)
-{
-    LogRaw(std::wstring(Message.begin(), Message.end()));
-}
 
 void LogImplementation(ELogLevel Level, const std::wstring& Message);
-
-template<typename... Args>
-inline void Log(ELogLevel Level, const char* Format, Args&&... Arguments)
-{
-    std::string MessageString(std::vformat(Format, std::make_format_args(Arguments...)));
-    LogImplementation(Level, std::wstring(MessageString.begin(), MessageString.end()));
-}
 
 template<typename... Args>
 inline void Log(ELogLevel Level, const wchar_t* Format, Args&&... Arguments)

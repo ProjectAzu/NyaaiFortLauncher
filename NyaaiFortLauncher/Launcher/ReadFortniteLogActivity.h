@@ -3,13 +3,14 @@
 #include "Activity.h"
 
 #include "Action.h"
+#include "Utils/Utf8.h"
 
 struct FCommandArguments;
 
 struct FLogTriggeredAction : FStructWithProperties
 {
     NPROPERTY(TriggerString)
-    std::string TriggerString{};
+    std::wstring TriggerString{};
 
     NPROPERTY(Action)
     FObjectInitializeTemplate<NAction> Action{};
@@ -17,7 +18,7 @@ struct FLogTriggeredAction : FStructWithProperties
     NPROPERTY(bTriggerOnlyOnce)
     bool bTriggerOnlyOnce = false;
 
-    int32 TriggerStringCharsFound = 0;
+    uint32 TriggerStringCharsFound = 0;
 };
 
 class NReadFortniteLogActivity : public NActivity
@@ -29,6 +30,8 @@ public:
     void Tick(double DeltaTime) override;
 
 private:
+    void ProcessTriggeredActions(wchar_t ch);
+    
     void ForwardCommandToFortniteCommand(const FCommandArguments& Args);
     
 public:
@@ -39,12 +42,17 @@ public:
     bool bPrintFortniteLog = true;
 
     NPROPERTY(ColoredPrintPrefix)
-    std::string ColoredPrintPrefix{};
+    std::wstring ColoredPrintPrefix{};
 
     NPROPERTY(bOnlyPrintLogWithColoredPrintPrefix)
     bool bOnlyPrintLogWithColoredPrintPrefix = false;
 
 private:
-    std::string AwaitingPrintString{};
-    static constexpr uint32 MaxAwaitingPrintStringLength = 3000; 
+    FUtf8StreamDecoder Utf8StreamDecoder{};
+    std::wstring LineStartBuffer{};
+
+    bool   bAtLineStart = true;
+    bool   bDecidingPrefix = true;
+    bool   bLineIsGreen = false;
+    size_t PrefixIndex = 0;
 };

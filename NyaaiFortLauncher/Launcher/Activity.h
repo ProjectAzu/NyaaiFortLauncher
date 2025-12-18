@@ -1,4 +1,5 @@
 #pragma once
+
 #include "LauncherObject.h"
 
 class NActivity : public NLauncherObject

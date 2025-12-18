@@ -161,6 +161,8 @@
     <ClCompile Include="Object\Object.cpp" />
     <ClCompile Include="Object\PropertySetters.cpp" />
     <ClCompile Include="Utils\Log.cpp" />
+    <ClCompile Include="Utils\TextFileLoader.cpp" />
+    <ClCompile Include="Utils\Utf8.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Launcher\Action.h" />
@@ -180,6 +182,9 @@
     <ClInclude Include="Object\PropertySetters.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils\Log.h" />
+    <ClInclude Include="Utils\TextFileLoader.h" />
+    <ClInclude Include="Utils\Utf8.h" />
+    <ClInclude Include="Utils\WindowsInclude.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NyaaiFortLauncher.rc" />

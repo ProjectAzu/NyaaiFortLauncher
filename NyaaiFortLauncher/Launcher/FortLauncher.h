@@ -12,9 +12,9 @@ class NActivity;
 
 struct FCommandArguments
 {
-    FCommandArguments(const std::string& RawString);
+    FCommandArguments(const std::wstring& RawString);
 
-    std::string GetArgumentAtIndex(uint8 Index) const;
+    std::wstring GetArgumentAtIndex(uint8 Index) const;
 
     template<class T>
     inline T GetArgumentAtIndex(uint8 Index) const
@@ -24,18 +24,18 @@ struct FCommandArguments
         return Result;
     }
     
-    inline std::string GetRawString() const { return RawString; }
+    inline std::wstring GetRawString() const { return RawString; }
     
 private:
-    std::vector<std::string> Tokens{};
-    std::string RawString{};
+    std::vector<std::wstring> Tokens{};
+    std::wstring RawString{};
 };
 
 struct FRegisteredCommand
 {
     NLauncherObject* OwningObject = nullptr;
-    std::string Command{};
-    std::string Description{};
+    std::wstring Command{};
+    std::wstring Description{};
     std::function<void(NLauncherObject*, const FCommandArguments&)> ExecuteCommandFunction{};
 };
 
@@ -60,13 +60,13 @@ public:
     void NotifyObjectDestroyed(NLauncherObject* Object);
 
     template<class T>
-    inline void RegisterConsoleCommand(T* Object, std::string Command, std::string Description, void(T::*Function)(const FCommandArguments& Args))
+    inline void RegisterConsoleCommand(T* Object, std::wstring Command, std::wstring Description, void(T::*Function)(const FCommandArguments& Args))
     {
         static_assert(std::is_base_of_v<NLauncherObject, T>, "T has to be derived from NLauncherObject");
 
         if (FindRegisteredCommand(Command))
         {
-            Log(Error, "Cannot register command '{}' because it's already registered.", Command);
+            Log(Error, L"Cannot register command '{}' because it's already registered.", Command);
             return;
         }
         
@@ -87,7 +87,7 @@ private:
     bool LaunchFortniteProcess();
     void DoCleanup();
 
-    FRegisteredCommand* FindRegisteredCommand(std::string Command);
+    FRegisteredCommand* FindRegisteredCommand(const std::wstring& Command);
     void ProcessCommands();
     
     void HelpCommand(const FCommandArguments& Args);
@@ -102,7 +102,7 @@ public:
     std::filesystem::path FortniteExePath{};
 
     NPROPERTY(FortniteLaunchArguments)
-    std::string FortniteLaunchArguments{};
+    std::wstring FortniteLaunchArguments{};
 
     NPROPERTY(PreFortniteLaunchActions)
     std::vector<FObjectInitializeTemplate<NAction>> PreFortniteLaunchActions{};

@@ -12,8 +12,8 @@ public:
     void Execute() override;
 
     NPROPERTY(Message)
-    std::string Message{};
+    std::wstring Message{};
 
     NPROPERTY(LogLevel)
-    std::string LogLevel = "Info";
+    std::wstring LogLevel = L"Info";
 };

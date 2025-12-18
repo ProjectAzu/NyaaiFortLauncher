@@ -3,12 +3,21 @@
 #include "FortLauncher.h"
 
 #include <iostream>
+#include <string>
+#include <vector>
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include "Utils/WindowsInclude.h"
 
 GENERATE_BASE_CPP(NReadFortniteLogActivity)
+
+static void FlushIfBig(std::wstring& out, size_t threshold = 4096)
+{
+    if (out.size() >= threshold)
+    {
+        LogRaw(out);
+        out.clear();
+    }
+}
 
 void NReadFortniteLogActivity::OnCreated()
 {
@@ -18,186 +27,253 @@ void NReadFortniteLogActivity::OnCreated()
     {
         if (bOnlyPrintLogWithColoredPrintPrefix && ColoredPrintPrefix.empty())
         {
-            Log(Warning, "bOnlyPrintLogWithColoredPrintPrefix is true but the ColoredPrintPrefix is not set, will not print anything");
-        }   
+            Log(Warning, L"bOnlyPrintLogWithColoredPrintPrefix is true but the ColoredPrintPrefix is not set, will not print anything");
+        }
     }
     else
     {
-        Log(Info, "Printing fortnite log is off");
+        Log(Info, L"Printing fortnite log is off");
     }
 
     GetLauncher()->RegisterConsoleCommand(
         this,
-        "fn",
-        "Forwards the command to fortnite",
+        L"fn",
+        L"Forwards the command to fortnite",
         &NReadFortniteLogActivity::ForwardCommandToFortniteCommand
-        );
+    );
 }
 
 void NReadFortniteLogActivity::Tick(double DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    auto StdOutReadPipeHandle = GetLauncher()->GetFortniteStdOutReadPipeHandle();
+    HANDLE StdOutReadPipeHandle = GetLauncher()->GetFortniteStdOutReadPipeHandle();
+    if (!StdOutReadPipeHandle)
+        return;
+
+    std::wstring Out{};
+    Out.reserve(4096);
+
+    const std::wstring& Prefix = ColoredPrintPrefix;
+    const size_t PrefixLen = Prefix.size();
+
+    auto ResetForNewLine = [&]()
+    {
+        bAtLineStart = true;
+        bDecidingPrefix = true;
+        bLineIsGreen = false;
+        PrefixIndex = 0;
+        LineStartBuffer.clear();
+    };
+
+    auto CommitDecisionAndFlushBuffered = [&](bool isGreen)
+    {
+        bLineIsGreen = isGreen;
+        bDecidingPrefix = false;
+
+        if (!bOnlyPrintLogWithColoredPrintPrefix || bLineIsGreen)
+        {
+            Out += bLineIsGreen ? L"\x1B[32m" : L"\x1B[90m";
+            Out += LineStartBuffer;
+        }
+
+        LineStartBuffer.clear();
+    };
+
+    auto EmitCharIfAllowed = [&](wchar_t ch)
+    {
+        if (!bOnlyPrintLogWithColoredPrintPrefix || bLineIsGreen)
+        {
+            Out.push_back(ch);
+        }
+    };
+
+    auto EndLineIfNeeded = [&]()
+    {
+        if (!bOnlyPrintLogWithColoredPrintPrefix || bLineIsGreen)
+        {
+            Out += L"\x1B[0m";
+        }
+        ResetForNewLine();
+    };
 
     while (true)
     {
         DWORD BytesAvailable = 0;
-        // PeekNamedPipe lets us see how many bytes are in the buffer without blocking
-        BOOL bPeekOk = ::PeekNamedPipe(
-            StdOutReadPipeHandle, // handle to the pipe
-            nullptr,              // no need a local buffer to peek data
-            0,                    // 0 bytes to read
-            nullptr,              // bytes read
-            &BytesAvailable,      // bytes available
-            nullptr               // total bytes left in this message (not needed)
-        );
-
-        if (!bPeekOk)
+        if (!::PeekNamedPipe(StdOutReadPipeHandle, nullptr, 0, nullptr, &BytesAvailable, nullptr))
         {
-            DWORD ErrorCode = GetLastError();
-            
-            Log(Error, "PeekNamedPipe failed with error: {}", ErrorCode);
-            
+            Log(Error, L"PeekNamedPipe failed with error: {}", GetLastError());
             break;
         }
 
-        // If there are no bytes available, we're done for this tick
         if (BytesAvailable == 0)
-        {
             break;
-        }
 
-        // Read only what's currently available (up to some chunk)
-        constexpr DWORD MAX_CHUNK = 4096;  // arbitrary chunk size
-        DWORD BytesToRead = (BytesAvailable < MAX_CHUNK) ? BytesAvailable : MAX_CHUNK;
+        constexpr DWORD MAX_CHUNK = 4096;
+        const DWORD BytesToRead = (BytesAvailable < MAX_CHUNK) ? BytesAvailable : MAX_CHUNK;
 
         char Buffer[MAX_CHUNK];
         DWORD BytesRead = 0;
-        BOOL bReadOk = ::ReadFile(
-            StdOutReadPipeHandle,
-            Buffer,
-            BytesToRead,
-            &BytesRead,
-            nullptr
-        );
-
-        if (!bReadOk || BytesRead == 0)
+        if (!::ReadFile(StdOutReadPipeHandle, Buffer, BytesToRead, &BytesRead, nullptr) || BytesRead == 0)
         {
-            DWORD ErrorCode = GetLastError();
-            
-            Log(Error, "ReadFile failed with error: {}", ErrorCode);
-            
+            Log(Error, L"ReadFile failed with error: {}", GetLastError());
             break;
         }
 
-        std::string ReadString = std::string{Buffer, BytesRead};
-        
-        for (const auto Char : ReadString)
+        Utf8StreamDecoder.Append(Buffer, BytesRead);
+        const std::wstring ReadString = Utf8StreamDecoder.ConsumeAll();
+
+        for (wchar_t ch : ReadString)
         {
-            std::vector<int32> LogTriggeredActionsToRemove{};
-            
-            for (int32 i = 0; i < static_cast<int32>(LogTriggeredActions.size()); i++)
+            // Optional but usually correct for piped text:
+            if (ch == L'\r') continue;
+
+            ProcessTriggeredActions(ch);
+
+            if (!bPrintFortniteLog)
+                continue;
+
+            if (bAtLineStart)
             {
-                auto& LogTriggeredAction = LogTriggeredActions[i];
-                
-                if (Char == LogTriggeredAction.TriggerString[LogTriggeredAction.TriggerStringCharsFound])
-                {
-                    LogTriggeredAction.TriggerStringCharsFound++;
-                }
-                else
-                {
-                    LogTriggeredAction.TriggerStringCharsFound = 0;
-                }
+                bAtLineStart = false;
+                bDecidingPrefix = (PrefixLen > 0);
+                bLineIsGreen = false;
+                PrefixIndex = 0;
+                LineStartBuffer.clear();
 
-                if (LogTriggeredAction.TriggerStringCharsFound >= static_cast<int32>(LogTriggeredAction.TriggerString.size()))
+                // If no prefix (or only-colored with empty prefix), we effectively won’t print lines.
+                if (PrefixLen == 0)
                 {
-                    LogTriggeredAction.TriggerStringCharsFound = 0;
-                    NUniquePtr<NAction> Action = LogTriggeredAction.Action.NewObject(this);
-
-                    if (LogTriggeredAction.bTriggerOnlyOnce)
+                    if (!bOnlyPrintLogWithColoredPrintPrefix)
                     {
-                        LogTriggeredActionsToRemove.push_back(i);
+                        Out += L"\x1B[90m"; // gray line
+                        bDecidingPrefix = false;
                     }
                 }
             }
 
-            for (int32 i = static_cast<int32>(LogTriggeredActionsToRemove.size()) - 1; i >= 0; i--)
+            // If we still need to decide whether this line is colored:
+            if (bDecidingPrefix)
             {
-                LogTriggeredActions[i] = LogTriggeredActions.back();
-                LogTriggeredActions.pop_back();
+                LineStartBuffer.push_back(ch);
+
+                // Newline before decision => not colored
+                if (ch == L'\n')
+                {
+                    CommitDecisionAndFlushBuffered(false);
+                    EndLineIfNeeded();
+                    FlushIfBig(Out);
+                    continue;
+                }
+
+                // Mismatch? decide immediately (this is the key improvement)
+                if (PrefixIndex >= PrefixLen || ch != Prefix[PrefixIndex])
+                {
+                    CommitDecisionAndFlushBuffered(false);
+                    FlushIfBig(Out);
+                    continue;
+                }
+
+                // Matched one more char
+                ++PrefixIndex;
+
+                // Full prefix matched => colored line, flush immediately
+                if (PrefixIndex == PrefixLen)
+                {
+                    CommitDecisionAndFlushBuffered(true);
+                }
+
+                FlushIfBig(Out);
+                continue;
             }
 
-            if (bPrintFortniteLog)
+            // Normal streaming after decision
+            EmitCharIfAllowed(ch);
+
+            if (ch == L'\n')
             {
-                AwaitingPrintString += Char;
+                EndLineIfNeeded();
+            }
+
+            FlushIfBig(Out);
+        }
+    }
+
+    if (!Out.empty())
+    {
+        LogRaw(Out);
+    }
+}
+
+void NReadFortniteLogActivity::ProcessTriggeredActions(wchar_t ch)
+{
+    std::vector<int32> ToRemove{};
+
+    for (int32 i = 0; i < static_cast<int32>(LogTriggeredActions.size()); i++)
+    {
+        auto& LogTriggeredAction = LogTriggeredActions[i];
+
+        const bool bInRange =
+            !LogTriggeredAction.TriggerString.empty() &&
+            LogTriggeredAction.TriggerStringCharsFound < static_cast<uint32>(LogTriggeredAction.TriggerString.size());
+
+        if (bInRange && ch == LogTriggeredAction.TriggerString[LogTriggeredAction.TriggerStringCharsFound])
+        {
+            LogTriggeredAction.TriggerStringCharsFound++;
+        }
+        else
+        {
+            LogTriggeredAction.TriggerStringCharsFound = 0;
+        }
+
+        if (LogTriggeredAction.TriggerStringCharsFound >= static_cast<uint32>(LogTriggeredAction.TriggerString.size()))
+        {
+            LogTriggeredAction.TriggerStringCharsFound = 0;
+            NUniquePtr<NAction> Action = LogTriggeredAction.Action.NewObject(this);
+
+            if (LogTriggeredAction.bTriggerOnlyOnce)
+            {
+                ToRemove.push_back(i);
             }
         }
     }
 
-    if (!bPrintFortniteLog || AwaitingPrintString.empty())
+    for (int32 i = static_cast<int32>(ToRemove.size()) - 1; i >= 0; --i)
     {
-        return;
-    }
-
-    while (true)
-    {
-        auto NewLinePos = AwaitingPrintString.find('\n');
-        
-        if (NewLinePos == std::string::npos)
-        {
-            if (AwaitingPrintString.length() < MaxAwaitingPrintStringLength)
-            {
-                break;
-            }
-            
-            NewLinePos = AwaitingPrintString.length() - 1;
-        }
-
-        NewLinePos++;
-
-        std::string Line = AwaitingPrintString.substr(0, NewLinePos);
-        AwaitingPrintString.erase(0, NewLinePos);
-
-        if (!ColoredPrintPrefix.empty() && Line.contains(ColoredPrintPrefix))
-        {
-            LogRaw("\x1B[32m" + Line + "\x1B[0m");
-        }
-        else if (!bOnlyPrintLogWithColoredPrintPrefix)
-        {
-             LogRaw("\x1B[90m" + Line + "\x1B[0m");
-        }
+        const int32 idx = ToRemove[i];
+        LogTriggeredActions[idx] = LogTriggeredActions.back();
+        LogTriggeredActions.pop_back();
     }
 }
 
 void NReadFortniteLogActivity::ForwardCommandToFortniteCommand(const FCommandArguments& Args)
 {
-    std::string CommandRaw = Args.GetRawString();
+    std::wstring CommandRaw = Args.GetRawString();
     if (CommandRaw.empty())
     {
         return;
     }
 
-    CommandRaw += '\n';
+    CommandRaw += L'\n';
 
     auto PipeHandle = GetLauncher()->GetFortniteStdInWritePipeHandle();
-
     if (!PipeHandle)
     {
-        Log(Error, "ForwardCommandToFortniteCommand: No pipe handle.");
+        Log(Error, L"ForwardCommandToFortniteCommand: No pipe handle.");
         return;
     }
 
+    const std::string CommandBytes = WideToUtf8(CommandRaw);
+
     DWORD BytesWritten = 0;
-    
     if (!WriteFile(
         PipeHandle,
-        CommandRaw.c_str(),
-        static_cast<uint32>(CommandRaw.length()),
+        CommandBytes.data(),
+        static_cast<uint32>(CommandBytes.size()),
         &BytesWritten,
         nullptr
-        ))
+    ))
     {
-        Log(Error, "ForwardCommandToFortniteCommand: WriteFile failed: {}.", GetLastError());
+        Log(Error, L"ForwardCommandToFortniteCommand: WriteFile failed: {}.", GetLastError());
     }
 }

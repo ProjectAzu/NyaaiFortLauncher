@@ -12,5 +12,5 @@ public:
     std::filesystem::path DllPath{};
 
     NPROPERTY(DllThreadDescription)
-    std::string DllThreadDescription{};
+    std::wstring DllThreadDescription{};
 };

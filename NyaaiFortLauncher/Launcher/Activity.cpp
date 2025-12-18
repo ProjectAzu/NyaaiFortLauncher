@@ -6,7 +6,7 @@ void NActivity::OnCreated()
 {
     Super::OnCreated();
 
-    Log(Info, "Hello from activity {}", GetClass()->GetName());
+    Log(Info, L"Hello from activity {}", GetClass()->GetName());
 }
 
 void NActivity::Tick(double DeltaTime)

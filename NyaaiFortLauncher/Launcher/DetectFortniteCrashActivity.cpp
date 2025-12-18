@@ -1,11 +1,11 @@
 #include "DetectFortniteCrashActivity.h"
 
-#include <fstream>
 #include <regex>
+#include <string>
+#include <vector>
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#include "Utils/WindowsInclude.h"
+#include "Utils/TextFileLoader.h" // Utils::LoadTextFileToWStringAlwaysWorks
 
 #include "FortLauncher.h"
 
@@ -41,17 +41,17 @@ void NDetectFortniteCrashActivity::OnCreated()
     {
         return;
     }
-    
-    char* Buffer = nullptr;
+
+    wchar_t* Buffer = nullptr;
     size_t Size = 0;
 
-    if (_dupenv_s(&Buffer, &Size, "LOCALAPPDATA") || !Buffer)
+    if (_wdupenv_s(&Buffer, &Size, L"LOCALAPPDATA") || !Buffer)
     {
         return;
     }
 
     FortniteCrashesFolderPath =
-        std::filesystem::path{Buffer} / "FortniteGame" / "Saved" / "Crashes";
+        std::filesystem::path{ Buffer } / L"FortniteGame" / L"Saved" / L"Crashes";
 
     free(Buffer);
 
@@ -63,7 +63,7 @@ void NDetectFortniteCrashActivity::OnCreated()
 
     for (const auto& Entry : std::filesystem::recursive_directory_iterator(FortniteCrashesFolderPath))
     {
-        if (Entry.is_regular_file() && Entry.path().filename() == "CrashContext.runtime-xml")
+        if (Entry.is_regular_file() && Entry.path().filename().wstring() == L"CrashContext.runtime-xml")
         {
             AlreadyCheckedCrashContextFilePaths.insert(Entry.path());
         }
@@ -82,7 +82,7 @@ void NDetectFortniteCrashActivity::OnDestroyed()
 
     if (CrashDirChangeHandle != INVALID_HANDLE_VALUE)
     {
-        ::FindCloseChangeNotification(CrashDirChangeHandle);   
+        ::FindCloseChangeNotification(CrashDirChangeHandle);
     }
 }
 
@@ -90,42 +90,42 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
 {
     if (FortniteProcessId == 0)
     {
-        return;   
+        return;
     }
-    
+
     if (CrashDirChangeHandle == INVALID_HANDLE_VALUE)
     {
-        return;   
+        return;
     }
 
     const DWORD Result = ::WaitForSingleObject(CrashDirChangeHandle, 0);
     const bool DirectoryChanged = Result == WAIT_OBJECT_0;
     if (DirectoryChanged)
     {
-        ::FindNextChangeNotification(CrashDirChangeHandle);   
+        ::FindNextChangeNotification(CrashDirChangeHandle);
     }
 
     if (!DirectoryChanged && PendingCrashContextFilePaths.empty())
     {
-        return;   
+        return;
     }
 
     std::vector<std::filesystem::path> CrashContextFilePaths{};
-    
+
     if (DirectoryChanged)
     {
         for (const auto& Entry : std::filesystem::recursive_directory_iterator(FortniteCrashesFolderPath))
         {
             const auto& Path = Entry.path();
 
-            if (!Entry.is_regular_file() || Path.filename() != "CrashContext.runtime-xml")
+            if (!Entry.is_regular_file() || Path.filename() != L"CrashContext.runtime-xml")
             {
-                continue;   
+                continue;
             }
 
             if (AlreadyCheckedCrashContextFilePaths.contains(Path))
             {
-                continue;   
+                continue;
             }
 
             if (IsFileInUse(Path))
@@ -137,7 +137,7 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
             CrashContextFilePaths.push_back(Path);
         }
     }
-    
+
     for (auto it = PendingCrashContextFilePaths.begin(); it != PendingCrashContextFilePaths.end();)
     {
         if (IsFileInUse(*it))
@@ -149,22 +149,30 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
         CrashContextFilePaths.push_back(*it);
         it = PendingCrashContextFilePaths.erase(it);
     }
-    
+
     for (const auto& CrashContextFilePath : CrashContextFilePaths)
     {
-        std::ifstream InFileStream(CrashContextFilePath, std::ios::binary);
-        std::string   Xml{std::istreambuf_iterator<char>(InFileStream), {}};
-        std::smatch   M{};
+        std::wstring Xml{};
+        try
+        {
+            Xml = Utils::LoadTextFileToWString(CrashContextFilePath);
+        }
+        catch (...)
+        {
+            AlreadyCheckedCrashContextFilePaths.insert(CrashContextFilePath);
+            continue;
+        }
 
-        if (!std::regex_search(Xml, M,
-                               std::regex(R"(<ProcessId>(\d+)</ProcessId>)")) ||
+        std::wsmatch M{};
+
+        if (!std::regex_search(Xml, M, std::wregex(LR"(<ProcessId>(\d+)</ProcessId>)")) ||
             M.size() < 2)
         {
             AlreadyCheckedCrashContextFilePaths.insert(CrashContextFilePath);
             continue;
         }
 
-        const uint32 CrashProcessId = std::stoul(M[1]);
+        const uint32 CrashProcessId = static_cast<uint32>(std::stoul(M[1].str()));
 
         AlreadyCheckedCrashContextFilePaths.insert(CrashContextFilePath);
 
@@ -173,30 +181,39 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
             continue;
         }
 
-        std::string CrashOffset{};
-        std::string CrashThread{};
-        std::string CrashThreadId{};
+        std::wstring CrashOffset{};
+        std::wstring CrashThread{};
+        std::wstring CrashThreadId{};
 
-        std::vector<std::pair<std::string,std::string>> Frames{};
+        std::vector<std::pair<std::wstring, std::wstring>> Frames{};
 
-        if (std::regex_search(Xml, M, std::regex(R"(<PCallStack>([\s\S]*?)</PCallStack>)")))
+        if (std::regex_search(Xml, M, std::wregex(LR"(<PCallStack>([\s\S]*?)</PCallStack>)")))
         {
-            const std::string Pcs = M[1].str();
+            const std::wstring Pcs = M[1].str();
 
-            std::smatch Top{};
-            if (!std::regex_search(Pcs, Top,
-                                   std::regex(R"(FortniteClient[-_]?Win64[-_]?Shipping\s+0x[0-9A-Fa-f]+\s+\+\s+([0-9A-Fa-f]+))")))
+            std::wsmatch Top{};
+            if (!std::regex_search(
+                    Pcs,
+                    Top,
+                    std::wregex(LR"(FortniteClient[-_]?Win64[-_]?Shipping\s+0x[0-9A-Fa-f]+\s+\+\s+([0-9A-Fa-f]+))")))
             {
-                std::regex_search(Pcs, Top,
-                                  std::regex(R"((\S+)\s+0x[0-9A-Fa-f]+\s+\+\s+([0-9A-Fa-f]+))"));
+                std::regex_search(
+                    Pcs,
+                    Top,
+                    std::wregex(LR"((\S+)\s+0x[0-9A-Fa-f]+\s+\+\s+([0-9A-Fa-f]+))"));
             }
+
+            // Keep original intent but fix capture index for fallback pattern.
             if (Top.size() >= 2)
             {
-                CrashOffset = "0x" + Top[1].str();
+                const std::wstring captured =
+                    (Top.size() >= 3) ? Top[2].str() : Top[1].str();
+
+                CrashOffset = std::wstring(L"0x") + captured;
             }
 
-            std::regex R(R"((\S+)\s+0x([0-9A-Fa-f]+)\s+\+\s+([0-9A-Fa-f]+))");
-            for (std::sregex_iterator it(Pcs.begin(), Pcs.end(), R), end; it != end; ++it)
+            std::wregex R(LR"((\S+)\s+0x([0-9A-Fa-f]+)\s+\+\s+([0-9A-Fa-f]+))");
+            for (std::wsregex_iterator it(Pcs.begin(), Pcs.end(), R), end; it != end; ++it)
             {
                 const auto& m = *it;
                 Frames.emplace_back(m[1].str(), m[3].str());
@@ -206,24 +223,24 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
         if (std::regex_search(
                 Xml,
                 M,
-                std::regex(
-                    R"(<Thread>[\s\S]*?<IsCrashed>true</IsCrashed>[\s\S]*?<ThreadID>(\d+)</ThreadID>[\s\S]*?<ThreadName>(.*?)</ThreadName>[\s\S]*?</Thread>)")))
+                std::wregex(
+                    LR"(<Thread>[\s\S]*?<IsCrashed>true</IsCrashed>[\s\S]*?<ThreadID>(\d+)</ThreadID>[\s\S]*?<ThreadName>(.*?)</ThreadName>[\s\S]*?</Thread>)")))
         {
             CrashThreadId = M[1].str();
             CrashThread   = M[2].str();
         }
 
-        if (CrashOffset.empty())   CrashOffset = "?";
-        if (CrashThread.empty())   CrashThread = "?";
-        if (CrashThreadId.empty()) CrashThreadId = "?";
+        if (CrashOffset.empty())   CrashOffset = L"?";
+        if (CrashThread.empty())   CrashThread = L"?";
+        if (CrashThreadId.empty()) CrashThreadId = L"?";
 
-        Log(Error, "Detected fortnite crash on thread '{}' at address '{}'.", CrashThread, CrashOffset);
-        Log(Error, "Crash info folder: 'file:///{}'", CrashContextFilePath.parent_path().generic_string());
-        
-        Log(Error, "CallStack:");
+        Log(Error, L"Detected fortnite crash on thread '{}' at address '{}'.", CrashThread, CrashOffset);
+        Log(Error, L"Crash info folder: 'file:///{}'", CrashContextFilePath.parent_path().generic_wstring());
+
+        Log(Error, L"CallStack:");
         for (const auto& Frame : Frames)
         {
-            Log(Error, "{}+0x{}", Frame.first, Frame.second);
+            Log(Error, L"{}+0x{}", Frame.first, Frame.second);
         }
 
         // Wait for fortnite to exit naturally so it can save the crash dump
@@ -231,7 +248,7 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
 
         for (const auto& ActionTemplate : OnFortniteCrashActions)
         {
-            NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);   
+            NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);
         }
 
         return;

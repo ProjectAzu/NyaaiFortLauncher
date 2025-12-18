@@ -8,24 +8,24 @@
 #include "Object.h"
 
 // leaves only alphabetic, digits and punctuation
-std::string RemoveUnnecessaryCharsFromString(const std::string& Input);
+std::wstring RemoveUnnecessaryCharsFromString(const std::wstring& Input);
 
 template <typename  T, typename Enable = void>
 struct FPropertySetterFunction
 {
-    static bool Set(T* Property, const std::string& Value)
+    static bool Set(T* Property, const std::wstring& Value)
     {
-        std::stringstream(RemoveUnnecessaryCharsFromString(Value)) >> *Property;
+        std::wstringstream(RemoveUnnecessaryCharsFromString(Value)) >> *Property;
         return true;
     }
 };
 
-bool ParsePropertiesSetData(const std::string& StringToParse, std::vector<FPropertySetData>& OutResult);
+bool ParsePropertiesSetData(const std::wstring& StringToParse, std::vector<FPropertySetData>& OutResult);
 
 template<>
 struct FPropertySetterFunction<std::vector<FPropertySetData>>
 {
-    static bool Set(std::vector<FPropertySetData>* Property, const std::string& Value)
+    static bool Set(std::vector<FPropertySetData>* Property, const std::wstring& Value)
     {
         return ParsePropertiesSetData(Value, *Property);
     }
@@ -35,7 +35,7 @@ struct FPropertySetterFunction<std::vector<FPropertySetData>>
 template<typename T>
 struct FPropertySetterFunction<T, std::enable_if_t<std::is_base_of_v<FStructWithProperties, T>>>
 {
-    static bool Set(FStructWithProperties* Property, const std::string& Value)
+    static bool Set(FStructWithProperties* Property, const std::wstring& Value)
     {
         std::vector<FPropertySetData> PropertiesSetData;
         if (!FPropertySetterFunction<std::vector<FPropertySetData>>::Set(&PropertiesSetData, Value))
@@ -52,12 +52,12 @@ struct FPropertySetterFunction<T, std::enable_if_t<std::is_base_of_v<FStructWith
     }
 };
 
-bool ParseCppStringLiteral(const std::string_view InData, std::string& OutParsedValue);
+bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutParsedValue);
 
 template<>
-struct FPropertySetterFunction<std::string>
+struct FPropertySetterFunction<std::wstring>
 {
-    static bool Set(std::string* Property, const std::string& Value)
+    static bool Set(std::wstring* Property, const std::wstring& Value)
     {
         return ParseCppStringLiteral(Value, *Property);
     }
@@ -66,21 +66,21 @@ struct FPropertySetterFunction<std::string>
 template<>
 struct FPropertySetterFunction<bool>
 {
-    static bool Set(bool* Property, const std::string& Value)
+    static bool Set(bool* Property, const std::wstring& Value)
     {
-        std::string GoodString = RemoveUnnecessaryCharsFromString(Value);
+        std::wstring GoodString = RemoveUnnecessaryCharsFromString(Value);
         
-        if (GoodString == "0")
+        if (GoodString == L"0")
             *Property = false;
-        else if (GoodString == "1")
+        else if (GoodString == L"1")
             *Property = true;
-        else if (GoodString == "false")
+        else if (GoodString == L"false")
             *Property = false;
-        else if (GoodString == "true")
+        else if (GoodString == L"true")
             *Property = true;
         else
         {
-            Log(Error, "Bool property setter failed.");
+            Log(Error, L"Bool property setter failed.");
             return false;
         }
 
@@ -91,11 +91,11 @@ struct FPropertySetterFunction<bool>
 template<>
 struct FPropertySetterFunction<class NClass*>
 {
-    static bool Set(NClass** Property, const std::string& Value)
+    static bool Set(NClass** Property, const std::wstring& Value)
     {
         auto GoodString = RemoveUnnecessaryCharsFromString(Value);
         
-        if (GoodString.empty() || GoodString == "nullptr" || GoodString == "null" || GoodString == "NULL" || GoodString == "0")
+        if (GoodString.empty() || GoodString == L"nullptr" || GoodString == L"null" || GoodString == L"NULL" || GoodString == L"0")
         {
             *Property = nullptr;
             return true;
@@ -105,7 +105,7 @@ struct FPropertySetterFunction<class NClass*>
 
         if (!*Property)
         {
-            Log(Error, "NClass property setter failed, did not find class.");
+            Log(Error, L"NClass property setter failed, did not find class.");
             return false;
         }
 
@@ -116,7 +116,7 @@ struct FPropertySetterFunction<class NClass*>
 template<class T>
 struct FPropertySetterFunction<NSubClassOf<T>>
 {
-    static bool Set(NSubClassOf<T>* Property, const std::string& OutValue)
+    static bool Set(NSubClassOf<T>* Property, const std::wstring& OutValue)
     {
         NClass* Class = nullptr;
         
@@ -129,7 +129,7 @@ struct FPropertySetterFunction<NSubClassOf<T>>
         
         if (Class && !*Property)
         {
-            Log(Error, "NSubClassOf<T> setter failed, class is not a subclass of T.");
+            Log(Error, L"NSubClassOf<T> setter failed, class is not a subclass of T.");
             return false;
         }
 
@@ -137,16 +137,16 @@ struct FPropertySetterFunction<NSubClassOf<T>>
     }
 };
 
-bool ParseStringArray(const std::string& InData, std::vector<std::string>& Result);
+bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Result);
 
 template<class T>
 struct FPropertySetterFunction<std::vector<T>>
 {
-    static bool Set(std::vector<T>* Property, const std::string& Value)
+    static bool Set(std::vector<T>* Property, const std::wstring& Value)
     {
         Property->clear();
         
-        std::vector<std::string> ParsedElements;
+        std::vector<std::wstring> ParsedElements;
         if (!ParseStringArray(Value, ParsedElements))
         {
             return false;
@@ -164,15 +164,15 @@ struct FPropertySetterFunction<std::vector<T>>
     }
 };
 
-bool ConvertStringToCanonicalPath(const std::string& Input, std::filesystem::path& OutResult);
+bool ConvertStringToCanonicalPath(const std::wstring& Input, std::filesystem::path& OutResult);
 
 template<>
 struct FPropertySetterFunction<std::filesystem::path>
 {
-    static bool Set(std::filesystem::path* Property, const std::string& Value)
+    static bool Set(std::filesystem::path* Property, const std::wstring& Value)
     {
-        std::string ParsedString{};
-        if (!FPropertySetterFunction<std::string>::Set(&ParsedString, Value))
+        std::wstring ParsedString{};
+        if (!FPropertySetterFunction<std::wstring>::Set(&ParsedString, Value))
         {
             return false;
         }

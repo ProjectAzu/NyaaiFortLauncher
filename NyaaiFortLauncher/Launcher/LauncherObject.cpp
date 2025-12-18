@@ -28,7 +28,7 @@ class NFortLauncher* NLauncherObject::GetLauncher() const
         }
     }
 
-    Log(Error, "Failed to get launcher from outer chain.");
+    Log(Error, L"Failed to get launcher from outer chain.");
     
     return nullptr;
 }

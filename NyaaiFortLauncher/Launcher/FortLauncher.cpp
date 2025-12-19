@@ -20,7 +20,7 @@ FCommandArguments::FCommandArguments(const std::wstring& RawString) : RawString(
 
     Tokens.clear();
 
-    std::wstring Current;
+    std::wstring Current{};
     bool bIsInQuotes = false;
     bool bShouldEscapeNext = false;
 
@@ -113,7 +113,7 @@ void NFortLauncher::OnCreated()
     Log(Info, L"Launcher starting");
 
     Log(Info, L"Fortnite exe path: {}", FortniteExePath.wstring());
-    if (!exists(FortniteExePath) || !is_regular_file(FortniteExePath) || FortniteExePath.extension() != L".exe")
+    if (!exists(FortniteExePath) || !is_regular_file(FortniteExePath) || FortniteExePath.extension().wstring() != L".exe")
     {
         Log(Error, L"The fortnite exe path is not valid.");
         return;

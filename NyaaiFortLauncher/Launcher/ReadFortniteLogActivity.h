@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Activity.h"
-
 #include "Action.h"
 #include "Utils/Utf8.h"
 
@@ -24,16 +23,27 @@ struct FLogTriggeredAction : FStructWithProperties
 class NReadFortniteLogActivity : public NActivity
 {
     GENERATE_BASE_H(NReadFortniteLogActivity)
-    
+
 public:
     void OnCreated() override;
     void Tick(double DeltaTime) override;
 
 private:
-    void ProcessTriggeredActions(wchar_t ch);
-    
+    void ProcessLogTriggeredActions(wchar_t Char);
+
+    void ReadAndProcessPipe(void* StdOutReadPipeHandle);
+    void HandleDecodedText(const std::wstring& Text);
+
+    void AppendToCurrentLine(wchar_t Ch);
+    void FlushCurrentLine(bool bForce);
+
+    bool ShouldPrintLine(bool bIsGreen) const;
+    bool IsCurrentLineGreen() const;
+
+    std::wstring BuildColoredLine(const std::wstring& Line, bool bIsGreen) const;
+
     void ForwardCommandToFortniteCommand(const FCommandArguments& Args);
-    
+
 public:
     NPROPERTY(LogTriggeredActions)
     std::vector<FLogTriggeredAction> LogTriggeredActions{};
@@ -49,10 +59,6 @@ public:
 
 private:
     FUtf8StreamDecoder Utf8StreamDecoder{};
-    std::wstring LineStartBuffer{};
-
-    bool   bAtLineStart = true;
-    bool   bDecidingPrefix = true;
-    bool   bLineIsGreen = false;
-    size_t PrefixIndex = 0;
+    std::wstring CurrentLine{};
+    std::wstring PendingOutput{};
 };

@@ -2,37 +2,21 @@
 
 #include "FortLauncher.h"
 
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "Utils/WindowsInclude.h"
 
 GENERATE_BASE_CPP(NReadFortniteLogActivity)
-
-static void FlushIfBig(std::wstring& out, size_t threshold = 4096)
-{
-    if (out.size() >= threshold)
-    {
-        LogRaw(out);
-        out.clear();
-    }
-}
 
 void NReadFortniteLogActivity::OnCreated()
 {
     Super::OnCreated();
 
-    if (bPrintFortniteLog)
-    {
-        if (bOnlyPrintLogWithColoredPrintPrefix && ColoredPrintPrefix.empty())
-        {
-            Log(Warning, L"bOnlyPrintLogWithColoredPrintPrefix is true but the ColoredPrintPrefix is not set, will not print anything");
-        }
-    }
-    else
+    if (!bPrintFortniteLog)
     {
         Log(Info, L"Printing fortnite log is off");
+    }
+    else if (bOnlyPrintLogWithColoredPrintPrefix && ColoredPrintPrefix.empty())
+    {
+        Log(Warning, L"bOnlyPrintLogWithColoredPrintPrefix is true but the ColoredPrintPrefix is not set, will not print anything");
     }
 
     GetLauncher()->RegisterConsoleCommand(
@@ -49,163 +33,160 @@ void NReadFortniteLogActivity::Tick(double DeltaTime)
 
     HANDLE StdOutReadPipeHandle = GetLauncher()->GetFortniteStdOutReadPipeHandle();
     if (!StdOutReadPipeHandle)
+    {
         return;
+    }
 
-    std::wstring Out{};
-    Out.reserve(4096);
-
-    const std::wstring& Prefix = ColoredPrintPrefix;
-    const size_t PrefixLen = Prefix.size();
-
-    auto ResetForNewLine = [&]()
+    ReadAndProcessPipe(StdOutReadPipeHandle);
+    
+    if (!PendingOutput.empty())
     {
-        bAtLineStart = true;
-        bDecidingPrefix = true;
-        bLineIsGreen = false;
-        PrefixIndex = 0;
-        LineStartBuffer.clear();
-    };
+        LogRaw(PendingOutput);
+        PendingOutput.clear();
+    }
+}
 
-    auto CommitDecisionAndFlushBuffered = [&](bool isGreen)
-    {
-        bLineIsGreen = isGreen;
-        bDecidingPrefix = false;
-
-        if (!bOnlyPrintLogWithColoredPrintPrefix || bLineIsGreen)
-        {
-            Out += bLineIsGreen ? L"\x1B[32m" : L"\x1B[90m";
-            Out += LineStartBuffer;
-        }
-
-        LineStartBuffer.clear();
-    };
-
-    auto EmitCharIfAllowed = [&](wchar_t ch)
-    {
-        if (!bOnlyPrintLogWithColoredPrintPrefix || bLineIsGreen)
-        {
-            Out.push_back(ch);
-        }
-    };
-
-    auto EndLineIfNeeded = [&]()
-    {
-        if (!bOnlyPrintLogWithColoredPrintPrefix || bLineIsGreen)
-        {
-            Out += L"\x1B[0m";
-        }
-        ResetForNewLine();
-    };
-
+void NReadFortniteLogActivity::ReadAndProcessPipe(void* StdOutReadPipeHandle)
+{
     while (true)
     {
         DWORD BytesAvailable = 0;
         if (!::PeekNamedPipe(StdOutReadPipeHandle, nullptr, 0, nullptr, &BytesAvailable, nullptr))
         {
             Log(Error, L"PeekNamedPipe failed with error: {}", GetLastError());
-            break;
+            return;
         }
 
         if (BytesAvailable == 0)
-            break;
+        {
+            return;
+        }
 
-        constexpr DWORD MAX_CHUNK = 4096;
-        const DWORD BytesToRead = (BytesAvailable < MAX_CHUNK) ? BytesAvailable : MAX_CHUNK;
+        constexpr DWORD MaxChunk = 4096;
+        const DWORD BytesToRead = (BytesAvailable < MaxChunk) ? BytesAvailable : MaxChunk;
 
-        char Buffer[MAX_CHUNK];
+        char Buffer[MaxChunk];
         DWORD BytesRead = 0;
+
         if (!::ReadFile(StdOutReadPipeHandle, Buffer, BytesToRead, &BytesRead, nullptr) || BytesRead == 0)
         {
             Log(Error, L"ReadFile failed with error: {}", GetLastError());
-            break;
+            return;
         }
 
         Utf8StreamDecoder.Append(Buffer, BytesRead);
-        const std::wstring ReadString = Utf8StreamDecoder.ConsumeAll();
 
-        for (wchar_t ch : ReadString)
+        const std::wstring Decoded = Utf8StreamDecoder.ConsumeAll();
+        if (!Decoded.empty())
         {
-            // Optional but usually correct for piped text:
-            if (ch == L'\r') continue;
-
-            ProcessTriggeredActions(ch);
-
-            if (!bPrintFortniteLog)
-                continue;
-
-            if (bAtLineStart)
-            {
-                bAtLineStart = false;
-                bDecidingPrefix = (PrefixLen > 0);
-                bLineIsGreen = false;
-                PrefixIndex = 0;
-                LineStartBuffer.clear();
-
-                // If no prefix (or only-colored with empty prefix), we effectively won’t print lines.
-                if (PrefixLen == 0)
-                {
-                    if (!bOnlyPrintLogWithColoredPrintPrefix)
-                    {
-                        Out += L"\x1B[90m"; // gray line
-                        bDecidingPrefix = false;
-                    }
-                }
-            }
-
-            // If we still need to decide whether this line is colored:
-            if (bDecidingPrefix)
-            {
-                LineStartBuffer.push_back(ch);
-
-                // Newline before decision => not colored
-                if (ch == L'\n')
-                {
-                    CommitDecisionAndFlushBuffered(false);
-                    EndLineIfNeeded();
-                    FlushIfBig(Out);
-                    continue;
-                }
-
-                // Mismatch? decide immediately (this is the key improvement)
-                if (PrefixIndex >= PrefixLen || ch != Prefix[PrefixIndex])
-                {
-                    CommitDecisionAndFlushBuffered(false);
-                    FlushIfBig(Out);
-                    continue;
-                }
-
-                // Matched one more char
-                ++PrefixIndex;
-
-                // Full prefix matched => colored line, flush immediately
-                if (PrefixIndex == PrefixLen)
-                {
-                    CommitDecisionAndFlushBuffered(true);
-                }
-
-                FlushIfBig(Out);
-                continue;
-            }
-
-            // Normal streaming after decision
-            EmitCharIfAllowed(ch);
-
-            if (ch == L'\n')
-            {
-                EndLineIfNeeded();
-            }
-
-            FlushIfBig(Out);
+            HandleDecodedText(Decoded);
         }
-    }
-
-    if (!Out.empty())
-    {
-        LogRaw(Out);
     }
 }
 
-void NReadFortniteLogActivity::ProcessTriggeredActions(wchar_t ch)
+void NReadFortniteLogActivity::HandleDecodedText(const std::wstring& Text)
+{
+    for (wchar_t Ch : Text)
+    {
+        if (Ch == L'\r')
+        {
+            continue;
+        }
+
+        ProcessLogTriggeredActions(Ch);
+
+        if (!bPrintFortniteLog)
+        {
+            continue;
+        }
+
+        AppendToCurrentLine(Ch);
+    }
+}
+
+void NReadFortniteLogActivity::AppendToCurrentLine(wchar_t Ch)
+{
+    CurrentLine.push_back(Ch);
+
+    static constexpr uint32 MaxLineLength = 3000;
+
+    if (Ch == L'\n' || CurrentLine.size() >= MaxLineLength)
+    {
+        FlushCurrentLine(true);
+    }
+}
+
+void NReadFortniteLogActivity::FlushCurrentLine(bool bForce)
+{
+    if (CurrentLine.empty())
+    {
+        return;
+    }
+
+    if (!bForce && CurrentLine.back() != L'\n')
+    {
+        return;
+    }
+
+    const bool bIsGreen = IsCurrentLineGreen();
+
+    if (ShouldPrintLine(bIsGreen))
+    {
+        PendingOutput += BuildColoredLine(CurrentLine, bIsGreen);
+    }
+
+    CurrentLine.clear();
+
+    static constexpr size_t MaxPendingOutputLength = 32 * 1024;
+    if (PendingOutput.size() >= MaxPendingOutputLength)
+    {
+        LogRaw(PendingOutput);
+        PendingOutput.clear();
+    }
+}
+
+bool NReadFortniteLogActivity::IsCurrentLineGreen() const
+{
+    if (ColoredPrintPrefix.empty())
+    {
+        return false;
+    }
+
+    if (CurrentLine.size() < ColoredPrintPrefix.size())
+    {
+        return false;
+    }
+
+    return CurrentLine.starts_with(ColoredPrintPrefix);
+}
+
+bool NReadFortniteLogActivity::ShouldPrintLine(bool bIsGreen) const
+{
+    if (!bOnlyPrintLogWithColoredPrintPrefix)
+    {
+        return true;
+    }
+
+    if (ColoredPrintPrefix.empty())
+    {
+        return false;
+    }
+
+    return bIsGreen;
+}
+
+std::wstring NReadFortniteLogActivity::BuildColoredLine(const std::wstring& Line, bool bIsGreen) const
+{
+    const wchar_t* Color = bIsGreen ? L"\x1B[32m" : L"\x1B[90m";
+    std::wstring Out;
+    Out.reserve(Line.size() + 16);
+    Out += Color;
+    Out += Line;
+    Out += L"\x1B[0m";
+    return Out;
+}
+
+void NReadFortniteLogActivity::ProcessLogTriggeredActions(wchar_t Char)
 {
     std::vector<int32> ToRemove{};
 
@@ -217,7 +198,7 @@ void NReadFortniteLogActivity::ProcessTriggeredActions(wchar_t ch)
             !LogTriggeredAction.TriggerString.empty() &&
             LogTriggeredAction.TriggerStringCharsFound < static_cast<uint32>(LogTriggeredAction.TriggerString.size());
 
-        if (bInRange && ch == LogTriggeredAction.TriggerString[LogTriggeredAction.TriggerStringCharsFound])
+        if (bInRange && Char == LogTriggeredAction.TriggerString[LogTriggeredAction.TriggerStringCharsFound])
         {
             LogTriggeredAction.TriggerStringCharsFound++;
         }
@@ -229,6 +210,7 @@ void NReadFortniteLogActivity::ProcessTriggeredActions(wchar_t ch)
         if (LogTriggeredAction.TriggerStringCharsFound >= static_cast<uint32>(LogTriggeredAction.TriggerString.size()))
         {
             LogTriggeredAction.TriggerStringCharsFound = 0;
+
             NUniquePtr<NAction> Action = LogTriggeredAction.Action.NewObject(this);
 
             if (LogTriggeredAction.bTriggerOnlyOnce)
@@ -240,8 +222,8 @@ void NReadFortniteLogActivity::ProcessTriggeredActions(wchar_t ch)
 
     for (int32 i = static_cast<int32>(ToRemove.size()) - 1; i >= 0; --i)
     {
-        const int32 idx = ToRemove[i];
-        LogTriggeredActions[idx] = LogTriggeredActions.back();
+        const int32 Idx = ToRemove[i];
+        LogTriggeredActions[Idx] = LogTriggeredActions.back();
         LogTriggeredActions.pop_back();
     }
 }
@@ -256,7 +238,7 @@ void NReadFortniteLogActivity::ForwardCommandToFortniteCommand(const FCommandArg
 
     CommandRaw += L'\n';
 
-    auto PipeHandle = GetLauncher()->GetFortniteStdInWritePipeHandle();
+    HANDLE PipeHandle = GetLauncher()->GetFortniteStdInWritePipeHandle();
     if (!PipeHandle)
     {
         Log(Error, L"ForwardCommandToFortniteCommand: No pipe handle.");
@@ -266,13 +248,12 @@ void NReadFortniteLogActivity::ForwardCommandToFortniteCommand(const FCommandArg
     const std::string CommandBytes = WideToUtf8(CommandRaw);
 
     DWORD BytesWritten = 0;
-    if (!WriteFile(
+    if (!::WriteFile(
         PipeHandle,
         CommandBytes.data(),
         static_cast<uint32>(CommandBytes.size()),
         &BytesWritten,
-        nullptr
-    ))
+        nullptr))
     {
         Log(Error, L"ForwardCommandToFortniteCommand: WriteFile failed: {}.", GetLastError());
     }

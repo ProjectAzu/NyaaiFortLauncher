@@ -95,7 +95,7 @@ private:
     void ExitCommand(const FCommandArguments& Args);
     void ExecuteActionCommand(const FCommandArguments& Args);
 
-    void KillAllChildProcesses();
+    static void KillAllChildProcesses();
 
 public:
     NPROPERTY(FortniteExePath)

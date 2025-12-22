@@ -34,17 +34,15 @@ namespace
 
 	std::mutex                 GCommandMutex;
 	std::queue<std::wstring>   GPendingCommands;
+	
+	std::mutex GPendingPrintMutex{};
+	std::wstring GPendingPrint{};
+	std::jthread GPrintingThread{};
 
 	std::jthread               GInputThread;
 	std::atomic<bool>          bInitialized = false;
 
 	constexpr char Prompt[] = "> ";
-
-	void EnqueueCommand(std::wstring&& Command)
-	{
-		std::lock_guard Lock(GCommandMutex);
-		GPendingCommands.push(std::move(Command));
-	}
 
 	void InputWorker(std::stop_token StopToken)
 	{
@@ -75,7 +73,41 @@ namespace
 			// Add to replxx history (Up/Down arrow navigation).
 			GReplxx->history_add(LineUtf8);
 
-			EnqueueCommand(Utf8ToWide(LineUtf8));
+			EnqueueConsoleCommand(Utf8ToWide(LineUtf8));
+		}
+	}
+	
+	void FlushPendingPrint()
+	{
+		std::scoped_lock Lock{GPendingPrintMutex};
+		
+		if (GPendingPrint.empty())
+		{
+			return;
+		}
+			
+		if (GReplxx)
+		{
+			const std::string Utf8 = WideToUtf8(GPendingPrint);
+			GReplxx->print("%s", Utf8.c_str());
+		}
+		else
+		{
+			// Fallback if logging is used before InitializeLogging().
+			std::wcout << GPendingPrint;	
+		}
+			
+		GPendingPrint.clear();
+	}
+	
+	// this logging lib goes to shit when you print too frequently and a different lib doesnt exist
+	void PrintingWorker(std::stop_token StopToken)
+	{
+		while (!StopToken.stop_requested())
+		{
+			FlushPendingPrint();
+			
+			Sleep(25);
 		}
 	}
 }
@@ -111,10 +143,13 @@ void InitializeLogging()
 
 	// Start input thread (reads user commands continuously).
 	GInputThread = std::jthread(InputWorker);
+	GPrintingThread = std::jthread(PrintingWorker);
 }
 
 void CleanupLogging()
 {
+	FlushPendingPrint();
+	
 	if (!bInitialized.exchange(false))
 	{
 		return;
@@ -133,6 +168,12 @@ void CleanupLogging()
 
 		GInputThread.join();
 	}
+	
+	if (GPrintingThread.joinable())
+	{
+		GPrintingThread.request_stop();
+		GPrintingThread.join();
+	}
 
 	GReplxx.reset();
 }
@@ -147,13 +188,18 @@ void LogImplementation(ELogLevel Level, const std::wstring& Msg)
 	LogRaw(Decorated);
 }
 
+void EnqueueConsoleCommand(const std::wstring& Command)
+{
+	std::scoped_lock Lock(GCommandMutex);
+	GPendingCommands.push(Command);
+}
+
 void LogRaw(const std::wstring& Msg)
 {
-	// IMPORTANT: print through replxx so it can keep the current input line at the bottom.
-	if (GReplxx)
+	if (bInitialized)
 	{
-		const std::string Utf8 = WideToUtf8(Msg);
-		GReplxx->print("%s", Utf8.c_str());
+		std::scoped_lock Lock{GPendingPrintMutex};
+		GPendingPrint += Msg;
 		return;
 	}
 

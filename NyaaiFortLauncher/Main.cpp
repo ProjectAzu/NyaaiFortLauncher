@@ -69,10 +69,10 @@ static void StartLauncher(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
     NUniquePtr<NFortLauncher> FortLauncher = LauncherClass->NewObject<NFortLauncher>(
         nullptr, LauncherPropertySetData
     );
+    
+    FortLauncher = nullptr;
 
     curl_global_cleanup();
-
-    FortLauncher = nullptr;
 }
 
 int wmain(int32 ArgsNum, wchar_t* ArgsArrayPtr[])

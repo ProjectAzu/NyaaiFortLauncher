@@ -47,6 +47,8 @@ void LogRaw(const std::wstring& Message);
 
 void LogImplementation(ELogLevel Level, const std::wstring& Message);
 
+void EnqueueConsoleCommand(const std::wstring& Command);
+
 template<typename... Args>
 inline void Log(ELogLevel Level, const wchar_t* Format, Args&&... Arguments)
 {

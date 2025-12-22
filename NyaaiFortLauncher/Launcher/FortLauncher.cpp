@@ -435,12 +435,12 @@ void NFortLauncher::HelpCommand(const FCommandArguments& Args)
 
 void NFortLauncher::RestartCommand(const FCommandArguments& Args)
 {
-    NRequestRelaunchAction::StaticClass()->NewObject(this);
+    bWantsToRelaunch = true;
 }
 
 void NFortLauncher::ExitCommand(const FCommandArguments& Args)
 {
-    NRequestExitAction::StaticClass()->NewObject(this);
+    bWantsToExit = true;
 }
 
 void NFortLauncher::ExecuteActionCommand(const FCommandArguments& Args)

@@ -45,7 +45,6 @@ class NFortLauncher : public NLauncherObject
     
 public:
     void OnCreated() override;
-    void OnDestroyed() override;
 
     inline void* GetFortniteProcessHandle() const { return FortniteProcessHandle; }
     inline void* GetFortniteStdOutReadPipeHandle() const { return FortniteStdOutReadPipeHandle; }
@@ -109,6 +108,9 @@ public:
 
     NPROPERTY(PostFortniteLaunchActions)
     std::vector<FObjectInitializeTemplate<NAction>> PostFortniteLaunchActions{};
+    
+    NPROPERTY(PostFortniteExitActions)
+    std::vector<FObjectInitializeTemplate<NAction>> PostFortniteExitActions{};
 
     NPROPERTY(Activities)
     std::vector<FObjectInitializeTemplate<NActivity>> Activities{};

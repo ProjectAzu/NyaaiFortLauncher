@@ -120,34 +120,32 @@ void NFortLauncher::OnCreated()
     }
 
     Log(Info, L"Fortnite launch arguments: {}", FortniteLaunchArguments);
+    
+    
+    bool bIsFirstLaunch = true;
 
-    if (!RunLauncher())
+    while ((bIsFirstLaunch || bWantsToRelaunch) && !bWantsToExit)
     {
-        Log(Error, L"Failed to run launcher, exiting.");
-        return;
-    }
-
-    while (bWantsToRelaunch && !bWantsToExit)
-    {
+        if (bIsFirstLaunch)
+        {
+            Log(Info, L"Launching");
+        }
+        else
+        {
+            Log(Info, L"Relaunching");
+        }
+        
+        bIsFirstLaunch = false;
         bWantsToRelaunch = false;
-
-        Log(Info, L"Relaunching");
-
-        DoCleanup();
-
+        
         if (!RunLauncher())
         {
-            Log(Error, L"Failed to relaunch, exiting.");
-            return;
+            Log(Error, L"Failed to run launcher, exiting.");
+            bWantsToExit = true;
         }
+        
+        DoCleanup();
     }
-}
-
-void NFortLauncher::OnDestroyed()
-{
-    Super::OnDestroyed();
-
-    DoCleanup();
 }
 
 void NFortLauncher::RequestRelaunch()
@@ -229,13 +227,19 @@ bool NFortLauncher::RunLauncher()
 
         if (bWantsToRelaunch || bWantsToExit)
         {
-            return true;
+            break;
         }
 
         if (WaitForSingleObject(FortniteProcessHandle, 50) != WAIT_TIMEOUT)
         {
             break;
         }
+    }
+    
+    Log(Info, L"Running fortnite exit actions");
+    for (const auto& ActionTemplate : PostFortniteExitActions)
+    {
+        NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);
     }
 
     return true;
@@ -435,12 +439,12 @@ void NFortLauncher::HelpCommand(const FCommandArguments& Args)
 
 void NFortLauncher::RestartCommand(const FCommandArguments& Args)
 {
-    bWantsToRelaunch = true;
+    RequestRelaunch();
 }
 
 void NFortLauncher::ExitCommand(const FCommandArguments& Args)
 {
-    bWantsToExit = true;
+    RequestExit();
 }
 
 void NFortLauncher::ExecuteActionCommand(const FCommandArguments& Args)

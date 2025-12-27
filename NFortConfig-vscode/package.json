@@ -1,0 +1,43 @@
+{
+  "name": "nfortconfig",
+  "displayName": "NFortConfig",
+  "description": "Syntax highlighting, formatting and diagnostics for NFortConfig (.nfort) files.",
+  "version": "0.0.2",
+  "publisher": "local",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Programming Languages", "Formatters"],
+  "activationEvents": ["onLanguage:nfortconfig"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "nfortconfig",
+        "aliases": ["NFortConfig", "nfortconfig"],
+        "extensions": [".nfort"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "nfortconfig",
+        "scopeName": "source.nfortconfig",
+        "path": "./syntaxes/nfortconfig.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "nfortconfig.formatDocument",
+        "title": "NFortConfig: Format Document"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p ."
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.4.0"
+  }
+}

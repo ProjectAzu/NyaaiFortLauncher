@@ -233,88 +233,104 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
 {
     OutParsedValue.clear();
 
-    // 1. Find the first double quote
-    const size_t StartPos = InData.find('\"');
-    if (StartPos == std::wstring_view::npos)
+    auto SkipWhitespace = [&](size_t& i)
+    {
+        while (i < InData.size() && std::iswspace(InData[i]))
+            ++i;
+    };
+
+    // Find the first quote
+    size_t i = InData.find(L'\"');
+    if (i == std::wstring_view::npos)
     {
         Log(Error, L"No opening '\"' found in input.");
         return false;
     }
 
-    // We will parse from the character immediately after the opening quote
-    size_t CurrentIndex = StartPos + 1;
-
-    while (CurrentIndex < InData.size())
+    // Parse one or more adjacent string literals and concatenate them.
+    while (true)
     {
-        const wchar_t CurrentChar = InData[CurrentIndex];
+        SkipWhitespace(i);
 
-        // 2. Check if this is the closing quote
-        if (CurrentChar == L'\"')
+        if (i >= InData.size() || InData[i] != L'\"')
         {
-            // Found the matching quote; done
-            // We do not consume this quote in the output
-            ++CurrentIndex;
-            return true; // successfully parsed
+            // We parsed at least one literal (first one is required); stop joining.
+            return !OutParsedValue.empty();
         }
 
-        // 3. If it's an escape character
-        if (CurrentChar == L'\\')
+        // Consume opening quote
+        ++i;
+
+        bool escape = false;
+        while (i < InData.size())
         {
-            // Look ahead to see what is escaped
-            if (CurrentIndex + 1 >= InData.size())
+            wchar_t c = InData[i];
+
+            if (escape)
             {
-                // No next character => malformed escape at end
-                Log(Error, L"Unexpected end of input after '\\'.");
-                return false;
+                // Handle escapes after backslash
+                switch (c)
+                {
+                case L'\\': OutParsedValue.push_back(L'\\'); break;
+                case L'\"': OutParsedValue.push_back(L'\"'); break;
+                case L'n':  OutParsedValue.push_back(L'\n'); break;
+                case L'r':  OutParsedValue.push_back(L'\r'); break;
+                case L't':  OutParsedValue.push_back(L'\t'); break;
+                case L'b':  OutParsedValue.push_back(L'\b'); break;
+                case L'f':  OutParsedValue.push_back(L'\f'); break;
+                case L'v':  OutParsedValue.push_back(L'\v'); break;
+                default:
+                    Log(Warning, L"Unknown escape sequence '\\{}'. Storing as literal.", c);
+                    OutParsedValue.push_back(c);
+                    break;
+                }
+
+                escape = false;
+                ++i;
+                continue;
             }
 
-            const wchar_t NextChar = InData[CurrentIndex + 1];
-            switch (NextChar)
+            if (c == L'\\')
             {
-            case '\\':
-                OutParsedValue.push_back(L'\\');
-                break;
-            case '\"':
-                OutParsedValue.push_back(L'\"');
-                break;
-            case 'n':
-                OutParsedValue.push_back(L'\n');
-                break;
-            case 'r':
-                OutParsedValue.push_back(L'\r');
-                break;
-            case 't':
-                OutParsedValue.push_back(L'\t');
-                break;
-            case 'b':
-                OutParsedValue.push_back(L'\b');
-                break;
-            case 'f':
-                OutParsedValue.push_back(L'\f');
-                break;
-            case 'v':
-                OutParsedValue.push_back(L'\v');
-                break;
-            default:
-                // Unknown escape => we can choose to log a warning or handle it
-                // For now, let's just add the character as-is:
-                Log(Warning, L"Unknown escape sequence '\\{}'. Storing as literal.", NextChar);
-                OutParsedValue.push_back(NextChar);
+                escape = true;
+                ++i;
+                continue;
+            }
+
+            if (c == L'\"')
+            {
+                // End of this literal
+                ++i;
                 break;
             }
-            CurrentIndex += 2; // Skip the backslash and the escaped character
+
+            OutParsedValue.push_back(c);
+            ++i;
         }
-        else
+
+        if (escape)
         {
-            // Normal character
-            OutParsedValue.push_back(CurrentChar);
-            ++CurrentIndex;
+            Log(Error, L"Unexpected end of input after '\\'.");
+            return false;
         }
+
+        if (i > InData.size())
+        {
+            // defensive; normally unreachable
+            Log(Error, L"Unexpected parsing state.");
+            return false;
+        }
+
+        // If we ended because we ran out of input without seeing a closing quote:
+        if (i == InData.size() && (InData.size() == 0 || InData[InData.size() - 1] != L'\"'))
+        {
+            Log(Error, L"No matching closing '\"' found for string literal.");
+            return false;
+        }
+
+        // Loop again: if next token is another quote (after whitespace), we'll append it.
+        // Otherwise we return at top of loop.
     }
-
-    // We reached the end of the string without finding a closing quote
-    Log(Error, L"No matching closing '\"' found for string literal starting at position {}.", StartPos);
-    return false;
 }
 
 #include "Utils/WindowsInclude.h"

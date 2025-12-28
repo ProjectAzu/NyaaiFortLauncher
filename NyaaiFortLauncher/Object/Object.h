@@ -50,7 +50,7 @@ public:
         std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*FInfoOfStructsWithPropertiesUsedInTypeGetter)(),
         std::wstring(*ValueToStringConverter)(const void* Value));
 
-    inline std::wstring GetName() const { return Name; }
+    const wchar_t* GetName() const { return Name; }
     std::wstring GetTypeName() const { return TypeNameGetter(); }
 
     void* GetNativePropertyPtr(void* Object) const

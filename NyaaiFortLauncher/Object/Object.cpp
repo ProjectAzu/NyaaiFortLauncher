@@ -108,7 +108,7 @@ FProperty::FProperty(const std::wstring& Name, struct FStructWithProperties* Own
     OwningObject->Properties.push_back(this);
 }
 
-NObject* NClass::NewObject(NObject* Outer, const std::vector<FPropertySetData>& DefaultValueOverrides, bool bDeferConstruction) const
+NObject* NClass::NewObjectRaw(NObject* Outer, const std::vector<FPropertySetData>& DefaultValueOverrides, bool bDeferConstruction) const
 {
     NObject* NewObject = NewObjectFactory();
 

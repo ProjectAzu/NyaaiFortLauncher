@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include <utility>
 
 #include "Utils/Log.h"
 #include "IntegerTypes.h"
@@ -64,85 +63,45 @@ private:
 
 struct FPropertySetData;
 
-class NClass
+class NObject
 {
 public:
-    NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObjectFactory)());
-
-    NClass(const NClass&) = delete;
-    NClass&operator=(const NClass&) = delete;
-    NClass(NClass&& Other) = delete;
-    NClass&operator=(NClass&& Other) = delete;
+    NObject() = default;
     
-    inline std::wstring GetName() const { return Name; }
-    inline uint16 GetId() const { return Id; }
-    inline NClass* GetSuper() const { return SuperClass; }
-
-    bool IsSubclassOf(const NClass* Other) const;
+    NObject(const NObject&) = delete;
+    NObject&operator=(const NObject&) = delete;
+    NObject(NObject&& Other) = delete;
+    NObject&operator=(NObject&& Other) = delete;
     
-    NObject* NewObject(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const;
-    template<class T> inline T* NewObject(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
-    {
-        return IsSubclassOf(T::StaticClass()) ? reinterpret_cast<T*>(NewObject(Outer, DefaultValueOverrides, bDeferConstruction)) : nullptr;
-    }
+    virtual ~NObject() = default;
 
-    static NClass* GetClassById(uint16 Id);
-    static NClass* GetClassByName(const std::wstring& Name);
-    std::vector<NClass*> GetAllDerivedClasses() const;
+    typedef NObject ThisClass;
+
+    void FinishConstruction();
+
+    void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
+
+    static NClass* StaticClass();
+    virtual NClass* GetClass() const;
+
+    inline NObject* GetOuter() const { return OuterPrivate; }
+
+    void Destroy();
+
+    // The first function called on the object, right after it is created
+    virtual void OnCreated();
+    
+    virtual void OnDestroyed();
 
 private:
-    std::wstring Name;
-    uint16 Id = 0;
-    NClass* SuperClass;
-    NObject*(*NewObjectFactory)();
+    friend class FProperty;
+    std::vector<FProperty*> Properties{};
+
+    friend class NClass;
+    NObject* OuterPrivate = nullptr;
+
+    bool bHasFinishedConstruction = false;
 };
-
-template<class NObjectType>
-class NSubClassOf
-{
-public:
-    inline NSubClassOf(NClass* Class)
-    {
-        if(Class && Class->IsSubclassOf(NObjectType::StaticClass()))
-        {
-            ClassPrivate = Class;
-        }
-    }
-	
-    NSubClassOf() : NSubClassOf(nullptr) {}
-
-    inline NSubClassOf(std::nullptr_t) {}
-
-    inline NSubClassOf(const NSubClassOf<NObjectType>& Other) : ClassPrivate(Other.ClassPrivate)
-    {
-    }
-
-    template<class T>
-    inline NSubClassOf(const NSubClassOf<T>& Other) : NSubClassOf(Other.Get())
-    {
-    }
-
-    inline NClass* Get() const { return ClassPrivate; }
-
-    inline NClass* operator->() const
-    {
-        return ClassPrivate;
-    }
-    
-    operator bool() const noexcept
-    {
-        return ClassPrivate != nullptr;
-    }
-
-    operator NClass*() const noexcept
-    {
-        return ClassPrivate;
-    }
-	
-private:
-    NClass* ClassPrivate = nullptr;
-};
-
 
 template <class T>
 class NUniquePtr
@@ -216,44 +175,102 @@ private:
     NObject* Object;
 };
 
-class NObject
+class NClass
 {
 public:
-    NObject() = default;
+    NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObjectFactory)());
+
+    NClass(const NClass&) = delete;
+    NClass&operator=(const NClass&) = delete;
+    NClass(NClass&& Other) = delete;
+    NClass&operator=(NClass&& Other) = delete;
     
-    NObject(const NObject&) = delete;
-    NObject&operator=(const NObject&) = delete;
-    NObject(NObject&& Other) = delete;
-    NObject&operator=(NObject&& Other) = delete;
+    inline std::wstring GetName() const { return Name; }
+    inline uint16 GetId() const { return Id; }
+    inline NClass* GetSuper() const { return SuperClass; }
+
+    bool IsSubclassOf(const NClass* Other) const;
     
-    virtual ~NObject() = default;
-
-    typedef NObject ThisClass;
-
-    void FinishConstruction();
-
-    void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
-
-    static NClass* StaticClass();
-    virtual NClass* GetClass() const;
-
-    inline NObject* GetOuter() const { return OuterPrivate; }
-
-    void Destroy();
-
-    // The first function called on the object, right after it is created
-    virtual void OnCreated();
+    NObject* NewObjectRaw(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const;
     
-    virtual void OnDestroyed();
+    template<class T>
+    T* NewObjectRaw(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    {
+        if (!IsSubclassOf(T::StaticClass()))
+        {
+            Log(Error, L"NewObject bad return type. {} is not a subclass of {}.", GetName(), T::StaticClass()->GetName());
+            return nullptr;
+        }
+        
+        return reinterpret_cast<T*>(NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction));
+    }
+    
+    NUniquePtr<NObject> NewObject(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    {
+        return NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction);
+    }
+    
+    template<class T>
+    NUniquePtr<T> NewObject(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    {
+        return NewObjectRaw<T>(Outer, DefaultValueOverrides, bDeferConstruction);
+    }
+
+    static NClass* GetClassById(uint16 Id);
+    static NClass* GetClassByName(const std::wstring& Name);
+    std::vector<NClass*> GetAllDerivedClasses() const;
 
 private:
-    friend class FProperty;
-    std::vector<FProperty*> Properties{};
+    std::wstring Name;
+    uint16 Id = 0;
+    NClass* SuperClass;
+    NObject*(*NewObjectFactory)();
+};
 
-    friend class NClass;
-    NObject* OuterPrivate = nullptr;
+template<class NObjectType>
+class NSubClassOf
+{
+public:
+    inline NSubClassOf(NClass* Class)
+    {
+        if(Class && Class->IsSubclassOf(NObjectType::StaticClass()))
+        {
+            ClassPrivate = Class;
+        }
+    }
+	
+    NSubClassOf() : NSubClassOf(nullptr) {}
 
-    bool bHasFinishedConstruction = false;
+    inline NSubClassOf(std::nullptr_t) {}
+
+    inline NSubClassOf(const NSubClassOf<NObjectType>& Other) : ClassPrivate(Other.ClassPrivate)
+    {
+    }
+
+    template<class T>
+    inline NSubClassOf(const NSubClassOf<T>& Other) : NSubClassOf(Other.Get())
+    {
+    }
+
+    inline NClass* Get() const { return ClassPrivate; }
+
+    inline NClass* operator->() const
+    {
+        return ClassPrivate;
+    }
+    
+    operator bool() const noexcept
+    {
+        return ClassPrivate != nullptr;
+    }
+
+    operator NClass*() const noexcept
+    {
+        return ClassPrivate;
+    }
+	
+private:
+    NClass* ClassPrivate = nullptr;
 };
 
 template<class T> inline T* Cast(NObject* Object)

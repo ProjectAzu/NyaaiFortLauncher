@@ -13,7 +13,7 @@ struct TObjectInitializeTemplate : FStructWithProperties
     {
     }
     
-    T* NewObject(NObject* Outer = nullptr, bool bDeferConstruction = false) const
+    T* NewObjectRaw(NObject* Outer = nullptr, bool bDeferConstruction = false) const
     {
         if (!Class)
         {
@@ -21,7 +21,12 @@ struct TObjectInitializeTemplate : FStructWithProperties
             return nullptr;
         }
         
-        return reinterpret_cast<T*>(Class->NewObject(Outer, DefaultValueOverrides, bDeferConstruction));
+        return reinterpret_cast<T*>(Class->NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction));
+    }
+    
+    NUniquePtr<T> NewObject(NObject* Outer = nullptr, bool bDeferConstruction = false) const
+    {
+        return NewObjectRaw(Outer, bDeferConstruction);
     }
     
     NPROPERTY(Class)

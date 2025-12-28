@@ -89,6 +89,7 @@ private:
 
 #define STRUCT_WITH_PROPERTIES_SIMPLE_NAME_GETTER(Name) static std::wstring GetName() { return L#Name; }
 
+// all structs with properties should have a no arg constructor for the sample object and should implement GetName
 struct FStructWithProperties
 {
     void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);

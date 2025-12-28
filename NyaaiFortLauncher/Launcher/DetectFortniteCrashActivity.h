@@ -4,6 +4,8 @@
 
 #include <unordered_set>
 
+#include "Object/ObjectInitializeTemplate.h"
+
 class NDetectFortniteCrashActivity : public NActivity
 {
     GENERATE_BASE_H(NDetectFortniteCrashActivity)

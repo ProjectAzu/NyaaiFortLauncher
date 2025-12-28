@@ -2,6 +2,7 @@
 
 #include "Activity.h"
 #include "Action.h"
+#include "Object/ObjectInitializeTemplate.h"
 #include "Utils/Utf8.h"
 
 struct FCommandArguments;

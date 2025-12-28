@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <unordered_map>
 
+#include "PropertySetData.h"
+
 static std::vector<NClass*>* AllClassesSortedByHierarchyAndName{};
 static std::unordered_map<std::wstring, NClass*>* AllClassesByByName{};
 

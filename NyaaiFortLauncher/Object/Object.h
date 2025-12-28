@@ -261,41 +261,4 @@ template<class T> inline T* Cast(NObject* Object)
     return Object ? (Object->GetClass()->IsSubclassOf(T::StaticClass()) ? reinterpret_cast<T*>(Object) : nullptr) : nullptr;
 }
 
-
 #include "PropertySetters.h"
-
-struct FPropertySetData
-{
-    std::wstring PropertyName{};
-    std::wstring SetValue;
-};
-
-template<class T>
-struct FObjectInitializeTemplate : FStructWithProperties
-{
-    FObjectInitializeTemplate() = default;
-
-    template<class Other>
-    FObjectInitializeTemplate(const FObjectInitializeTemplate<Other>& OtherTemplate)
-        : Class(OtherTemplate.Class), DefaultValueOverrides(OtherTemplate.DefaultValueOverrides)
-    {
-        
-    }
-    
-    T* NewObject(NObject* Outer = nullptr, bool bDeferConstruction = false) const
-    {
-        if (!Class)
-        {
-            Log(Error, L"Cannot initialize template, no class.");
-            return nullptr;
-        }
-        
-        return reinterpret_cast<T*>(Class->NewObject(Outer, DefaultValueOverrides, bDeferConstruction));
-    }
-    
-    NPROPERTY(Class)
-    NSubClassOf<T> Class = T::StaticClass();
-
-    NPROPERTY(DefaultValueOverrides)
-    std::vector<FPropertySetData> DefaultValueOverrides{};
-};

@@ -181,6 +181,7 @@
     <ClInclude Include="Launcher\WaitForBackendToRespondAction.h" />
     <ClInclude Include="Object\IntegerTypes.h" />
     <ClInclude Include="Object\Object.h" />
+    <ClInclude Include="Object\PropertySetData.h" />
     <ClInclude Include="Object\PropertySetters.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils\Log.h" />
@@ -193,6 +194,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\NyaaiFortLauncher.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Object\ObjectInitializeTemplate.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

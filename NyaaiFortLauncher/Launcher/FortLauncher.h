@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <functional>
 
+#include "Object/ObjectInitializeTemplate.h"
+
 class NActivity;
 
 struct FCommandArguments

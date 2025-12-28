@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "Object.h"
+#include "PropertySetData.h"
 
 // leaves only alphabetic, digits and punctuation
 std::wstring RemoveUnnecessaryCharsFromString(const std::wstring& Input);
@@ -68,16 +69,16 @@ struct FPropertySetterFunction<bool>
 {
     static bool Set(bool* Property, const std::wstring& Value)
     {
-        std::wstring GoodString = RemoveUnnecessaryCharsFromString(Value);
+        std::wstring CleanString = RemoveUnnecessaryCharsFromString(Value);
         
-        if (GoodString == L"0")
+        if (CleanString == L"0" || CleanString == L"false" || CleanString == L"FALSE" || CleanString == L"False")
+        {
             *Property = false;
-        else if (GoodString == L"1")
+        }
+        else if (CleanString == L"1" || CleanString == L"true" || CleanString == L"TRUE" || CleanString == L"True")
+        {
             *Property = true;
-        else if (GoodString == L"false")
-            *Property = false;
-        else if (GoodString == L"true")
-            *Property = true;
+        }
         else
         {
             Log(Error, L"Bool property setter failed.");
@@ -93,15 +94,15 @@ struct FPropertySetterFunction<class NClass*>
 {
     static bool Set(NClass** Property, const std::wstring& Value)
     {
-        auto GoodString = RemoveUnnecessaryCharsFromString(Value);
+        auto CleanString = RemoveUnnecessaryCharsFromString(Value);
         
-        if (GoodString.empty() || GoodString == L"nullptr" || GoodString == L"null" || GoodString == L"NULL" || GoodString == L"0")
+        if (CleanString.empty() || CleanString == L"nullptr" || CleanString == L"null" || CleanString == L"NULL" || CleanString == L"0")
         {
             *Property = nullptr;
             return true;
         }
         
-        *Property = NClass::GetClassByName(GoodString);
+        *Property = NClass::GetClassByName(CleanString);
 
         if (!*Property)
         {

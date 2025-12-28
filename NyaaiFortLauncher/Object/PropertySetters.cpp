@@ -48,7 +48,7 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
                 else
                 {
                     // Unexpected character while looking for '{'
-                    Log(Error, L"Expected '{{' at position {}, but found '{}'.", i, Char);
+                    Log(Error, L"ArrayElementsParser: Expected '{{' at position {}, but found '{}'.", i, Char);
                     return false;
                 }
             }
@@ -69,7 +69,7 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
                     if (BraceDepth < 0)
                     {
                         // More closing braces than opening
-                        Log(Error, L"Mismatched braces at position {}.", i);
+                        Log(Error, L"ArrayElementsParser: Mismatched braces at position {}.", i);
                         return false;
                     }
 
@@ -102,7 +102,7 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
     // it implies we're missing a closing brace.
     if (State == EParseState::GatheringElement)
     {
-        Log(Error, L"Unexpected end of input while parsing element: missing '}}'.");
+        Log(Error, L"ArrayElementsParser: Unexpected end of input while parsing element: missing '}}'.");
         return false;
     }
     
@@ -243,7 +243,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
     size_t i = InData.find(L'\"');
     if (i == std::wstring_view::npos)
     {
-        Log(Error, L"No opening '\"' found in input.");
+        Log(Error, L"String parser: No opening '\"' found in input.");
         return false;
     }
 
@@ -280,7 +280,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
                 case L'f':  OutParsedValue.push_back(L'\f'); break;
                 case L'v':  OutParsedValue.push_back(L'\v'); break;
                 default:
-                    Log(Warning, L"Unknown escape sequence '\\{}'. Storing as literal.", c);
+                    Log(Warning, L"String parser: Unknown escape sequence '\\{}'. Storing as literal.", c);
                     OutParsedValue.push_back(c);
                     break;
                 }
@@ -310,21 +310,21 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
 
         if (escape)
         {
-            Log(Error, L"Unexpected end of input after '\\'.");
+            Log(Error, L"String parser: Unexpected end of input after '\\'.");
             return false;
         }
 
         if (i > InData.size())
         {
             // defensive; normally unreachable
-            Log(Error, L"Unexpected parsing state.");
+            Log(Error, L"String parser: Unexpected parsing state.");
             return false;
         }
 
         // If we ended because we ran out of input without seeing a closing quote:
         if (i == InData.size() && (InData.size() == 0 || InData[InData.size() - 1] != L'\"'))
         {
-            Log(Error, L"No matching closing '\"' found for string literal.");
+            Log(Error, L"String parser: No matching closing '\"' found for string literal.");
             return false;
         }
 

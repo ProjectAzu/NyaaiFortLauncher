@@ -142,9 +142,12 @@ public:
     
     virtual void OnDestroyed();
     
-    const std::vector<FProperty*>& GetPropertiesArrayConstRef() const;
+    const std::vector<FProperty*>& GetPropertiesArrayConstRef() const { return Properties; }
 
 private:
+    friend class FProperty;
+    std::vector<FProperty*> Properties{};
+
     friend class NClass;
     NObject* OuterPrivate = nullptr;
 
@@ -278,8 +281,6 @@ public:
     static NClass* GetClassById(uint16 Id);
     static NClass* GetClassByName(const std::wstring& Name);
     std::vector<NClass*> GetAllDerivedClasses() const;
-    
-    const std::vector<FProperty*>& GetObjectPropertiesArrayConstRef() const { return ObjectProperties; }
 
 private:
     std::wstring Name;
@@ -287,9 +288,6 @@ private:
     NClass* SuperClass;
     NObject*(*NewObjectFactory)();
     const NObject* DefaultObject = nullptr;
-    
-    friend class FProperty;
-    std::vector<FProperty*> ObjectProperties{};
 };
 
 template<class NObjectType>

@@ -9,6 +9,8 @@ struct FCommandArguments;
 
 struct FLogTriggeredAction : FStructWithProperties
 {
+    STRUCT_WITH_PROPERTIES_SIMPLE_NAME_GETTER(FLogTriggeredAction)
+    
     NPROPERTY(TriggerString)
     std::wstring TriggerString{};
 

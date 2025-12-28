@@ -22,7 +22,7 @@ struct FCommandArguments
     inline T GetArgumentAtIndex(uint8 Index) const
     {
         T Result{};
-        TPropertySetterFunction<T>::Set(&Result, GetArgumentAtIndex(Index));
+        TTypeHelpers<T>::SetFromString(&Result, GetArgumentAtIndex(Index));
         return Result;
     }
     

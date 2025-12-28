@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "PropertySetData.h"
+#include "DefaultValueOverrides.h"
 
 static std::vector<NClass*>* AllClassesSortedByHierarchyAndName{};
 static std::unordered_map<std::wstring, NClass*>* AllClassesByByName{};
@@ -78,6 +78,16 @@ NClass::NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObject
     }
 }
 
+const NObject* NClass::GetDefaultObject() const
+{
+    if (!DefaultObject)
+    {
+        const_cast<NClass*>(this)->DefaultObject = NewObjectFactory();
+    }
+    
+    return DefaultObject;
+}
+
 bool NClass::IsSubclassOf(const NClass* Other) const
 {
     for (const NClass* Class = this; Class; Class = Class->SuperClass)
@@ -91,24 +101,35 @@ bool NClass::IsSubclassOf(const NClass* Other) const
     return false;
 }
 
-FProperty::FProperty(const std::wstring& Name, NObject* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::wstring& Value))
-    : Name(Name)
+FProperty::FProperty(const wchar_t* Name, NObject* OwningObject, void* Property,
+    bool(*Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(), 
+    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*InfoOfStructsWithPropertiesUsedInTypeGetter)(),
+    std::wstring(*ValueToStringConverter)(const void* Value))
+    : Name(Name)    
+    , TypeNameGetter(TypeNameGetter)
+    , InfoOfStructsWithPropertiesUsedInTypeGetter(InfoOfStructsWithPropertiesUsedInTypeGetter)
+    , ValueToStringConverter(ValueToStringConverter)
     , Setter(Setter)
 {
     Offset = static_cast<uint16>(reinterpret_cast<uint64>(Property) - reinterpret_cast<uint64>(OwningObject));
     OwningObject->Properties.push_back(this);
 }
 
-FProperty::FProperty(const std::wstring& Name, struct FStructWithProperties* OwningObject, void* Property,
-    bool(* Setter)(void* PropertyPtr, const std::wstring& Value))
+FProperty::FProperty(const wchar_t* Name, struct FStructWithProperties* OwningObject, void* Property,
+    bool(* Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(),
+    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*InfoOfStructsWithPropertiesUsedInTypeGetter)(),
+    std::wstring(*ValueToStringConverter)(const void* Value))
     : Name(Name)
+    , TypeNameGetter(TypeNameGetter)
+    , InfoOfStructsWithPropertiesUsedInTypeGetter(InfoOfStructsWithPropertiesUsedInTypeGetter)
+    , ValueToStringConverter(ValueToStringConverter)
     , Setter(Setter)
 {
     Offset = static_cast<uint16>(reinterpret_cast<uint64>(Property) - reinterpret_cast<uint64>(OwningObject));
     OwningObject->Properties.push_back(this);
 }
 
-NObject* NClass::NewObjectRaw(NObject* Outer, const std::vector<FPropertySetData>& DefaultValueOverrides, bool bDeferConstruction) const
+NObject* NClass::NewObjectRaw(NObject* Outer, const FDefaultValueOverrides& DefaultValueOverrides, bool bDeferConstruction) const
 {
     NObject* NewObject = NewObjectFactory();
 

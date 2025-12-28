@@ -13,6 +13,11 @@ struct TObjectInitializeTemplate : FStructWithProperties
     {
     }
     
+    static std::wstring GetName()
+    { 
+        return std::format(L"TObjectInitializeTemplate<{}>", T::StaticClass()->GetName());
+    }
+    
     T* NewObjectRaw(NObject* Outer = nullptr, bool bDeferConstruction = false) const
     {
         if (!Class)
@@ -33,5 +38,5 @@ struct TObjectInitializeTemplate : FStructWithProperties
     NSubClassOf<T> Class = T::StaticClass();
 
     NPROPERTY(DefaultValueOverrides)
-    std::vector<FPropertySetData> DefaultValueOverrides{};
+    FDefaultValueOverrides DefaultValueOverrides{};
 };

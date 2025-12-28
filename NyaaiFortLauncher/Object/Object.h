@@ -5,6 +5,7 @@
 
 #include "Utils/Log.h"
 #include "IntegerTypes.h"
+#include "DefaultValueOverrides.h"
 
 #define GENERATE_BASE_H(ClassName) \
 public: \
@@ -24,7 +25,13 @@ NClass* ClassName::StaticClass() { return &ClassName##_Class; } \
 NClass* ClassName::GetClass() const { return &ClassName##_Class; }
 
 #define NPROPERTY(Name) \
-FProperty Name##_Property{L#Name, this, &(Name), reinterpret_cast<bool(*)(void*, const std::wstring&)>(&TPropertySetterFunction<decltype(Name)>::Set)};
+FProperty Name##_Property{ \
+        L#Name, this, &(Name), \
+        reinterpret_cast<bool(*)(void*, const std::wstring&)>(&TTypeHelpers<decltype(Name)>::SetFromString), \
+        &TTypeHelpers<decltype(Name)>::GetName, \
+        &TTypeHelpers<decltype(Name)>::GetInfoOfStructsWithPropertiesUsedInType, \
+        reinterpret_cast<std::wstring(*)(const void*)>(&TTypeHelpers<decltype(Name)>::ToString) \
+    };
 
 class NObject;
 class NClass;
@@ -32,36 +39,77 @@ class NClass;
 class FProperty
 {
 public:
-    FProperty(const std::wstring& Name, NObject* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::wstring& Value));
-    FProperty(const std::wstring& Name, struct FStructWithProperties* OwningObject, void* Property, bool(*Setter)(void* PropertyPtr, const std::wstring& Value));
+    // this is so ugly lmao
+    FProperty(const wchar_t* Name, NObject* OwningObject, void* Property,
+        bool(*Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(), 
+        std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*FInfoOfStructsWithPropertiesUsedInTypeGetter)(),
+        std::wstring(*ValueToStringConverter)(const void* Value));
+    
+    FProperty(const wchar_t* Name, struct FStructWithProperties* OwningObject, void* Property, 
+        bool(*Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(), 
+        std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*FInfoOfStructsWithPropertiesUsedInTypeGetter)(),
+        std::wstring(*ValueToStringConverter)(const void* Value));
 
     inline std::wstring GetName() const { return Name; }
+    std::wstring GetTypeName() const { return TypeNameGetter(); }
 
+    void* GetNativePropertyPtr(void* Object) const
+    {
+        return reinterpret_cast<void*>(reinterpret_cast<uint64>(Object) + Offset);
+    }
+    
+    const void* GetNativePropertyPtr(const void* Object) const
+    {
+        return reinterpret_cast<const void*>(reinterpret_cast<uint64>(Object) + Offset);
+    }
+    
+    std::vector<struct FInfoOfStructWithPropertiesUsedInType> GetInfoOfStructsWithPropertiesUsedInType() const
+    {
+        return InfoOfStructsWithPropertiesUsedInTypeGetter();
+    }
+    
     inline bool Set(void* Object, const std::wstring& Value) 
     {
-        return Setter(reinterpret_cast<void*>(reinterpret_cast<uint64>(Object) + Offset), Value);
+        return Setter(GetNativePropertyPtr(Object), Value);
+    }
+    
+    std::wstring GetAsString(const void* Object) const
+    {
+        return ValueToStringConverter(GetNativePropertyPtr(Object));
     }
     
 private:
-    std::wstring Name;
+    const wchar_t* Name;
+    std::wstring(*TypeNameGetter)();
+    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*InfoOfStructsWithPropertiesUsedInTypeGetter)();
+    std::wstring(*ValueToStringConverter)(const void* Value);
     uint16 Offset;
     bool(*Setter)(void* PropertyPtr, const std::wstring& Value);
 };
+
+#define STRUCT_WITH_PROPERTIES_SIMPLE_NAME_GETTER(Name) static std::wstring GetName() { return L#Name; }
 
 struct FStructWithProperties
 {
     void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
     
+    // Please implement this when deriving from FStructWithProperties
+    static std::wstring GetName()
+    {
+        Log(Warning, L"GetName not implemented for this FStructWithProperties, please implement");
+        return L"Struct with unknown name";
+    }
+    
+    const std::vector<FProperty*>& GetPropertiesArrayConstRef() const { return Properties; }
+    
 private:
     friend class FProperty;
 
     template<typename, typename>
-    friend struct TPropertySetterFunction;
+    friend struct TTypeHelpers;
     
     std::vector<FProperty*> Properties{};
 };
-
-struct FPropertySetData;
 
 class NObject
 {
@@ -92,6 +140,8 @@ public:
     virtual void OnCreated();
     
     virtual void OnDestroyed();
+    
+    const std::vector<FProperty*>& GetPropertiesArrayConstRef() const { return Properties; }
 
 private:
     friend class FProperty;
@@ -185,16 +235,27 @@ public:
     NClass(NClass&& Other) = delete;
     NClass&operator=(NClass&& Other) = delete;
     
-    inline std::wstring GetName() const { return Name; }
-    inline uint16 GetId() const { return Id; }
-    inline NClass* GetSuper() const { return SuperClass; }
+    std::wstring GetName() const { return Name; }
+    uint16 GetId() const { return Id; }
+    NClass* GetSuper() const { return SuperClass; }
+    
+    const NObject* GetDefaultObject() const;
+    template<class T> const T* GetDefaultObject() const
+    {
+        if (!IsSubclassOf(T::StaticClass()))
+        {
+            return nullptr;
+        }
+        
+        return reinterpret_cast<const T*>(GetDefaultObject());
+    }
 
     bool IsSubclassOf(const NClass* Other) const;
     
-    NObject* NewObjectRaw(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const;
+    NObject* NewObjectRaw(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const;
     
     template<class T>
-    T* NewObjectRaw(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    T* NewObjectRaw(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
     {
         if (!IsSubclassOf(T::StaticClass()))
         {
@@ -205,13 +266,13 @@ public:
         return reinterpret_cast<T*>(NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction));
     }
     
-    NUniquePtr<NObject> NewObject(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    NUniquePtr<NObject> NewObject(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
     {
         return NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction);
     }
     
     template<class T>
-    NUniquePtr<T> NewObject(NObject* Outer = nullptr, const std::vector<FPropertySetData>& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    NUniquePtr<T> NewObject(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
     {
         return NewObjectRaw<T>(Outer, DefaultValueOverrides, bDeferConstruction);
     }
@@ -225,6 +286,7 @@ private:
     uint16 Id = 0;
     NClass* SuperClass;
     NObject*(*NewObjectFactory)();
+    const NObject* DefaultObject = nullptr;
 };
 
 template<class NObjectType>
@@ -278,4 +340,4 @@ template<class T> inline T* Cast(NObject* Object)
     return Object ? (Object->GetClass()->IsSubclassOf(T::StaticClass()) ? reinterpret_cast<T*>(Object) : nullptr) : nullptr;
 }
 
-#include "PropertySetters.h"
+#include "TypeHelpers.h"

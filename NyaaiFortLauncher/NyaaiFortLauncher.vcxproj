@@ -160,7 +160,7 @@
     <ClCompile Include="Launcher\WaitForBackendToRespondAction.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Object\Object.cpp" />
-    <ClCompile Include="Object\PropertySetters.cpp" />
+    <ClCompile Include="Object\TypeHelpers.cpp" />
     <ClCompile Include="Utils\Log.cpp" />
     <ClCompile Include="Utils\TextFileLoader.cpp" />
     <ClCompile Include="Utils\Utf8.cpp" />
@@ -181,8 +181,8 @@
     <ClInclude Include="Launcher\WaitForBackendToRespondAction.h" />
     <ClInclude Include="Object\IntegerTypes.h" />
     <ClInclude Include="Object\Object.h" />
-    <ClInclude Include="Object\PropertySetData.h" />
-    <ClInclude Include="Object\PropertySetters.h" />
+    <ClInclude Include="Object\DefaultValueOverrides.h" />
+    <ClInclude Include="Object\TypeHelpers.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils\Log.h" />
     <ClInclude Include="Utils\TextFileLoader.h" />

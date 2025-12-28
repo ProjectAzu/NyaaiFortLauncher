@@ -1,4 +1,4 @@
-#include "PropertySetters.h"
+#include "TypeHelpers.h"
 
 #include <cwctype>
 
@@ -109,7 +109,7 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
     return true;
 }
 
-bool ParsePropertiesSetData(const std::wstring& StringToParse, std::vector<FPropertySetData>& OutResult)
+bool ParsePropertiesSetData(const std::wstring& StringToParse, FDefaultValueOverrides& OutResult)
 {
     OutResult.clear();
 

@@ -19,13 +19,13 @@ private:
 #define GENERATE_BASE_CPP(ClassName) \
 static NClass ClassName##_Class{L#ClassName, ClassName::Super::StaticClass(), []()\
     { \
-        return reinterpret_cast<NObject*>(new ClassName{}); \
+        return reinterpret_cast<NObject*>(new (ClassName){}); \
     }}; \
 NClass* ClassName::StaticClass() { return &ClassName##_Class; } \
 NClass* ClassName::GetClass() const { return &ClassName##_Class; }
 
 #define NPROPERTY(Name) \
-FProperty Name##_Property{L#Name, this, &Name, reinterpret_cast<bool(*)(void*, const std::wstring&)>(&TPropertySetterFunction<decltype(Name)>::Set)};
+FProperty Name##_Property{L#Name, this, &(Name), reinterpret_cast<bool(*)(void*, const std::wstring&)>(&TPropertySetterFunction<decltype(Name)>::Set)};
 
 class NObject;
 class NClass;

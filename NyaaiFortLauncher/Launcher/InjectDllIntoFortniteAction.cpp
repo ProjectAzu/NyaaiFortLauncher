@@ -1,5 +1,7 @@
 #include "InjectDllIntoFortniteAction.h"
 
+#include <thread>
+
 #include "FortLauncher.h"
 
 #include "Utils/WindowsInclude.h"
@@ -73,14 +75,13 @@ void NInjectDllIntoFortniteAction::Execute()
     }
 
     ResumeThread(DllThreadHandle);
-
-    // Wait so the remote thread can safely read the argument buffer before we free it
-    //WaitForSingleObject(DllThreadHandle, INFINITE);
-
-    // Remote free (MEM_RELEASE requires size = 0)
-    //VirtualFreeEx(ProcessHandle, AllocatedMemory, 0, MEM_RELEASE); i dont care it can leak memory im not waiting
-
-    CloseHandle(DllThreadHandle);
+    
+    std::thread([=]()
+    {
+        WaitForSingleObject(DllThreadHandle, INFINITE);
+        VirtualFreeEx(ProcessHandle, AllocatedMemory, 0, MEM_RELEASE);
+        CloseHandle(DllThreadHandle);
+    }).detach();
 
     Log(Info, L"Injected dll '{}' into fortnite", DllPathString);
 }

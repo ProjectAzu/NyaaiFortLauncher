@@ -52,7 +52,7 @@ static void StartLauncher(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
     }
 
     std::vector<FPropertySetData> LauncherPropertySetData{};
-    if (!FPropertySetterFunction<std::vector<FPropertySetData>>::Set(&LauncherPropertySetData, ConfigAsWString))
+    if (!TPropertySetterFunction<std::vector<FPropertySetData>>::Set(&LauncherPropertySetData, ConfigAsWString))
     {
         Log(Error, L"Malformatted config file '{}'.", ConfigPath.wstring());
         return;

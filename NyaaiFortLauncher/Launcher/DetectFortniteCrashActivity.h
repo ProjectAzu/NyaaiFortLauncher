@@ -1,10 +1,9 @@
 #pragma once
 
 #include "Activity.h"
+#include "Object/ObjectInitializeTemplate.h"
 
 #include <unordered_set>
-
-#include "Object/ObjectInitializeTemplate.h"
 
 class NDetectFortniteCrashActivity : public NActivity
 {
@@ -17,7 +16,7 @@ public:
     void Tick(double DeltaTime) override;
     
     NPROPERTY(OnFortniteCrashActions)
-    std::vector<FObjectInitializeTemplate<NAction>> OnFortniteCrashActions{};
+    std::vector<TObjectInitializeTemplate<NAction>> OnFortniteCrashActions{};
 
 private:
     uint32 FortniteProcessId = 0;

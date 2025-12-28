@@ -3,12 +3,12 @@
 #include "Object.h"
 
 template<class T>
-struct FObjectInitializeTemplate : FStructWithProperties
+struct TObjectInitializeTemplate : FStructWithProperties
 {
-    FObjectInitializeTemplate() = default;
+    TObjectInitializeTemplate() = default;
 
     template<class Other>
-    FObjectInitializeTemplate(const FObjectInitializeTemplate<Other>& OtherTemplate)
+    TObjectInitializeTemplate(const TObjectInitializeTemplate<Other>& OtherTemplate)
         : Class(OtherTemplate.Class), DefaultValueOverrides(OtherTemplate.DefaultValueOverrides)
     {
     }

@@ -22,7 +22,7 @@ struct FCommandArguments
     inline T GetArgumentAtIndex(uint8 Index) const
     {
         T Result{};
-        FPropertySetterFunction<T>::Set(&Result, GetArgumentAtIndex(Index));
+        TPropertySetterFunction<T>::Set(&Result, GetArgumentAtIndex(Index));
         return Result;
     }
     
@@ -106,16 +106,16 @@ public:
     std::wstring FortniteLaunchArguments{};
 
     NPROPERTY(PreFortniteLaunchActions)
-    std::vector<FObjectInitializeTemplate<NAction>> PreFortniteLaunchActions{};
+    std::vector<TObjectInitializeTemplate<NAction>> PreFortniteLaunchActions{};
 
     NPROPERTY(PostFortniteLaunchActions)
-    std::vector<FObjectInitializeTemplate<NAction>> PostFortniteLaunchActions{};
+    std::vector<TObjectInitializeTemplate<NAction>> PostFortniteLaunchActions{};
     
     NPROPERTY(PostFortniteExitActions)
-    std::vector<FObjectInitializeTemplate<NAction>> PostFortniteExitActions{};
+    std::vector<TObjectInitializeTemplate<NAction>> PostFortniteExitActions{};
 
     NPROPERTY(Activities)
-    std::vector<FObjectInitializeTemplate<NActivity>> Activities{};
+    std::vector<TObjectInitializeTemplate<NActivity>> Activities{};
 
 private:
     void* FortniteProcessHandle = nullptr;

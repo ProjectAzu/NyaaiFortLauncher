@@ -449,7 +449,7 @@ void NFortLauncher::ExitCommand(const FCommandArguments& Args)
 
 void NFortLauncher::ExecuteActionCommand(const FCommandArguments& Args)
 {
-    FObjectInitializeTemplate<NAction> ActionTemplate = Args.GetArgumentAtIndex<FObjectInitializeTemplate<NAction>>(0);
+    TObjectInitializeTemplate<NAction> ActionTemplate = Args.GetArgumentAtIndex<TObjectInitializeTemplate<NAction>>(0);
     if (!ActionTemplate.Class)
     {
         return;

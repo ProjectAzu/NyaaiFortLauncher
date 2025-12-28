@@ -13,7 +13,7 @@ struct FLogTriggeredAction : FStructWithProperties
     std::wstring TriggerString{};
 
     NPROPERTY(Action)
-    FObjectInitializeTemplate<NAction> Action{};
+    TObjectInitializeTemplate<NAction> Action{};
 
     NPROPERTY(bTriggerOnlyOnce)
     bool bTriggerOnlyOnce = false;

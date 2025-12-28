@@ -112,7 +112,7 @@ FProperty::FProperty(const wchar_t* Name, NObject* OwningObject, void* Property,
     , Setter(Setter)
 {
     Offset = static_cast<uint16>(reinterpret_cast<uint64>(Property) - reinterpret_cast<uint64>(OwningObject));
-    OwningObject->Properties.push_back(this);
+    OwningObject->GetClass()->ObjectProperties.push_back(this);
 }
 
 FProperty::FProperty(const wchar_t* Name, struct FStructWithProperties* OwningObject, void* Property,
@@ -204,7 +204,7 @@ void NObject::FinishConstruction()
 
 void NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
 {
-    for (const auto Property : Properties)
+    for (const auto Property : GetPropertiesArrayConstRef())
     {
         if (Property->GetName() == PropertyName)
         {
@@ -237,4 +237,9 @@ void NObject::OnCreated()
 
 void NObject::OnDestroyed()
 {
+}
+
+const std::vector<FProperty*>& NObject::GetPropertiesArrayConstRef() const
+{
+    return GetClass()->GetObjectPropertiesArrayConstRef();
 }

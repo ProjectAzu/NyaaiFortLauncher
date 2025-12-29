@@ -232,6 +232,46 @@ struct TTypeHelpers<int64>
 };
 
 template<>
+struct TTypeHelpers<float>
+{
+    static bool SetFromString(float* Property, const std::wstring& Value)
+    {
+        std::wstringstream(RemoveUnnecessaryCharsFromString(Value)) >> *Property;
+        return true;
+    }
+    
+    static std::wstring ToString(const float* Value)
+    {
+        std::wstringstream Stream{};
+        Stream << *Value;
+        return Stream.str();
+    }
+    
+    static std::wstring GetName() { return L"float"; }
+    static std::vector<FInfoOfStructWithPropertiesUsedInType> GetInfoOfStructsWithPropertiesUsedInType() { return {}; }
+};
+
+template<>
+struct TTypeHelpers<double>
+{
+    static bool SetFromString(double* Property, const std::wstring& Value)
+    {
+        std::wstringstream(RemoveUnnecessaryCharsFromString(Value)) >> *Property;
+        return true;
+    }
+    
+    static std::wstring ToString(const double* Value)
+    {
+        std::wstringstream Stream{};
+        Stream << *Value;
+        return Stream.str();
+    }
+    
+    static std::wstring GetName() { return L"double"; }
+    static std::vector<FInfoOfStructWithPropertiesUsedInType> GetInfoOfStructsWithPropertiesUsedInType() { return {}; }
+};
+
+template<>
 struct TTypeHelpers<wchar_t>
 {
     static bool SetFromString(wchar_t* Property, const std::wstring& Value)

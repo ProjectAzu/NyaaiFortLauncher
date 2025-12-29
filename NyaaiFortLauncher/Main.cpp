@@ -4,6 +4,7 @@
 
 #include "Utils/WindowsInclude.h"
 #include <conio.h>
+#include <iostream>
 
 #include <unordered_set>
 
@@ -153,8 +154,25 @@ static void RunLauncher(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
     curl_global_cleanup();
 }
 
+static void ApplyInvariantLocale()
+{
+    _configthreadlocale(_DISABLE_PER_THREAD_LOCALE);
+    
+    std::setlocale(LC_ALL, "C");
+    
+    std::locale::global(std::locale::classic());
+    
+    auto Locale = std::locale::classic();
+    std::cin.imbue(Locale);
+    std::cout.imbue(Locale);
+    std::wcin.imbue(Locale);
+    std::wcout.imbue(Locale);
+}
+
 int wmain(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
 {
+    ApplyInvariantLocale();
+    
     InitializeLogging();
 
     RunLauncher(ArgsNum, ArgsArrayPtr);

@@ -5,7 +5,6 @@
 #include <utility>
 #include <filesystem>
 #include <memory>
-#include <utility>
 #include <unordered_set>
 
 #include "Object.h"
@@ -26,6 +25,7 @@ struct FInfoOfStructWithPropertiesUsedInType
 template <typename T, typename Enable = void>
 struct TTypeHelpers
 {
+    // SetFromString and ToString should be compatible
     static bool SetFromString(T* Property, const std::wstring& Value)
     {
         Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type.");
@@ -33,12 +33,13 @@ struct TTypeHelpers
         return true;
     }
     
+    // SetFromString and ToString should be compatible
     static std::wstring ToString(const T* Value)
     {
         Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type.");
         
         std::wstringstream Stream{};
-        Stream << Value;
+        Stream << *Value;
         return Stream.str();
     }
     
@@ -63,7 +64,7 @@ struct TTypeHelpers<uint8>
         std::wstringstream ss(RemoveUnnecessaryCharsFromString(Value));
         
         uint32 Uint32 = 0;
-        ss << Uint32;
+        ss >> Uint32;
         
         *Property = static_cast<uint8>(Uint32);
         
@@ -92,7 +93,7 @@ struct TTypeHelpers<uint16>
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const uint16* Value)
     {
         std::wstringstream Stream{};
         Stream << *Value;
@@ -112,7 +113,7 @@ struct TTypeHelpers<uint32>
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const uint32* Value)
     {
         std::wstringstream Stream{};
         Stream << *Value;
@@ -132,7 +133,7 @@ struct TTypeHelpers<uint64>
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const uint64* Value)
     {
         std::wstringstream Stream{};
         Stream << *Value;
@@ -151,14 +152,14 @@ struct TTypeHelpers<int8>
         std::wstringstream ss(RemoveUnnecessaryCharsFromString(Value));
         
         int32 Int32 = 0;
-        ss << Int32;
+        ss >> Int32;
         
         *Property = static_cast<int8>(Int32);
         
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const int8* Value)
     {
         int32 Int32 = static_cast<int32>(*Value);
         
@@ -180,7 +181,7 @@ struct TTypeHelpers<int16>
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const int16* Value)
     {
         std::wstringstream Stream{};
         Stream << *Value;
@@ -200,7 +201,7 @@ struct TTypeHelpers<int32>
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const int32* Value)
     {
         std::wstringstream Stream{};
         Stream << *Value;
@@ -220,7 +221,7 @@ struct TTypeHelpers<int64>
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const int64* Value)
     {
         std::wstringstream Stream{};
         Stream << *Value;
@@ -276,11 +277,11 @@ struct TTypeHelpers<wchar_t>
 {
     static bool SetFromString(wchar_t* Property, const std::wstring& Value)
     {
-        std::wstringstream(RemoveUnnecessaryCharsFromString(Value)) >> *Property;
+        std::wstringstream(Value) >> *Property;
         return true;
     }
     
-    static std::wstring ToString(const uint8* Value)
+    static std::wstring ToString(const wchar_t* Value)
     {
         std::wstringstream Stream{};
         Stream << *Value;
@@ -305,23 +306,19 @@ struct TTypeHelpers<FDefaultValueOverrides>
     {
         std::wstring Result{};
         
-        Result += L"{";
-        
         bool bIsFirst = true;
         
         for (const auto& Override : *Value)
         {
             if (!bIsFirst)
             {
-                Result += L", ";
+                Result += L"\n";
             }
             
             bIsFirst = false;
             
-            Result += std::format(L"{}: {}", Override.PropertyName, Override.SetValue);
+            Result += std::format(L"{}: {{{}}}", Override.PropertyName, Override.SetValue);
         }
-        
-        Result += L"}";
         
         return Result;
     }
@@ -351,27 +348,18 @@ struct TTypeHelpers<T, std::enable_if_t<std::is_base_of_v<FStructWithProperties,
     
     static std::wstring ToString(const FStructWithProperties* StructWithProperties)
     {
-        std::wstring Result{};
+        FDefaultValueOverrides DefaultValueOverrides{};
         
-        Result += L"{";
-        
-        bool bIsFirst = true;
-        
-        for (const auto& Property : StructWithProperties->GetPropertiesArrayConstRef())
+        for (const auto Property : StructWithProperties->GetPropertiesArrayConstRef())
         {
-            if (!bIsFirst)
-            {
-                Result += L", ";
-            }
+            FPropertySetData PropertySetData{};
+            PropertySetData.PropertyName = Property->GetName();
+            PropertySetData.SetValue = Property->GetAsString(StructWithProperties);
             
-            bIsFirst = false;
-            
-            Result += std::format(L".{} = {}", Property->GetName(), Property->GetAsString(StructWithProperties));
+            DefaultValueOverrides.emplace_back(std::move(PropertySetData));
         }
         
-        Result += L"}";
-        
-        return Result;
+        return TTypeHelpers<FDefaultValueOverrides>::ToString(&DefaultValueOverrides);
     }
     
     static std::wstring GetName() { return T::GetName(); }
@@ -411,6 +399,7 @@ struct TTypeHelpers<T, std::enable_if_t<std::is_base_of_v<FStructWithProperties,
 };
 
 bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutParsedValue);
+std::wstring EscapeForCppWideStringLiteral(std::wstring_view s);
 
 template<>
 struct TTypeHelpers<std::wstring>
@@ -422,12 +411,8 @@ struct TTypeHelpers<std::wstring>
     
     static std::wstring ToString(const std::wstring* Property)
     {
-        if (Property->empty())
-        {
-            return L"{}";
-        }
-        
-        return std::format(L"\"{}\"", *Property);
+        const std::wstring escaped = EscapeForCppWideStringLiteral(*Property);
+        return std::format(L"\"{}\"", escaped);
     }
     
     static std::wstring GetName() { return L"std::wstring"; }
@@ -491,11 +476,11 @@ struct TTypeHelpers<class NClass*>
         return true;
     }
     
-    static std::wstring ToString(NClass** Property)
+    static std::wstring ToString(NClass* const* Property)
     {
         if (*Property)
         {
-            return std::format(L"{}::StaticClass()", (*Property)->GetName());
+            return (*Property)->GetName();
         }
         
         return L"nullptr";
@@ -521,18 +506,18 @@ struct TTypeHelpers<NSubClassOf<T>>
         
         if (Class && !*Property)
         {
-            Log(Error, L"NSubClassOf<T> setter failed, class is not a subclass of T.");
+            Log(Error, L"{} setter failed, class is not a subclass of {}.", GetName(), T::StaticClass()->GetName());
             return false;
         }
 
         return true;
     }
     
-    static std::wstring ToString(NSubClassOf<T>* Property)
+    static std::wstring ToString(const NSubClassOf<T>* Property)
     {
         if (*Property)
         {
-            return std::format(L"{}::StaticClass()", (*Property)->GetName());
+            return (*Property)->GetName();
         }
         
         return L"nullptr";
@@ -563,7 +548,10 @@ struct TTypeHelpers<std::vector<T>>
         for (const auto& Elem : ParsedElements)
         {
             T ConvertedElem;
-            TTypeHelpers<T>::SetFromString(&ConvertedElem, Elem);
+            if (!TTypeHelpers<T>::SetFromString(&ConvertedElem, Elem))
+            {
+                return false;
+            }
             
             Property->push_back(std::move(ConvertedElem));
         }
@@ -575,23 +563,10 @@ struct TTypeHelpers<std::vector<T>>
     {
         std::wstring Result{};
         
-        Result += L"{";
-        
-        bool bIsFirst = true;
-        
         for (const auto& Elem : *Array)
         {
-            if (!bIsFirst)
-            {
-                Result += L", ";
-            }
-            
-            bIsFirst = false;
-            
-            Result += TTypeHelpers<T>::ToString(&Elem);
+            Result += std::format(L"{{{}}}", TTypeHelpers<T>::ToString(&Elem));
         }
-        
-        Result += L"}";
         
         return Result;
     }

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "Utils/Log.h"
 #include "IntegerTypes.h"
@@ -137,9 +138,10 @@ public:
 
     void Destroy();
 
-    // The first function called on the object, right after it is created
+    // The first function called on the object, when finishing construction. Unless using deferred construct, right after it is created.
     virtual void OnCreated();
     
+    // Warning - OnDestroyed is only called if OnCreated was called (If construction was finished)
     virtual void OnDestroyed();
     
     const std::vector<FProperty*>& GetPropertiesArrayConstRef() const { return Properties; }

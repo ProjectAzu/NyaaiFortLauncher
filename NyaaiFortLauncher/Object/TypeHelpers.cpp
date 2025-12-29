@@ -2,6 +2,22 @@
 
 #include <cwctype>
 
+static bool IsHex(wchar_t c)
+{
+    return (c >= L'0' && c <= L'9') ||
+           (c >= L'a' && c <= L'f') ||
+           (c >= L'A' && c <= L'F');
+}
+
+static int32 HexVal(wchar_t c)
+{
+    if (c >= L'0' && c <= L'9') return int32(c - L'0');
+    if (c >= L'a' && c <= L'f') return 10 + int32(c - L'a');
+    return 10 + int32(c - L'A');
+}
+
+static bool IsOct(wchar_t c) { return c >= L'0' && c <= L'7'; }
+
 std::wstring RemoveUnnecessaryCharsFromString(const std::wstring& Input)
 {
     std::wstring Result = Input;
@@ -14,15 +30,21 @@ std::wstring RemoveUnnecessaryCharsFromString(const std::wstring& Input)
 
 bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Result)
 {
+    Result.clear();
+
     enum class EParseState : uint8
     {
         SearchingForOpenBrace,
         GatheringElement
     };
-    
+
     EParseState State = EParseState::SearchingForOpenBrace;
     int32_t BraceDepth = 0;
     std::wstring CurrentElement;
+
+    // Track whether we're inside a normal C++ "..." string literal (within an element)
+    bool bInString = false;
+    bool bEscape   = false;
 
     for (size_t i = 0; i < InData.size(); )
     {
@@ -31,81 +53,118 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
         switch (State)
         {
         case EParseState::SearchingForOpenBrace:
+        {
+            bInString = false;
+            bEscape   = false;
+
+            if (std::iswspace(static_cast<wint_t>(Char)))
             {
-                // Skip any whitespace
-                if (std::iswspace(Char))
-                {
-                    ++i;
-                }
-                else if (Char == L'{')
-                {
-                    // Found the start of an element
-                    BraceDepth = 1;
-                    CurrentElement.clear();
-                    State = EParseState::GatheringElement;
-                    ++i;
-                }
-                else
-                {
-                    // Unexpected character while looking for '{'
-                    Log(Error, L"ArrayElementsParser: Expected '{{' at position {}, but found '{}'.", i, Char);
-                    return false;
-                }
+                ++i;
             }
-            break;
+            else if (Char == L'{')
+            {
+                BraceDepth = 1;
+                CurrentElement.clear();
+                State = EParseState::GatheringElement;
+                ++i; // consume '{'
+            }
+            else
+            {
+                Log(Error, L"ArrayElementsParser: Expected '{{' at position {}, but found '{}'.", i, Char);
+                return false;
+            }
+        }
+        break;
 
         case EParseState::GatheringElement:
+        {
+            if (bInString)
             {
-                if (Char == L'{')
-                {
-                    // Nested brace - increase depth
-                    ++BraceDepth;
-                    CurrentElement.push_back(Char);
-                    ++i;
-                }
-                else if (Char == L'}')
-                {
-                    --BraceDepth;
-                    if (BraceDepth < 0)
-                    {
-                        // More closing braces than opening
-                        Log(Error, L"ArrayElementsParser: Mismatched braces at position {}.", i);
-                        return false;
-                    }
+                // Inside "..."
+                CurrentElement.push_back(Char);
 
-                    if (BraceDepth == 0)
-                    {
-                        // This '}' closes the element
-                        Result.push_back(CurrentElement);
-                        CurrentElement.clear();
-                        State = EParseState::SearchingForOpenBrace;
-                    }
-                    else
-                    {
-                        // Still inside nested braces
-                        CurrentElement.push_back(Char);
-                    }
-                    ++i;
+                if (bEscape)
+                {
+                    bEscape = false;
+                }
+                else if (Char == L'\\')
+                {
+                    bEscape = true;
+                }
+                else if (Char == L'"')
+                {
+                    bInString = false;
+                }
+
+                ++i;
+                break;
+            }
+
+            // Not inside string
+            if (Char == L'"')
+            {
+                bInString = true;
+                bEscape   = false;
+                CurrentElement.push_back(Char);
+                ++i;
+                break;
+            }
+
+            if (Char == L'{')
+            {
+                ++BraceDepth;
+                CurrentElement.push_back(Char);
+                ++i;
+                break;
+            }
+
+            if (Char == L'}')
+            {
+                --BraceDepth;
+
+                if (BraceDepth < 0)
+                {
+                    Log(Error, L"ArrayElementsParser: Mismatched braces at position {}.", i);
+                    return false;
+                }
+
+                if (BraceDepth == 0)
+                {
+                    // Element closed
+                    Result.push_back(CurrentElement);
+                    CurrentElement.clear();
+                    State = EParseState::SearchingForOpenBrace;
                 }
                 else
                 {
-                    // Normal character, part of the element
+                    // Still inside nested braces
                     CurrentElement.push_back(Char);
-                    ++i;
                 }
+
+                ++i;
+                break;
             }
-            break;
+
+            // Normal character
+            CurrentElement.push_back(Char);
+            ++i;
+        }
+        break;
         }
     }
 
-    // If the parser ended while still gathering an element,
-    // it implies we're missing a closing brace.
     if (State == EParseState::GatheringElement)
     {
-        Log(Error, L"ArrayElementsParser: Unexpected end of input while parsing element: missing '}}'.");
+        if (bInString)
+            Log(Error, L"ArrayElementsParser: Unexpected end of input: missing '\"' in string literal.");
+        else if (bEscape)
+            Log(Error, L"ArrayElementsParser: Unexpected end of input after '\\' in string literal.");
+        else
+            Log(Error, L"ArrayElementsParser: Unexpected end of input while parsing element: missing '}}'.");
+
         return false;
     }
-    
+
     return true;
 }
 
@@ -179,41 +238,89 @@ bool ParsePropertiesSetData(const std::wstring& StringToParse, FDefaultValueOver
         ++Index; // consume the '{'
 
         // We'll parse the value by tracking brace depth
+    
         int BraceDepth = 1;
         std::wstring CapturedValue;
-        CapturedValue.reserve(128); // just a small reserve to reduce re-allocs
+        CapturedValue.reserve(128);
+
+        // Track whether we are inside a normal "..." string literal
+        bool bInString = false;
+        bool bEscape   = false;
 
         while (Index < StringToParse.size() && BraceDepth > 0)
         {
             wchar_t C = StringToParse[Index];
+
+            if (bInString)
+            {
+                // Inside "..."
+                CapturedValue.push_back(C);
+
+                if (bEscape)
+                {
+                    bEscape = false; // whatever it was, it's escaped
+                }
+                else if (C == L'\\')
+                {
+                    bEscape = true;  // next char is escaped
+                }
+                else if (C == L'"')
+                {
+                    bInString = false; // end of string literal
+                }
+
+                ++Index;
+                continue;
+            }
+
+            // Not in string literal
+            if (C == L'"')
+            {
+                bInString = true;
+                bEscape   = false;
+                CapturedValue.push_back(C);
+                ++Index;
+                continue;
+            }
 
             if (C == L'{')
             {
                 ++BraceDepth;
                 CapturedValue.push_back(C);
                 ++Index;
+                continue;
             }
-            else if (C == L'}')
+
+            if (C == L'}')
             {
                 --BraceDepth;
                 if (BraceDepth > 0)
                 {
-                    // still inside nested braces
-                    CapturedValue.push_back(C);
+                    CapturedValue.push_back(C); // keep nested closing braces
                 }
                 ++Index;
+                continue;
             }
-            else
-            {
-                // Normal character
-                CapturedValue.push_back(C);
-                ++Index;
-            }
+
+            // Normal character
+            CapturedValue.push_back(C);
+            ++Index;
+        }
+
+        if (bInString)
+        {
+            Log(Error, L"Missing closing '\"' inside value for property '{}'.", RawPropertyName);
+            return false;
+        }
+
+        if (bEscape)
+        {
+            Log(Error, L"Unexpected end of value after '\\' inside string for property '{}'.", RawPropertyName);
+            return false;
         }
 
         if (BraceDepth != 0)
         {
-            // We never closed all braces
             Log(Error, L"Missing '}}' for property '{}'.", RawPropertyName);
             return false;
         }
@@ -235,12 +342,12 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
 
     auto SkipWhitespace = [&](size_t& i)
     {
-        while (i < InData.size() && std::iswspace(InData[i]))
+        while (i < InData.size() && std::iswspace(static_cast<wint_t>(InData[i])))
             ++i;
     };
 
     // Find the first quote
-    size_t i = InData.find(L'\"');
+    size_t i = InData.find(L'"');
     if (i == std::wstring_view::npos)
     {
         Log(Error, L"String parser: No opening '\"' found in input.");
@@ -252,85 +359,189 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
     {
         SkipWhitespace(i);
 
-        if (i >= InData.size() || InData[i] != L'\"')
+        if (i >= InData.size() || InData[i] != L'"')
         {
-            // We parsed at least one literal (first one is required); stop joining.
-            return !OutParsedValue.empty();
+            // Stop joining. Succeed only if we parsed at least one literal.
+            return !OutParsedValue.empty() || (InData.find(L"\"\"") != std::wstring_view::npos);
         }
 
-        // Consume opening quote
-        ++i;
+        ++i; // consume opening quote
 
-        bool escape = false;
         while (i < InData.size())
         {
             wchar_t c = InData[i];
 
-            if (escape)
+            if (c == L'"')
             {
-                // Handle escapes after backslash
-                switch (c)
-                {
-                case L'\\': OutParsedValue.push_back(L'\\'); break;
-                case L'\"': OutParsedValue.push_back(L'\"'); break;
-                case L'n':  OutParsedValue.push_back(L'\n'); break;
-                case L'r':  OutParsedValue.push_back(L'\r'); break;
-                case L't':  OutParsedValue.push_back(L'\t'); break;
-                case L'b':  OutParsedValue.push_back(L'\b'); break;
-                case L'f':  OutParsedValue.push_back(L'\f'); break;
-                case L'v':  OutParsedValue.push_back(L'\v'); break;
-                default:
-                    Log(Warning, L"String parser: Unknown escape sequence '\\{}'. Storing as literal.", c);
-                    OutParsedValue.push_back(c);
-                    break;
-                }
-
-                escape = false;
-                ++i;
-                continue;
-            }
-
-            if (c == L'\\')
-            {
-                escape = true;
-                ++i;
-                continue;
-            }
-
-            if (c == L'\"')
-            {
-                // End of this literal
-                ++i;
+                ++i; // consume closing quote
                 break;
             }
 
-            OutParsedValue.push_back(c);
+            if (c != L'\\')
+            {
+                OutParsedValue.push_back(c);
+                ++i;
+                continue;
+            }
+
+            // Backslash escape
             ++i;
+            if (i >= InData.size())
+            {
+                Log(Error, L"String parser: Unexpected end of input after '\\'.");
+                return false;
+            }
+
+            wchar_t e = InData[i];
+
+            switch (e)
+            {
+            case L'\\': OutParsedValue.push_back(L'\\'); ++i; break;
+            case L'"':  OutParsedValue.push_back(L'"');  ++i; break;
+            case L'n':  OutParsedValue.push_back(L'\n'); ++i; break;
+            case L'r':  OutParsedValue.push_back(L'\r'); ++i; break;
+            case L't':  OutParsedValue.push_back(L'\t'); ++i; break;
+            case L'b':  OutParsedValue.push_back(L'\b'); ++i; break;
+            case L'f':  OutParsedValue.push_back(L'\f'); ++i; break;
+            case L'v':  OutParsedValue.push_back(L'\v'); ++i; break;
+            case L'a':  OutParsedValue.push_back(L'\a'); ++i; break;
+            case L'0':  // could be just \0 or start of octal
+            default:
+                if (IsOct(e))
+                {
+                    // Octal escape: up to 3 octal digits (already have 1)
+                    unsigned int val = 0;
+                    int count = 0;
+                    while (i < InData.size() && count < 3 && IsOct(InData[i]))
+                    {
+                        val = (val * 8u) + unsigned(InData[i] - L'0');
+                        ++i;
+                        ++count;
+                    }
+                    OutParsedValue.push_back(static_cast<wchar_t>(val));
+                }
+                else if (e == L'x')
+                {
+                    // Hex escape: \x + 1+ hex digits
+                    ++i; // consume 'x'
+                    if (i >= InData.size() || !IsHex(InData[i]))
+                    {
+                        Log(Error, L"String parser: Invalid hex escape '\\x' (no digits).");
+                        return false;
+                    }
+                    unsigned int val = 0;
+                    while (i < InData.size() && IsHex(InData[i]))
+                    {
+                        val = (val * 16u) + unsigned(HexVal(InData[i]));
+                        ++i;
+                    }
+                    OutParsedValue.push_back(static_cast<wchar_t>(val));
+                }
+                else if (e == L'u' || e == L'U')
+                {
+                    const int digits = (e == L'u') ? 4 : 8;
+                    ++i; // consume 'u'/'U'
+                    if (i + digits > InData.size())
+                    {
+                        Log(Error, L"String parser: Incomplete universal character name.");
+                        return false;
+                    }
+                    unsigned int val = 0;
+                    for (int k = 0; k < digits; ++k)
+                    {
+                        wchar_t h = InData[i + k];
+                        if (!IsHex(h))
+                        {
+                            Log(Error, L"String parser: Invalid universal character name (non-hex digit).");
+                            return false;
+                        }
+                        val = (val * 16u) + unsigned(HexVal(h));
+                    }
+                    i += digits;
+
+                    // Store as wchar_t (Windows wchar_t is 16-bit UTF-16 code unit).
+                    // If val > 0xFFFF, you may want to emit surrogate pairs instead.
+                    if (val <= 0xFFFFu)
+                    {
+                        OutParsedValue.push_back(static_cast<wchar_t>(val));
+                    }
+                    else
+                    {
+                        // Surrogate pair for UTF-16
+                        val -= 0x10000u;
+                        wchar_t high = static_cast<wchar_t>(0xD800u + (val >> 10));
+                        wchar_t low  = static_cast<wchar_t>(0xDC00u + (val & 0x3FFu));
+                        OutParsedValue.push_back(high);
+                        OutParsedValue.push_back(low);
+                    }
+                }
+                else
+                {
+                    Log(Warning, L"String parser: Unknown escape sequence '\\{}'. Storing as literal.", e);
+                    OutParsedValue.push_back(e);
+                    ++i;
+                }
+                break;
+            }
         }
 
-        if (escape)
-        {
-            Log(Error, L"String parser: Unexpected end of input after '\\'.");
-            return false;
-        }
-
+        // If we ran out of input without a closing quote, error.
         if (i > InData.size())
         {
-            // defensive; normally unreachable
             Log(Error, L"String parser: Unexpected parsing state.");
             return false;
         }
-
-        // If we ended because we ran out of input without seeing a closing quote:
-        if (i == InData.size() && (InData.size() == 0 || InData[InData.size() - 1] != L'\"'))
+        if (i == InData.size() && (InData.empty() || InData.back() != L'"'))
         {
             Log(Error, L"String parser: No matching closing '\"' found for string literal.");
             return false;
         }
 
         // Loop again: if next token is another quote (after whitespace), we'll append it.
-        // Otherwise we return at top of loop.
     }
+}
+
+std::wstring EscapeForCppWideStringLiteral(std::wstring_view s)
+{
+    std::wstring out;
+    out.reserve(s.size() + 2);
+
+    for (wchar_t ch : s)
+    {
+        switch (ch)
+        {
+        case L'\\': out += L"\\\\"; break;
+        case L'"':  out += L"\\\""; break;
+        case L'\n': out += L"\\n";  break;
+        case L'\r': out += L"\\r";  break;
+        case L'\t': out += L"\\t";  break;
+        case L'\b': out += L"\\b";  break;
+        case L'\f': out += L"\\f";  break;
+        case L'\v': out += L"\\v";  break;
+        case L'\a': out += L"\\a";  break;
+        case L'\0': out += L"\\0";  break;
+        default:
+            {
+                // Emit non-printables as UCNs so parsing is unambiguous and portable.
+                if (!std::iswprint(static_cast<wint_t>(ch)))
+                {
+                    // Use \uXXXX when possible, else \UXXXXXXXX.
+                    unsigned int u = static_cast<unsigned int>(ch);
+                    if (u <= 0xFFFFu)
+                        out += std::format(L"\\u{:04X}", u);
+                    else
+                        out += std::format(L"\\U{:08X}", u);
+                }
+                else
+                {
+                    out.push_back(ch);
+                }
+                break;
+            }
+        }
+    }
+
+    return out;
 }
 
 #include "Utils/WindowsInclude.h"

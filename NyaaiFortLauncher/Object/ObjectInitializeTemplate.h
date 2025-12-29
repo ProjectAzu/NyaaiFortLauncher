@@ -34,9 +34,36 @@ struct TObjectInitializeTemplate : FStructWithProperties
         return NewObjectRaw(Outer, bDeferConstruction);
     }
     
+    NUniquePtr<T> MakeNativeTemplate()
+    {
+        if (!Class)
+        {
+            Log(Error, L"Cannot make native template, no class.");
+            return nullptr;
+        }
+        
+        // using deferred init and never finishing construction because it's a template object
+        return reinterpret_cast<T*>(Class->NewObject(nullptr, DefaultValueOverrides, true));
+    }
+    
+    void SetFromNativeTemplate(const T* NativeTemplate)
+    {
+        DefaultValueOverrides.clear();
+        
+        for (const FProperty* Property : NativeTemplate->GetPropertiesArrayConstRef())
+        {
+            FPropertySetData PropertySetData{};
+            PropertySetData.PropertyName = Property->GetName();
+            PropertySetData.SetValue = Property->GetAsString(NativeTemplate);
+            
+            DefaultValueOverrides.emplace_back(std::move(PropertySetData));
+        }
+    }
+
     NPROPERTY(Class)
     NSubClassOf<T> Class = T::StaticClass();
-
+    
+protected:
     NPROPERTY(DefaultValueOverrides)
     FDefaultValueOverrides DefaultValueOverrides{};
 };

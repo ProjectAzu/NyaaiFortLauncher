@@ -399,7 +399,6 @@ void NFortLauncher::ProcessCommands()
 
         if (Command.empty())
         {
-            Log(Info, L"Type 'help' to list available commands.");
             continue;
         }
 

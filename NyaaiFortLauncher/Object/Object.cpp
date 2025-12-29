@@ -227,7 +227,11 @@ NClass* NObject::GetClass() const { return &NObject_Class; }
 
 void NObject::Destroy()
 {
-    OnDestroyed();
+    if (bHasFinishedConstruction)
+    {
+        OnDestroyed();
+    }
+
     delete this;
 }
 

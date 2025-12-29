@@ -563,8 +563,17 @@ struct TTypeHelpers<std::vector<T>>
     {
         std::wstring Result{};
         
+        bool bIsFirstElem = true;
+        
         for (const auto& Elem : *Array)
         {
+            if (!bIsFirstElem)
+            {
+                Result += L" ";
+            }
+            
+            bIsFirstElem = false;
+            
             Result += std::format(L"{{{}}}", TTypeHelpers<T>::ToString(&Elem));
         }
         

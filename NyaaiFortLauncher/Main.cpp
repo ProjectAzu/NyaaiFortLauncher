@@ -33,7 +33,7 @@ static void PrintHelp()
         }
         else for (const auto Property : Properties)
         {
-            LogRaw(std::format(L"\t{} {} = {};\n", 
+            LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
                 Property->GetTypeName(),
                 Property->GetName(), 
                 Property->GetAsString(DefaultObject))
@@ -72,7 +72,7 @@ static void PrintHelp()
         }
         else for (const auto Property : Properties)
         {
-            LogRaw(std::format(L"\t{} {} = {};\n", 
+            LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
                 Property->GetTypeName(),
                 Property->GetName(), 
                 Property->GetAsString(StructInfo.SampleObjectHolder.get()))

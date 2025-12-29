@@ -312,7 +312,7 @@ struct TTypeHelpers<FDefaultValueOverrides>
         {
             if (!bIsFirst)
             {
-                Result += L"\n";
+                Result += L" ";
             }
             
             bIsFirst = false;

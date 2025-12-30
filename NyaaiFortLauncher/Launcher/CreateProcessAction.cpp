@@ -71,7 +71,7 @@ void NCreateProcessAction::Execute()
 
     // We want to suspend if bSuspendProcessAfterCreation is true
     DWORD CreationFlags = 0;
-    if (bSuspendProcessAfterCreation)
+    if (bCreateSuspended)
     {
         CreationFlags |= CREATE_SUSPENDED;
     }

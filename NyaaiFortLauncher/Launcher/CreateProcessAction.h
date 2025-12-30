@@ -17,8 +17,8 @@ public:
     NPROPERTY(LaunchArguments)
     std::wstring LaunchArguments{};
 
-    NPROPERTY(bSuspendProcessAfterCreation)
-    bool bSuspendProcessAfterCreation = false;
+    NPROPERTY(bCreateSuspended)
+    bool bCreateSuspended = false;
 
     STARTUPINFOW StartupInfo{};
     PROCESS_INFORMATION ResultProcessInfo{};

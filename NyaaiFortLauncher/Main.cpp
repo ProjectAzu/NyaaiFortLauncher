@@ -180,7 +180,7 @@ int wmain(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
     Log(Info, L"Press any key to exit...");
 
     CleanupLogging();
-
+    
     _getch();
 
     return 0;

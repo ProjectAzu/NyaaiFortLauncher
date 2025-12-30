@@ -8,8 +8,6 @@
 
 #include "Activity.h"
 #include "CreateProcessAction.h"
-#include "RequestExitAction.h"
-#include "RequestRelaunchAction.h"
 
 FCommandArguments::FCommandArguments(const std::wstring& RawString) : RawString(RawString)
 {
@@ -236,7 +234,7 @@ bool NFortLauncher::RunLauncher()
         }
     }
     
-    Log(Info, L"Running fortnite exit actions");
+    Log(Info, L"Running on fortnite exit actions");
     for (const auto& ActionTemplate : PostFortniteExitActions)
     {
         NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);

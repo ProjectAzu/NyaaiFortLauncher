@@ -1,3 +1,5 @@
+// Log.cpp
+
 #include "Log.h"
 
 #include "Utils/WindowsInclude.h"
@@ -6,13 +8,11 @@
 #include "replxx/replxx.hxx"
 
 #include <atomic>
-#include <condition_variable>
 #include <format>
 #include <mutex>
 #include <optional>
 #include <queue>
 #include <string>
-#include <string_view>
 #include <thread>
 #include <utility>
 #include <iostream>
@@ -29,24 +29,37 @@ namespace
 		}
 	}
 
-	// replxx expects UTF-8. We'll keep your public API as std::wstring and convert at the boundary.
-	std::unique_ptr<replxx::Replxx> GReplxx;
+	std::unique_ptr<replxx::Replxx> GReplxx = nullptr;
 
-	std::mutex                 GCommandMutex;
-	std::queue<std::wstring>   GPendingCommands;
-	
-	std::mutex GPendingPrintMutex{};
-	std::wstring GPendingPrint{};
-	std::jthread GPrintingThread{};
+	std::mutex               GCommandMutex{};
+	std::queue<std::wstring> GPendingCommands{};
 
-	std::jthread               GInputThread;
-	std::atomic<bool>          bInitialized = false;
+	std::jthread      GInputThread{};
+	std::atomic<bool> bInitialized = false;
 
 	constexpr char Prompt[] = "> ";
 
+	// Internal key used only to bail out of input() during shutdown.
+	constexpr char32_t ShutdownReplKey = replxx::Replxx::KEY::F11;
+
+	void EnqueueConsoleCommand(std::wstring&& Command)
+	{
+		std::scoped_lock Lock(GCommandMutex);
+		GPendingCommands.push(std::move(Command));
+	}
+
+	replxx::Replxx::ACTION_RESULT ShutdownHandler(char32_t)
+	{
+		// Remove prompt + current input line so we don't leave "> " behind on exit.
+		if (GReplxx)
+		{
+			GReplxx->invoke(replxx::Replxx::ACTION::CLEAR_SELF, 0);
+		}
+		return replxx::Replxx::ACTION_RESULT::BAIL;
+	}
+
 	void InputWorker(std::stop_token StopToken)
 	{
-		// Typical replxx usage: retry on EAGAIN.
 		while (!StopToken.stop_requested())
 		{
 			errno = 0;
@@ -62,7 +75,7 @@ namespace
 				break;
 			}
 
-			// nullptr means EOF / abort / etc (depending on key bindings / platform).
+			// nullptr means EOF / abort / etc.
 			if (Buf == nullptr)
 			{
 				break;
@@ -70,44 +83,13 @@ namespace
 
 			std::string LineUtf8(Buf);
 
-			// Add to replxx history (Up/Down arrow navigation).
-			GReplxx->history_add(LineUtf8);
+			// Up/Down arrow history.
+			if (GReplxx)
+			{
+				GReplxx->history_add(LineUtf8);
+			}
 
 			EnqueueConsoleCommand(Utf8ToWide(LineUtf8));
-		}
-	}
-	
-	void FlushPendingPrint()
-	{
-		std::scoped_lock Lock{GPendingPrintMutex};
-		
-		if (GPendingPrint.empty())
-		{
-			return;
-		}
-			
-		if (GReplxx)
-		{
-			const std::string Utf8 = WideToUtf8(GPendingPrint);
-			GReplxx->print("%s", Utf8.c_str());
-		}
-		else
-		{
-			// Fallback if logging is used before InitializeLogging().
-			std::wcout << GPendingPrint;	
-		}
-			
-		GPendingPrint.clear();
-	}
-	
-	// this logging lib goes to shit when you print too frequently and a different lib doesnt exist
-	void PrintingWorker(std::stop_token StopToken)
-	{
-		while (!StopToken.stop_requested())
-		{
-			FlushPendingPrint();
-			
-			Sleep(25);
 		}
 	}
 }
@@ -125,6 +107,12 @@ std::optional<std::wstring> GetPendingConsoleCommand()
 	return Cmd;
 }
 
+void EnqueueConsoleCommand(const std::wstring& Command)
+{
+	std::scoped_lock Lock(GCommandMutex);
+	GPendingCommands.push(Command);
+}
+
 void InitializeLogging()
 {
 	EnableVirtualTerminalProcessing();
@@ -134,45 +122,38 @@ void InitializeLogging()
 	SetConsoleCP(CP_UTF8);
 
 	GReplxx = std::make_unique<replxx::Replxx>();
+	GReplxx->install_window_change_handler();
 
-	// Make sure Ctrl+D sends EOF (so we can also emulate it during shutdown).
-	// Example of binding ctrl-D to "send_eof" in a real replxx app.
+	// Internal shutdown key: always bails out of input() regardless of line state.
+	GReplxx->bind_key(ShutdownReplKey, &ShutdownHandler);
+
+	// Optional: keep Ctrl+D as EOF behavior if you want it.
 	GReplxx->bind_key_internal(replxx::Replxx::KEY::control('D'), "send_eof");
 
 	bInitialized = true;
 
 	// Start input thread (reads user commands continuously).
 	GInputThread = std::jthread(InputWorker);
-	GPrintingThread = std::jthread(PrintingWorker);
 }
 
 void CleanupLogging()
 {
-	FlushPendingPrint();
-	
 	if (!bInitialized.exchange(false))
 	{
 		return;
 	}
 
-	// Ask the input thread to stop, then poke replxx so a blocking input() returns.
 	if (GInputThread.joinable())
 	{
 		GInputThread.request_stop();
 
+		// Wake replxx::input() and bail cleanly (does not require user input).
 		if (GReplxx)
 		{
-			// emulate_key_press is used to break replxx input from another thread.
-			GReplxx->emulate_key_press(replxx::Replxx::KEY::control('D'));
+			GReplxx->emulate_key_press(ShutdownReplKey);
 		}
 
 		GInputThread.join();
-	}
-	
-	if (GPrintingThread.joinable())
-	{
-		GPrintingThread.request_stop();
-		GPrintingThread.join();
 	}
 
 	GReplxx.reset();
@@ -188,21 +169,17 @@ void LogImplementation(ELogLevel Level, const std::wstring& Msg)
 	LogRaw(Decorated);
 }
 
-void EnqueueConsoleCommand(const std::wstring& Command)
-{
-	std::scoped_lock Lock(GCommandMutex);
-	GPendingCommands.push(Command);
-}
-
 void LogRaw(const std::wstring& Msg)
 {
-	if (bInitialized)
+	if (!bInitialized || !GReplxx)
 	{
-		std::scoped_lock Lock{GPendingPrintMutex};
-		GPendingPrint += Msg;
+		// Fallback if logging is used before InitializeLogging() or after CleanupLogging().
+		std::wcout << Msg;
 		return;
 	}
 
-	// Fallback if logging is used before InitializeLogging().
-	std::wcout << Msg;
+	// Correct replxx usage: print() from any thread.
+	// With the fixed Windows event signaling, this should display immediately.
+	const std::string Utf8 = WideToUtf8(Msg);
+	GReplxx->print("%s", Utf8.c_str());
 }

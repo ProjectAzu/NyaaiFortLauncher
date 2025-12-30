@@ -208,6 +208,11 @@ bool NFortLauncher::RunLauncher()
                 continue;
             }
             
+            if (PendingCommand->empty())
+            {
+                continue;
+            }
+            
             std::wstring CommandLower = PendingCommand.value();
             
             std::ranges::transform(CommandLower, CommandLower.begin(),

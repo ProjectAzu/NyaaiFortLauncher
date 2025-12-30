@@ -16,6 +16,9 @@ struct FLogTriggeredAction : FStructWithProperties
 
     NPROPERTY(Action)
     TObjectInitializeTemplate<NAction> Action{};
+    
+    NPROPERTY(Actions)
+    std::vector<TObjectInitializeTemplate<NAction>> Actions{};
 
     NPROPERTY(bTriggerOnlyOnce)
     bool bTriggerOnlyOnce = false;

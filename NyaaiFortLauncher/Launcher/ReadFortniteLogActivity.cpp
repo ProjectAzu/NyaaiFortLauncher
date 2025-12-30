@@ -210,8 +210,15 @@ void NReadFortniteLogActivity::ProcessLogTriggeredActions(wchar_t Char)
         if (LogTriggeredAction.TriggerStringCharsFound >= static_cast<uint32>(LogTriggeredAction.TriggerString.size()))
         {
             LogTriggeredAction.TriggerStringCharsFound = 0;
-
-            NUniquePtr<NAction> Action = LogTriggeredAction.Action.NewObject(this);
+            
+            {
+                NUniquePtr<NAction> Action = LogTriggeredAction.Action.NewObject(this);
+            }
+            
+            for (const auto& ActionTemplate : LogTriggeredAction.Actions)
+            {
+                NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);
+            }
 
             if (LogTriggeredAction.bTriggerOnlyOnce)
             {

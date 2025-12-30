@@ -61,7 +61,7 @@ public:
 
     void RequestRelaunch();
     void RequestExit();
-    void RequestGoIdlePreNextLaunch();
+    void RequestGoIdle();
 
     void NotifyObjectCreated(NLauncherObject* Object);
     void NotifyObjectDestroyed(NLauncherObject* Object);

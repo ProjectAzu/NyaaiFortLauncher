@@ -166,10 +166,11 @@ void NFortLauncher::RequestExit()
     bWantsToExit = true;
 }
 
-void NFortLauncher::RequestGoIdlePreNextLaunch()
+void NFortLauncher::RequestGoIdle()
 {
-    Log(Info, L"Requested for the launcher go idle pre next launch.");
+    Log(Info, L"Requested for the launcher to go idle.");
     bWantsToGoIdlePreNextLaunch = true;
+    bWantsToRelaunch = true;
 }
 
 void NFortLauncher::NotifyObjectCreated(NLauncherObject* Object)
@@ -494,10 +495,7 @@ void NFortLauncher::ExitCommand(const FCommandArguments& Args)
 
 void NFortLauncher::GoIdleCommand(const FCommandArguments& Args)
 {
-    bWantsToRelaunch = true;
-    bWantsToGoIdlePreNextLaunch = true;
-    
-    Log(Info, L"Requesting for the launcher to go idle");
+    RequestGoIdle();
 }
 
 void NFortLauncher::ExecuteActionCommand(const FCommandArguments& Args)

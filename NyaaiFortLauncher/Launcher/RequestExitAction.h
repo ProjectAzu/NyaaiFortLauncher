@@ -1,10 +1,10 @@
 #pragma once
 #include "Action.h"
 
-class NRequestExitAction : NAction
+class NRequestExitAction : public NAction
 {
     GENERATE_BASE_H(NRequestExitAction)
     
 public:
-    void Execute() override;
+    virtual void Execute() override;
 };

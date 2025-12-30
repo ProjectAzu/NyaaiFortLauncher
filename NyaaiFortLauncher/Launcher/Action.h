@@ -7,7 +7,7 @@ class NAction : public NLauncherObject
     GENERATE_BASE_H(NAction)
     
 public:
-    void OnCreated() override;
+    virtual void OnCreated() override;
 
 protected:
     virtual void Execute();

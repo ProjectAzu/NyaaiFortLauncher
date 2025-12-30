@@ -6,7 +6,7 @@ class NInjectDllIntoFortniteAction : public NAction
     GENERATE_BASE_H(NInjectDllIntoFortniteAction)
     
 public:
-    void Execute() override;
+    virtual void Execute() override;
     
     NPROPERTY(DllPath)
     std::filesystem::path DllPath{};

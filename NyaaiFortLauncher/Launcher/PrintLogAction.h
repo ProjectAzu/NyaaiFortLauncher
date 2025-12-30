@@ -2,14 +2,14 @@
 
 #include "Action.h"
 
-class NPrintLogAction : NAction
+class NPrintLogAction : public NAction
 {
     GENERATE_BASE_H(NPrintLogAction)
     
 public:
     NPrintLogAction();
     
-    void Execute() override;
+    virtual void Execute() override;
 
     NPROPERTY(Message)
     std::wstring Message{};

@@ -10,10 +10,10 @@ class NDetectFortniteCrashActivity : public NActivity
     GENERATE_BASE_H(NDetectFortniteCrashActivity)
 
 public:
-    void OnCreated() override;
-    void OnDestroyed() override;
+    virtual void OnCreated() override;
+    virtual void OnDestroyed() override;
     
-    void Tick(double DeltaTime) override;
+    virtual void Tick(double DeltaTime) override;
     
     NPROPERTY(OnFortniteCrashActions)
     std::vector<TObjectInitializeTemplate<NAction>> OnFortniteCrashActions{};

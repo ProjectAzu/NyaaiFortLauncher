@@ -100,7 +100,14 @@ void NFortLauncher::OnCreated()
         L"Requests that the launcher exits.",
         &ThisClass::ExitCommand
     );
-
+    
+    RegisterConsoleCommand(
+        this,
+        L"goidle",
+        L"Restart with idle phase in between stop and start.",
+        &ThisClass::GoIdleCommand
+    );
+    
     RegisterConsoleCommand(
         this,
         L"ExecuteAction",
@@ -118,7 +125,6 @@ void NFortLauncher::OnCreated()
     }
 
     Log(Info, L"Fortnite launch arguments: {}", FortniteLaunchArguments);
-    
     
     bool bIsFirstLaunch = true;
 
@@ -160,6 +166,12 @@ void NFortLauncher::RequestExit()
     bWantsToExit = true;
 }
 
+void NFortLauncher::RequestGoIdlePreNextLaunch()
+{
+    Log(Info, L"Requested for the launcher go idle pre next launch.");
+    bWantsToGoIdlePreNextLaunch = true;
+}
+
 void NFortLauncher::NotifyObjectCreated(NLauncherObject* Object)
 {
 }
@@ -180,6 +192,37 @@ void NFortLauncher::NotifyObjectDestroyed(NLauncherObject* Object)
 
 bool NFortLauncher::RunLauncher()
 {
+    if (bWantsToGoIdlePreNextLaunch)
+    {
+        bWantsToGoIdlePreNextLaunch = false;
+        
+        Log(Info, L"Going idle, type 'resume' to run launcher.");
+        
+        while (true)
+        {
+            Sleep(50);
+            
+            auto PendingCommand = GetPendingConsoleCommand();
+            if (!PendingCommand)
+            {
+                continue;
+            }
+            
+            std::wstring CommandLower = PendingCommand.value();
+            
+            std::ranges::transform(CommandLower, CommandLower.begin(),
+                       [](wchar_t c) { return static_cast<wchar_t>(std::towlower(static_cast<wint_t>(c))); });
+            
+            if (CommandLower != L"resume")
+            {
+                Log(Info, L"Launcher in idle mode, type 'resume' to run launcher.");
+                continue;
+            }
+            
+            break;
+        }
+    }
+    
     Log(Info, L"Running pre fortnite launch actions");
     for (const auto& ActionTemplate : PreFortniteLaunchActions)
     {
@@ -215,14 +258,14 @@ bool NFortLauncher::RunLauncher()
         auto NewTime = std::chrono::high_resolution_clock::now();
         double DeltaTime = std::chrono::duration<double>(NewTime - CurrentTime).count();
         CurrentTime = NewTime;
-
-        ProcessCommands();
-
+        
         for (const auto& Activity : ActivitiesSpawned)
         {
             Activity->Tick(DeltaTime);
         }
-
+        
+        ProcessCommands();
+        
         if (bWantsToRelaunch || bWantsToExit)
         {
             break;
@@ -442,6 +485,14 @@ void NFortLauncher::RestartCommand(const FCommandArguments& Args)
 void NFortLauncher::ExitCommand(const FCommandArguments& Args)
 {
     RequestExit();
+}
+
+void NFortLauncher::GoIdleCommand(const FCommandArguments& Args)
+{
+    bWantsToRelaunch = true;
+    bWantsToGoIdlePreNextLaunch = true;
+    
+    Log(Info, L"Requesting for the launcher to go idle");
 }
 
 void NFortLauncher::ExecuteActionCommand(const FCommandArguments& Args)

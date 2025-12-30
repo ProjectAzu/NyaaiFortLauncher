@@ -31,8 +31,8 @@ class NReadFortniteLogActivity : public NActivity
     GENERATE_BASE_H(NReadFortniteLogActivity)
 
 public:
-    void OnCreated() override;
-    void Tick(double DeltaTime) override;
+    virtual void OnCreated() override;
+    virtual void Tick(double DeltaTime) override;
 
 private:
     void ProcessLogTriggeredActions(wchar_t Char);

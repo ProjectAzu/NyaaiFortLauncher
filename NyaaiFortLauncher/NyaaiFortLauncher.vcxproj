@@ -157,6 +157,7 @@
     <ClCompile Include="Launcher\LauncherObject.cpp" />
     <ClCompile Include="Launcher\PrintLogAction.cpp" />
     <ClCompile Include="Launcher\ReadFortniteLogActivity.cpp" />
+    <ClCompile Include="Launcher\RequestGoIdlePreNextLaunchAction.cpp" />
     <ClCompile Include="Launcher\RequestRelaunchAction.cpp" />
     <ClCompile Include="Launcher\RunCommandAction.cpp" />
     <ClCompile Include="Launcher\WaitForBackendToRespondAction.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="Launcher\LauncherObject.h" />
     <ClInclude Include="Launcher\PrintLogAction.h" />
     <ClInclude Include="Launcher\ReadFortniteLogActivity.h" />
+    <ClInclude Include="Launcher\RequestGoIdlePreNextLaunchAction.h" />
     <ClInclude Include="Launcher\RequestRelaunchAction.h" />
     <ClInclude Include="Launcher\RunCommandAction.h" />
     <ClInclude Include="Launcher\WaitForBackendToRespondAction.h" />

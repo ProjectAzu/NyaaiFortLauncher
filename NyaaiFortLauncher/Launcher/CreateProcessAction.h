@@ -9,7 +9,7 @@ class NCreateProcessAction : public NAction
     GENERATE_BASE_H(NCreateProcessAction)
     
 public:
-    void Execute() override;
+    virtual void Execute() override;
     
     NPROPERTY(FilePath)
     std::filesystem::path FilePath{};

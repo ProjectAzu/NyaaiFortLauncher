@@ -7,7 +7,7 @@ class NWaitForBackendToRespondAction : public NAction
     GENERATE_BASE_H(NWaitForBackendToRespondAction)
     
 public:
-    void Execute() override;
+    virtual void Execute() override;
     
     NPROPERTY(Url)
     std::wstring Url{};

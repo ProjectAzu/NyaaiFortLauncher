@@ -51,7 +51,7 @@ class NFortLauncher : public NLauncherObject
     GENERATE_BASE_H(NFortLauncher)
     
 public:
-    void OnCreated() override;
+    virtual void OnCreated() override;
 
     inline void* GetFortniteProcessHandle() const { return FortniteProcessHandle; }
     inline void* GetFortniteStdOutReadPipeHandle() const { return FortniteStdOutReadPipeHandle; }
@@ -61,6 +61,7 @@ public:
 
     void RequestRelaunch();
     void RequestExit();
+    void RequestGoIdlePreNextLaunch();
 
     void NotifyObjectCreated(NLauncherObject* Object);
     void NotifyObjectDestroyed(NLauncherObject* Object);
@@ -99,6 +100,7 @@ private:
     void HelpCommand(const FCommandArguments& Args);
     void RestartCommand(const FCommandArguments& Args);
     void ExitCommand(const FCommandArguments& Args);
+    void GoIdleCommand(const FCommandArguments& Args);
     void ExecuteActionCommand(const FCommandArguments& Args);
 
     static void KillAllChildProcesses();
@@ -131,6 +133,7 @@ private:
 
     bool bWantsToRelaunch = false;
     bool bWantsToExit = false;
+    bool bWantsToGoIdlePreNextLaunch = false;
     
     std::vector<FRegisteredCommand> RegisteredCommands{};
 };

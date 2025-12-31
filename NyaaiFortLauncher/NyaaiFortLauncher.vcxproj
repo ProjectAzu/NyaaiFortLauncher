@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClCompile Include="Launcher\Action.cpp" />
     <ClCompile Include="Launcher\Activity.cpp" />
+    <ClCompile Include="Launcher\CopyFileAction.cpp" />
     <ClCompile Include="Launcher\CreateProcessAction.cpp" />
     <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp" />
     <ClCompile Include="Launcher\RequestExitAction.cpp" />
@@ -171,6 +172,7 @@
   <ItemGroup>
     <ClInclude Include="Launcher\Action.h" />
     <ClInclude Include="Launcher\Activity.h" />
+    <ClInclude Include="Launcher\CopyFileAction.h" />
     <ClInclude Include="Launcher\CreateProcessAction.h" />
     <ClInclude Include="Launcher\DetectFortniteCrashActivity.h" />
     <ClInclude Include="Launcher\RequestExitAction.h" />

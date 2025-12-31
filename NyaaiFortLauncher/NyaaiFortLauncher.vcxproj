@@ -202,7 +202,7 @@
     <Image Include="Resources\NyaaiFortLauncher.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Object\ObjectInitializeTemplate.h" />
+    <Content Include="Object\ObjectTemplate.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

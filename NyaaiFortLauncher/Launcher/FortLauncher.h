@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <functional>
 
-#include "Object/ObjectInitializeTemplate.h"
+#include "Object/ObjectTemplate.h"
 
 class NActivity;
 
@@ -113,16 +113,16 @@ public:
     std::wstring FortniteLaunchArguments{};
 
     NPROPERTY(PreFortniteLaunchActions)
-    std::vector<TObjectInitializeTemplate<NAction>> PreFortniteLaunchActions{};
+    std::vector<TObjectTemplate<NAction>> PreFortniteLaunchActions{};
 
     NPROPERTY(PostFortniteLaunchActions)
-    std::vector<TObjectInitializeTemplate<NAction>> PostFortniteLaunchActions{};
+    std::vector<TObjectTemplate<NAction>> PostFortniteLaunchActions{};
     
     NPROPERTY(PostFortniteExitActions)
-    std::vector<TObjectInitializeTemplate<NAction>> PostFortniteExitActions{};
+    std::vector<TObjectTemplate<NAction>> PostFortniteExitActions{};
 
     NPROPERTY(Activities)
-    std::vector<TObjectInitializeTemplate<NActivity>> Activities{};
+    std::vector<TObjectTemplate<NActivity>> Activities{};
 
 private:
     void* FortniteProcessHandle = nullptr;

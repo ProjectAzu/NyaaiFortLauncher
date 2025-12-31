@@ -3,19 +3,19 @@
 #include "Object.h"
 
 template<class T>
-struct TObjectInitializeTemplate : FStructWithProperties
+struct TObjectTemplate : FStructWithProperties
 {
-    TObjectInitializeTemplate() = default;
+    TObjectTemplate() = default;
 
     template<class Other>
-    TObjectInitializeTemplate(const TObjectInitializeTemplate<Other>& OtherTemplate)
+    TObjectTemplate(const TObjectTemplate<Other>& OtherTemplate)
         : Class(OtherTemplate.Class), DefaultValueOverrides(OtherTemplate.DefaultValueOverrides)
     {
     }
     
     static std::wstring GetName()
     { 
-        return std::format(L"TObjectInitializeTemplate<{}>", T::StaticClass()->GetName());
+        return std::format(L"TObjectTemplate<{}>", T::StaticClass()->GetName());
     }
     
     T* NewObjectRaw(NObject* Outer = nullptr, bool bDeferConstruction = false) const
@@ -34,7 +34,8 @@ struct TObjectInitializeTemplate : FStructWithProperties
         return NewObjectRaw(Outer, bDeferConstruction);
     }
     
-    NUniquePtr<T> MakeNativeTemplate()
+    template<class ReturnType>
+    NUniquePtr<ReturnType> MakeNativeTemplate() const
     {
         if (!Class)
         {
@@ -42,8 +43,19 @@ struct TObjectInitializeTemplate : FStructWithProperties
             return nullptr;
         }
         
+        if (!ReturnType::StaticClass()->IsSubclassOf(Class))
+        {
+            Log(Error, L"Cannot make native template, bad return type.");
+            return nullptr;
+        }
+        
         // using deferred init and never finishing construction because it's a template object
-        return reinterpret_cast<T*>(Class->NewObject(nullptr, DefaultValueOverrides, true));
+        return reinterpret_cast<ReturnType*>(Class->NewObject(nullptr, DefaultValueOverrides, true));
+    }
+    
+    NUniquePtr<T> MakeNativeTemplate() const
+    {
+        return MakeNativeTemplate<T>();
     }
     
     void SetFromNativeTemplate(const T* NativeTemplate)

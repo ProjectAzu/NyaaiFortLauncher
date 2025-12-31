@@ -2,7 +2,7 @@
 
 #include "Activity.h"
 #include "Action.h"
-#include "Object/ObjectInitializeTemplate.h"
+#include "Object/ObjectTemplate.h"
 #include "Utils/Utf8.h"
 
 struct FCommandArguments;
@@ -15,10 +15,10 @@ struct FLogTriggeredAction : FStructWithProperties
     std::wstring TriggerString{};
 
     NPROPERTY(Action)
-    TObjectInitializeTemplate<NAction> Action{};
+    TObjectTemplate<NAction> Action{};
     
     NPROPERTY(Actions)
-    std::vector<TObjectInitializeTemplate<NAction>> Actions{};
+    std::vector<TObjectTemplate<NAction>> Actions{};
 
     NPROPERTY(bTriggerOnlyOnce)
     bool bTriggerOnlyOnce = false;

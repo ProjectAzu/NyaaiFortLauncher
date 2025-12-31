@@ -500,7 +500,7 @@ void NFortLauncher::GoIdleCommand(const FCommandArguments& Args)
 
 void NFortLauncher::ExecuteActionCommand(const FCommandArguments& Args)
 {
-    TObjectInitializeTemplate<NAction> ActionTemplate = Args.GetArgumentAtIndex<TObjectInitializeTemplate<NAction>>(0);
+    TObjectTemplate<NAction> ActionTemplate = Args.GetArgumentAtIndex<TObjectTemplate<NAction>>(0);
     if (!ActionTemplate.Class)
     {
         return;

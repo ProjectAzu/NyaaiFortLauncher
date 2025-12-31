@@ -2,8 +2,6 @@
 
 #include "Action.h"
 
-#include "Utils/WindowsInclude.h"
-
 class NCopyFileAction : public NAction
 {
     GENERATE_BASE_H(NCopyFileAction)

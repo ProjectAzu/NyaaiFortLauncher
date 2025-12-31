@@ -550,44 +550,138 @@ std::wstring EscapeForCppWideStringLiteral(std::wstring_view s)
 
 bool ConvertStringToCleanAbsolutePath(const std::wstring& input, std::filesystem::path& out)
 {
-    std::filesystem::path p(input);
+    namespace fs = std::filesystem;
 
-    // If it doesn't look like a path (no root, no parent), treat it as a bare name and search.
-    // Examples that go to PATH search: "git", "tool.exe"
-    // Examples treated as paths: ".\\tool.exe", "C:\\bin\\tool.exe", "..\\tool.exe", "\\server\\share\\x"
-    if (!p.has_root_name() && !p.has_root_directory() && !p.has_parent_path())
+    auto last_error = []() -> DWORD { return GetLastError(); };
+
+    auto split_pathext = []() -> std::vector<std::wstring>
     {
-        DWORD required = SearchPathW(nullptr, input.c_str(), nullptr, 0, nullptr, nullptr);
-        if (required == 0) 
-        {
-            return false;
+        DWORD needed = GetEnvironmentVariableW(L"PATHEXT", nullptr, 0);
+        if (needed == 0) {
+            // Reasonable default if PATHEXT is missing
+            return { L".COM", L".EXE", L".BAT", L".CMD" };
+        }
+
+        std::wstring buf(needed, L'\0');
+        DWORD written = GetEnvironmentVariableW(L"PATHEXT", buf.data(), needed);
+        if (written == 0 || written >= needed) {
+            return { L".COM", L".EXE", L".BAT", L".CMD" };
+        }
+        buf.resize(written);
+
+        std::vector<std::wstring> exts;
+        size_t start = 0;
+        for (;;) {
+            size_t semi = buf.find(L';', start);
+            std::wstring token = (semi == std::wstring::npos) ? buf.substr(start) : buf.substr(start, semi - start);
+
+            // trim spaces
+            while (!token.empty() && iswspace(token.front())) token.erase(token.begin());
+            while (!token.empty() && iswspace(token.back())) token.pop_back();
+
+            if (!token.empty()) {
+                // Ensure it starts with '.'
+                if (token.front() != L'.') token.insert(token.begin(), L'.');
+                exts.push_back(token);
+            }
+
+            if (semi == std::wstring::npos) break;
+            start = semi + 1;
+        }
+
+        if (exts.empty()) {
+            exts = { L".COM", L".EXE", L".BAT", L".CMD" };
+        }
+        return exts;
+    };
+
+    auto search_path = [&](const std::wstring& file, const wchar_t* extension) -> std::optional<std::wstring>
+    {
+        // Probe for required size
+        SetLastError(ERROR_SUCCESS);
+        DWORD required = SearchPathW(nullptr, file.c_str(), extension, 0, nullptr, nullptr);
+        if (required == 0) {
+            return std::nullopt;
         }
 
         std::wstring buf(required, L'\0'); // required includes null terminator in this probe pattern
-        DWORD written = SearchPathW(nullptr, input.c_str(), nullptr, required, buf.data(), nullptr);
-        if (written == 0 || written >= required) 
-        {
-            return false;
+        SetLastError(ERROR_SUCCESS);
+        DWORD written = SearchPathW(nullptr, file.c_str(), extension, required, buf.data(), nullptr);
+        if (written == 0 || written >= required) {
+            return std::nullopt;
         }
 
         buf.resize(written);
-        p = std::filesystem::path(buf);
+        return buf;
+    };
+
+    fs::path p(input);
+
+    // Treat as "bare name" only if it has no root info and no parent path.
+    // Examples that go to PATH search: "git", "tool.exe"
+    // Examples treated as paths: ".\\tool", "C:\\bin\\tool", "..\\tool", "\\\\server\\share\\x"
+    const bool isBareName =
+        !p.has_root_name() &&
+        !p.has_root_directory() &&
+        !p.has_parent_path();
+
+    if (isBareName) {
+
+        // If there's already an extension, try exactly that first.
+        // If there's no extension, try PATHEXT (cmd-like) and ALSO try truly extensionless.
+        std::optional<std::wstring> found;
+
+        if (!p.has_extension()) {
+            const auto pathext = split_pathext();
+
+            // Try PATHEXT entries first (git -> git.exe, git.cmd, ...)
+            for (const auto& ext : pathext) {
+                found = search_path(input, ext.c_str());
+                if (found) {
+                    break;
+                }
+            }
+
+            // Finally, try the truly extensionless file name
+            if (!found) {
+                found = search_path(input, nullptr);
+            }
+        } else {
+            found = search_path(input, nullptr);
+        }
+
+        if (!found) {
+            const DWORD err = last_error();
+            Log(Error, L"SearchPathW could not resolve '{}' (GetLastError={}).", input, err);
+            return false;
+        }
+
+        p = fs::path(*found);
     }
 
     std::error_code ec;
 
-    std::filesystem::path abs = std::filesystem::absolute(p, ec);
-    if (ec) 
-    {
+    // Make absolute (string-based; does not validate existence)
+    fs::path abs = fs::absolute(p, ec);
+    if (ec) {
+        Log(Error, L"absolute() failed for '{}' -> '{}' (ec={} '{}').",
+            input, p.wstring(), ec.value(), std::wstring(ec.message().begin(), ec.message().end()));
         return false;
     }
 
-    // Best-effort: if the target exists, weakly_canonical tends to produce a nicer path,
-    // but won't throw if parts are missing (unlike canonical()).
-    std::filesystem::path canon = std::filesystem::weakly_canonical(abs, ec);
-    if (ec)
-    {
+    // If you want "bad path" (nonexistent) to be an error, check it explicitly.
+    if (!fs::exists(abs, ec) || ec) {
+        Log(Error, L"Path does not exist or is not reachable: '{}'.", abs.wstring(), input);
+        return false;
+    }
+
+    // Best-effort cleanup using weakly_canonical (may still fail for permissions, weird reparse points, etc.)
+    fs::path canon = fs::weakly_canonical(abs, ec);
+    if (ec) {
+        Log(Warning, L"weakly_canonical() failed for '{}' (ec={} '{}'). Returning cleaned absolute path instead.",
+            abs.wstring(), ec.value(), std::wstring(ec.message().begin(), ec.message().end()));
         canon = abs;
+        ec.clear();
     }
 
     out = canon.lexically_normal();

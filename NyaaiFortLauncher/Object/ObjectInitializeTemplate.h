@@ -50,6 +50,14 @@ struct TObjectInitializeTemplate : FStructWithProperties
     {
         DefaultValueOverrides.clear();
         
+        if (!NativeTemplate)
+        {
+            Class = nullptr;
+            return;
+        }
+        
+        Class = NativeTemplate->GetClass();
+        
         for (const FProperty* Property : NativeTemplate->GetPropertiesArrayConstRef())
         {
             FPropertySetData PropertySetData{};

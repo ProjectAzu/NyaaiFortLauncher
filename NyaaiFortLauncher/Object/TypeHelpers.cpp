@@ -550,6 +550,18 @@ std::wstring EscapeForCppWideStringLiteral(std::wstring_view s)
 
 bool ConvertStringToCleanAbsolutePath(const std::wstring& InInput, std::filesystem::path& OutPath)
 {
+    std::wstring InputWithoutWhitespaces = InInput;
+    std::erase_if(InputWithoutWhitespaces, [](wchar_t Char)
+    {
+        return std::iswspace(Char);
+    });
+    
+     if (InputWithoutWhitespaces.empty())
+     {
+         OutPath.clear();
+         return true;
+     }
+    
     std::filesystem::path CandidatePath(InInput);
 
     const bool bIsBareName =

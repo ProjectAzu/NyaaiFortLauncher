@@ -19,13 +19,14 @@ public:
 
     NPROPERTY(bCreateSuspended)
     bool bCreateSuspended = false;
+    
+    NPROPERTY(WorkingDirectory)
+    std::filesystem::path WorkingDirectory{};
 
     STARTUPINFOW StartupInfo{};
     PROCESS_INFORMATION ResultProcessInfo{};
-
-    // Be careful, you will need to close the handle yourself if you do this
-    bool bReturnProcessHandle = false;
-
-    void* ResultProcessHandle = nullptr;
+    
+    FUniqueHandle ResultProcessHandle = nullptr;
+    FUniqueHandle ResultThreadHandle = nullptr;
     bool bResultWasSuccess = false;
 };

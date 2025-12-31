@@ -350,8 +350,6 @@ bool NFortLauncher::LaunchFortniteProcess()
     NUniquePtr<NCreateProcessAction> CreateFortniteProcessAction =
         NCreateProcessAction::StaticClass()->NewObject<NCreateProcessAction>(this, {}, true);
 
-    CreateFortniteProcessAction->bReturnProcessHandle = true;
-
     CreateFortniteProcessAction->StartupInfo.dwFlags = STARTF_USESTDHANDLES;
     CreateFortniteProcessAction->StartupInfo.hStdOutput = StdOutWriteHandle;
     CreateFortniteProcessAction->StartupInfo.hStdError = StdOutWriteHandle;
@@ -379,7 +377,7 @@ bool NFortLauncher::LaunchFortniteProcess()
         return false;
     }
 
-    FortniteProcessHandle = CreateFortniteProcessAction->ResultProcessHandle;
+    FortniteProcessHandle = CreateFortniteProcessAction->ResultProcessHandle.Release();
 
     return true;
 }

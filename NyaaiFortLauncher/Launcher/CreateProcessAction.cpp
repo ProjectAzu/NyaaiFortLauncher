@@ -41,44 +41,55 @@ void NCreateProcessAction::Execute()
 {
     Super::Execute();
 
-    if (!exists(FilePath) || !is_regular_file(FilePath) || FilePath.extension().wstring() != L".exe")
+    if (!std::filesystem::exists(FilePath) || 
+        !std::filesystem::is_regular_file(FilePath) || 
+        FilePath.extension().wstring() != L".exe")
     {
         Log(Error, L"NCreateProcessAction: Bad file path");
         return;
     }
-
-    // Ensure our Job Object is initialized. All child processes will join this job.
+    
     InitializeJobObjectIfNeeded();
     
+    if (!WorkingDirectory.empty())
+    {
+        if (!std::filesystem::exists(WorkingDirectory) ||
+            !std::filesystem::is_directory(WorkingDirectory))
+        {
+            Log(Error, L"NCreateProcessAction: Bad working directory. Using exe dir as working dir");
+            WorkingDirectory.clear();
+        }   
+    }
+    
+    if (WorkingDirectory.empty())
+    {
+        WorkingDirectory = FilePath.parent_path();
+    }
+    
+    auto WorkingDirectoryW = WorkingDirectory.wstring();
+    
     std::wstring ExePathW = FilePath.wstring();
-    // Convert LaunchArguments (UTF-8) to wide
-    std::wstring ArgsW(LaunchArguments.begin(), LaunchArguments.end());
-
+    
     // If there are no arguments, we can pass null or an empty string to CreateProcess
     LPWSTR CommandLinePtr = nullptr;
-    if (!ArgsW.empty())
+    if (!LaunchArguments.empty())
     {
-        if (ArgsW[0] != L' ')
+        if (LaunchArguments[0] != L' ')
         {
-            ArgsW.insert(ArgsW.begin(), L' ');
+            LaunchArguments.insert(LaunchArguments.begin(), L' ');
         }
         
-        // Command line should contain only the arguments, not the .exe path again
-        CommandLinePtr = ArgsW.data(); // safe in C++17+ as ArgsW is non-empty
+        CommandLinePtr = LaunchArguments.data();
     }
 
     StartupInfo.cb = sizeof(StartupInfo);
-
-    // We want to suspend if bSuspendProcessAfterCreation is true
+    
     DWORD CreationFlags = 0;
     if (bCreateSuspended)
     {
         CreationFlags |= CREATE_SUSPENDED;
     }
-
-    // In many console or server apps, you might prefer bInheritHandles = FALSE
-    // but set to TRUE if you want the child to inherit any of this process's
-    // inheritable handles, stdin/out, etc.
+    
     BOOL bSuccess = CreateProcessW(
         ExePathW.c_str(),     // lpApplicationName
         CommandLinePtr,       // lpCommandLine (arguments only)
@@ -87,7 +98,7 @@ void NCreateProcessAction::Execute()
         TRUE,                 // bInheritHandles
         CreationFlags,
         nullptr,              // lpEnvironment (inherit environment)
-        nullptr,              // lpCurrentDirectory (inherit current directory)
+        WorkingDirectoryW.c_str(),
         &StartupInfo,
         &ResultProcessInfo
     );
@@ -98,8 +109,7 @@ void NCreateProcessAction::Execute()
         Log(Error, L"Failed to create process (Error code {})", LastError);
         return;
     }
-
-    // If our job object was successfully created, assign the new process to it
+    
     if (GJobHandle)
     {
         if (!AssignProcessToJobObject(GJobHandle, ResultProcessInfo.hProcess))
@@ -118,16 +128,8 @@ void NCreateProcessAction::Execute()
         ResultProcessInfo.dwProcessId, 
         ResultProcessInfo.dwThreadId);
     
-    CloseHandle(ResultProcessInfo.hThread);
-
-    if (bReturnProcessHandle)
-    {
-        ResultProcessHandle = ResultProcessInfo.hProcess;
-    }
-    else
-    {
-        CloseHandle(ResultProcessInfo.hProcess);
-    }
+    ResultProcessHandle = ResultProcessInfo.hProcess;
+    ResultThreadHandle = ResultProcessInfo.hThread;
 
     bResultWasSuccess = true;
 }

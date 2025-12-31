@@ -7,7 +7,7 @@ class NCopyFileAction : public NAction
     GENERATE_BASE_H(NCopyFileAction)
 
 public:
-    void Execute() override;
+    virtual void Execute() override;
 
     NPROPERTY(From)
     std::filesystem::path From{};

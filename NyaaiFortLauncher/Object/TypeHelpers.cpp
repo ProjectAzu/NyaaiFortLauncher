@@ -583,27 +583,27 @@ bool ConvertStringToCleanAbsolutePath(const std::wstring& InInput, std::filesyst
         CandidatePath = std::filesystem::path(Buffer);
     }
 
-    std::error_code Ec;
+    std::error_code ErrorCode{};
 
-    const std::filesystem::path AbsolutePath = std::filesystem::absolute(CandidatePath, Ec);
-    if (Ec)
+    const std::filesystem::path AbsolutePath = std::filesystem::absolute(CandidatePath, ErrorCode);
+    if (ErrorCode)
     {
-        Log(Error, L"absolute() failed for '{}' (ec={}, path='{}').", InInput, Ec.value(), CandidatePath.wstring());
+        Log(Error, L"absolute() failed for '{}' (ec={}, path='{}').", InInput, ErrorCode.value(), CandidatePath.wstring());
         return false;
     }
 
-    if (!std::filesystem::exists(AbsolutePath, Ec) || Ec)
+    if (!std::filesystem::exists(AbsolutePath, ErrorCode) || ErrorCode)
     {
         Log(Error, L"Path does not exist or is not accessible: '{}' (from '{}').", AbsolutePath.wstring(), InInput);
         return false;
     }
 
-    std::filesystem::path CanonicalPath = std::filesystem::weakly_canonical(AbsolutePath, Ec);
-    if (Ec)
+    std::filesystem::path CanonicalPath = std::filesystem::weakly_canonical(AbsolutePath, ErrorCode);
+    if (ErrorCode)
     {
         Log(Warning,
             L"weakly_canonical() failed for '{}' (ec={}). Using cleaned absolute path instead.",
-            AbsolutePath.wstring(), Ec.value());
+            AbsolutePath.wstring(), ErrorCode.value());
 
         OutPath = AbsolutePath.lexically_normal();
         return true;

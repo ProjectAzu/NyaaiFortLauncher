@@ -547,47 +547,49 @@ std::wstring EscapeForCppWideStringLiteral(std::wstring_view s)
 #include "Utils/WindowsInclude.h"
 #include <filesystem>
 #include <string>
-#include <stdexcept>
 
-bool ConvertStringToCanonicalPath(const std::wstring& Input, std::filesystem::path& OutResult)
+bool ConvertStringToCleanAbsolutePath(const std::wstring& input, std::filesystem::path& out)
 {
-    wchar_t buffer[MAX_PATH];
+    std::filesystem::path p(input);
 
-    DWORD length = SearchPathW(
-        nullptr,
-        Input.c_str(),
-        nullptr,
-        static_cast<DWORD>(std::size(buffer)),
-        buffer,
-        nullptr
-    );
-
-    if (length == 0 || length > MAX_PATH)
+    // If it doesn't look like a path (no root, no parent), treat it as a bare name and search.
+    // Examples that go to PATH search: "git", "tool.exe"
+    // Examples treated as paths: ".\\tool.exe", "C:\\bin\\tool.exe", "..\\tool.exe", "\\server\\share\\x"
+    if (!p.has_root_name() && !p.has_root_directory() && !p.has_parent_path())
     {
-        // Not found in PATH
-        Log(Error, 
-            L"Unable to locate file '{}' as a direct path or in the system PATH.", Input
-        );
+        DWORD required = SearchPathW(nullptr, input.c_str(), nullptr, 0, nullptr, nullptr);
+        if (required == 0) 
+        {
+            return false;
+        }
 
-        return false;
+        std::wstring buf(required, L'\0'); // required includes null terminator in this probe pattern
+        DWORD written = SearchPathW(nullptr, input.c_str(), nullptr, required, buf.data(), nullptr);
+        if (written == 0 || written >= required) 
+        {
+            return false;
+        }
+
+        buf.resize(written);
+        p = std::filesystem::path(buf);
     }
-    
-    try
-    {
-        std::filesystem::path foundPath(buffer);
-        OutResult = std::filesystem::canonical(foundPath);
-    }
-    catch (const std::filesystem::filesystem_error& e)
-    {
-        auto What = std::string(e.what());
-        
-        // Very unlikely to fail here, but just in case:
-        Log(Error, 
-            L"Found file in PATH but failed to canonicalize. Reason: {}", std::wstring(What.begin(), What.end())
-        );
 
+    std::error_code ec;
+
+    std::filesystem::path abs = std::filesystem::absolute(p, ec);
+    if (ec) 
+    {
         return false;
     }
 
+    // Best-effort: if the target exists, weakly_canonical tends to produce a nicer path,
+    // but won't throw if parts are missing (unlike canonical()).
+    std::filesystem::path canon = std::filesystem::weakly_canonical(abs, ec);
+    if (ec)
+    {
+        canon = abs;
+    }
+
+    out = canon.lexically_normal();
     return true;
 }

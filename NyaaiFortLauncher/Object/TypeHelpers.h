@@ -591,7 +591,7 @@ struct TTypeHelpers<std::vector<T>>
     }
 };
 
-bool ConvertStringToCanonicalPath(const std::wstring& Input, std::filesystem::path& OutResult);
+bool ConvertStringToCleanAbsolutePath(const std::wstring& Input, std::filesystem::path& OutResult);
 
 template<>
 struct TTypeHelpers<std::filesystem::path>
@@ -604,7 +604,7 @@ struct TTypeHelpers<std::filesystem::path>
             return false;
         }
 
-        return ConvertStringToCanonicalPath(ParsedString, *Property);
+        return ConvertStringToCleanAbsolutePath(ParsedString, *Property);
     }
     
     static std::wstring ToString(const std::filesystem::path* Property)

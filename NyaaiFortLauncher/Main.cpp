@@ -100,7 +100,7 @@ static void RunLauncher(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
     }
 
     std::filesystem::path ConfigPath{};
-    if (!ConvertStringToCanonicalPath(ConfigPathString, ConfigPath))
+    if (!ConvertStringToCleanAbsolutePath(ConfigPathString, ConfigPath))
     {
         Log(Error, L"Could not convert command line argument '{}' into a valid path.", ConfigPathString);
         return;

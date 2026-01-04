@@ -84,7 +84,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)/Dependencies/Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libcurl_a.lib;advapi32.lib;crypt32.lib;normaliz.lib;ws2_32.lib;wldap32.lib;replxx-static-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -123,6 +122,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)/Dependencies/Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libcurl_a.lib;advapi32.lib;crypt32.lib;normaliz.lib;ws2_32.lib;wldap32.lib;replxx-static-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
+      <ShowProgress>NotSet</ShowProgress>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -147,50 +147,31 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Launcher\Action.cpp" />
-    <ClCompile Include="Launcher\Activity.cpp" />
-    <ClCompile Include="Launcher\CopyFileAction.cpp" />
-    <ClCompile Include="Launcher\CreateProcessAction.cpp" />
-    <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp" />
-    <ClCompile Include="Launcher\RequestExitAction.cpp" />
-    <ClCompile Include="Launcher\FortLauncher.cpp" />
-    <ClCompile Include="Launcher\InjectDllIntoFortniteAction.cpp" />
-    <ClCompile Include="Launcher\LauncherObject.cpp" />
-    <ClCompile Include="Launcher\PrintLogAction.cpp" />
-    <ClCompile Include="Launcher\ReadFortniteLogActivity.cpp" />
-    <ClCompile Include="Launcher\RequestGoIdleAction.cpp" />
-    <ClCompile Include="Launcher\RequestRelaunchAction.cpp" />
-    <ClCompile Include="Launcher\RunCommandAction.cpp" />
-    <ClCompile Include="Launcher\WaitForBackendToRespondAction.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Object\Object.cpp" />
-    <ClCompile Include="Object\TypeHelpers.cpp" />
-    <ClCompile Include="Utils\Log.cpp" />
-    <ClCompile Include="Utils\TextFileLoader.cpp" />
-    <ClCompile Include="Utils\Utf8.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Launcher\Action.h" />
+    <ClInclude Include="Launcher\Actions\Action.h" />
+    <ClInclude Include="Launcher\Actions\CopyFileAction.h" />
+    <ClInclude Include="Launcher\Actions\CreateProcessAction.h" />
+    <ClInclude Include="Launcher\Actions\InjectDllIntoFortniteAction.h" />
+    <ClInclude Include="Launcher\Actions\PrintLogAction.h" />
+    <ClInclude Include="Launcher\Actions\RequestExitAction.h" />
+    <ClInclude Include="Launcher\Actions\RequestRelaunchAction.h" />
+    <ClInclude Include="Launcher\Actions\RunCommandAction.h" />
+    <ClInclude Include="Launcher\Actions\WaitForBackendToRespondAction.h" />
     <ClInclude Include="Launcher\Activity.h" />
-    <ClInclude Include="Launcher\CopyFileAction.h" />
-    <ClInclude Include="Launcher\CreateProcessAction.h" />
+    <ClInclude Include="Launcher\CommandManager.h" />
     <ClInclude Include="Launcher\DetectFortniteCrashActivity.h" />
-    <ClInclude Include="Launcher\RequestExitAction.h" />
+    <ClInclude Include="Launcher\Engine.h" />
+    <ClInclude Include="Launcher\EngineObject.h" />
     <ClInclude Include="Launcher\FortLauncher.h" />
-    <ClInclude Include="Launcher\InjectDllIntoFortniteAction.h" />
-    <ClInclude Include="Launcher\LauncherObject.h" />
-    <ClInclude Include="Launcher\PrintLogAction.h" />
     <ClInclude Include="Launcher\ReadFortniteLogActivity.h" />
-    <ClInclude Include="Launcher\RequestGoIdleAction.h" />
-    <ClInclude Include="Launcher\RequestRelaunchAction.h" />
-    <ClInclude Include="Launcher\RunCommandAction.h" />
-    <ClInclude Include="Launcher\WaitForBackendToRespondAction.h" />
+    <ClInclude Include="Object\DefaultValueOverrides.h" />
     <ClInclude Include="Object\IntegerTypes.h" />
     <ClInclude Include="Object\Object.h" />
-    <ClInclude Include="Object\DefaultValueOverrides.h" />
+    <ClInclude Include="Object\ObjectTemplate.h" />
     <ClInclude Include="Object\TypeHelpers.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Utils\Log.h" />
+    <ClInclude Include="Utils\CommandLine.h" />
+    <ClInclude Include="Utils\CommandLineImplementation.h" />
+    <ClInclude Include="Utils\ReplxxCommandLine.h" />
     <ClInclude Include="Utils\TextFileLoader.h" />
     <ClInclude Include="Utils\Utf8.h" />
     <ClInclude Include="Utils\WindowsInclude.h" />
@@ -203,6 +184,31 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Object\ObjectTemplate.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Launcher\Actions\Action.cpp" />
+    <ClCompile Include="Launcher\Actions\CopyFileAction.cpp" />
+    <ClCompile Include="Launcher\Actions\CreateProcessAction.cpp" />
+    <ClCompile Include="Launcher\Actions\InjectDllIntoFortniteAction.cpp" />
+    <ClCompile Include="Launcher\Actions\PrintLogAction.cpp" />
+    <ClCompile Include="Launcher\Actions\RequestExitAction.cpp" />
+    <ClCompile Include="Launcher\Actions\RequestRelaunchAction.cpp" />
+    <ClCompile Include="Launcher\Actions\RunCommandAction.cpp" />
+    <ClCompile Include="Launcher\Actions\WaitForBackendToRespondAction.cpp" />
+    <ClCompile Include="Launcher\Activity.cpp" />
+    <ClCompile Include="Launcher\CommandManager.cpp" />
+    <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp" />
+    <ClCompile Include="Launcher\Engine.cpp" />
+    <ClCompile Include="Launcher\EngineObject.cpp" />
+    <ClCompile Include="Launcher\FortLauncher.cpp" />
+    <ClCompile Include="Launcher\ReadFortniteLogActivity.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Object\Object.cpp" />
+    <ClCompile Include="Object\TypeHelpers.cpp" />
+    <ClCompile Include="Utils\CommandLineImplementation.cpp" />
+    <ClCompile Include="Utils\ReplxxCommandLine.cpp" />
+    <ClCompile Include="Utils\TextFileLoader.cpp" />
+    <ClCompile Include="Utils\Utf8.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,84 +15,58 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Launcher\Action.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\Activity.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\CreateProcessAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\FortLauncher.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\InjectDllIntoFortniteAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\LauncherObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\ReadFortniteLogActivity.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Object\Object.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\Log.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\RequestExitAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\PrintLogAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\RequestRelaunchAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\WaitForBackendToRespondAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\TextFileLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\Utf8.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\RunCommandAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Object\TypeHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Launcher\Action.h">
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\Action.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\CopyFileAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\CreateProcessAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\InjectDllIntoFortniteAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\PrintLogAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\RequestExitAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\RequestRelaunchAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\RunCommandAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Actions\WaitForBackendToRespondAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Launcher\Activity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\CreateProcessAction.h">
+    <ClInclude Include="Launcher\CommandManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\DetectFortniteCrashActivity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\Engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\EngineObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Launcher\FortLauncher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\InjectDllIntoFortniteAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\LauncherObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Launcher\ReadFortniteLogActivity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\DefaultValueOverrides.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Object\IntegerTypes.h">
@@ -101,43 +75,28 @@
     <ClInclude Include="Object\Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\Log.h">
+    <ClInclude Include="Object\ObjectTemplate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\RequestExitAction.h">
+    <ClInclude Include="Object\TypeHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\PrintLogAction.h">
+    <ClInclude Include="Utils\CommandLine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\RequestRelaunchAction.h">
+    <ClInclude Include="Utils\CommandLineImplementation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\DetectFortniteCrashActivity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\WaitForBackendToRespondAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="resource.h">
+    <ClInclude Include="Utils\ReplxxCommandLine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils\TextFileLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utils\WindowsInclude.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utils\Utf8.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\RunCommandAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Object\DefaultValueOverrides.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Object\TypeHelpers.h">
+    <ClInclude Include="Utils\WindowsInclude.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -150,5 +109,76 @@
     <Image Include="Resources\NyaaiFortLauncher.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Launcher\Actions\Action.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\CopyFileAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\CreateProcessAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\InjectDllIntoFortniteAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\PrintLogAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\RequestExitAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\RequestRelaunchAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\RunCommandAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\WaitForBackendToRespondAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Activity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\CommandManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\EngineObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\FortLauncher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\ReadFortniteLogActivity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\TypeHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLineImplementation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\ReplxxCommandLine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TextFileLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Utf8.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

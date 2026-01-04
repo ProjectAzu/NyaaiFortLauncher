@@ -5,6 +5,8 @@
 
 #include <unordered_set>
 
+#include "Launcher/Actions/Action.h"
+
 class NDetectFortniteCrashActivity : public NActivity
 {
     GENERATE_BASE_H(NDetectFortniteCrashActivity)

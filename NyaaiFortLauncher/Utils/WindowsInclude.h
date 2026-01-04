@@ -42,6 +42,11 @@ struct FUniqueHandle
     {
         return Handle;
     }
+    
+    operator HANDLE() const
+    {
+        return Get();
+    }
 
     bool IsValid() const noexcept
     {
@@ -80,6 +85,12 @@ struct FUniqueHandle
         HANDLE Temp = Handle;
         Handle = Other.Handle;
         Other.Handle = Temp;
+    }
+    
+    HANDLE* GetAddressOf() noexcept
+    {
+        Reset();
+        return &Handle;
     }
 
 private:

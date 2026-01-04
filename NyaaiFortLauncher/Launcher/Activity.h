@@ -1,13 +1,28 @@
 #pragma once
 
-#include "LauncherObject.h"
+#include "Launcher/EngineObject.h"
+#include "Object/ObjectTemplate.h"
 
-class NActivity : public NLauncherObject
+class NActivity : public NEngineObject
 {
     GENERATE_BASE_H(NActivity)
     
 public:
-    virtual void OnCreated() override;
     virtual void Tick(double DeltaTime);
+    virtual void OnDestroyed() override;
     
+    NActivity* StartChildActivity(const TObjectTemplate<NActivity>& ActivityTemplate);
+    template<class T> T* StartChildActivity(const TObjectTemplate<T>& ActivityTemplate)
+    {
+        return reinterpret_cast<T*>(StartChildActivity(TObjectTemplate<NActivity>{ActivityTemplate}));
+    }
+    
+    const std::vector<NActivity*>& GetChildActivities() const { return ChildActivities; }
+    
+private:
+    std::vector<NActivity*> ChildActivities{};
+    uint32 ChildActivitiesArrayIndex = 0;
+    
+    uint64 TickNumber = 0;
+    uint64 ParentTickNumber = 0;
 };

@@ -10,7 +10,7 @@
 static std::vector<NClass*>* AllClassesSortedByHierarchyAndName{};
 static std::unordered_map<std::wstring, NClass*>* AllClassesByByName{};
 
-void FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
+bool FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
 {
     for (const auto Property : Properties)
     {
@@ -19,13 +19,15 @@ void FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, c
             if (!Property->Set(this, Value))
             {
                 Log(Error, L"Setting property {} to {} in a struct failed.", PropertyName, Value);
+                return false;
             }
             
-            return;
+            return true;
         }
     }
 
-    Log(Error, L"SetPropertyValue: Failed to find property {} a struct.", PropertyName);
+    Log(Error, L"SetPropertyValue: Failed to find property {} in a struct.", PropertyName);
+    return false;
 }
 
 NClass::NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObjectFactory)())
@@ -129,7 +131,7 @@ FProperty::FProperty(const wchar_t* Name, struct FStructWithProperties* OwningOb
     OwningObject->Properties.push_back(this);
 }
 
-NObject* NClass::NewObjectRaw(NObject* Outer, const FDefaultValueOverrides& DefaultValueOverrides, bool bDeferConstruction) const
+NObject* NClass::NewObjectRaw(NObject* Outer, bool bDeferConstruction, const FDefaultValueOverrides& DefaultValueOverrides) const
 {
     NObject* NewObject = NewObjectFactory();
 
@@ -198,11 +200,14 @@ void NObject::FinishConstruction()
         return;
     }
     
+    bIsInsideOnCreated = true;
     OnCreated();
+    bIsInsideOnCreated = false;
+
     bHasFinishedConstruction = true;
 }
 
-void NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
+bool NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
 {
     for (const auto Property : Properties)
     {
@@ -212,21 +217,59 @@ void NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstr
             {
                 Log(Error, L"Setting property {} to {} in an object of class {} failed.",
                     PropertyName, Value, GetClass()->GetName());
+                
+                return false;
             }
             
-            return;
+            return true;
         }
     }
 
     Log(Error, L"SetPropertyValue: Failed to find property {} in class {}.",
         PropertyName, GetClass()->GetName());
+    
+    return false;
 }
 
 NClass* NObject::StaticClass() { return &NObject_Class; }
 NClass* NObject::GetClass() const { return &NObject_Class; }
 
+NObject* NObject::GetObjectOfTypeFromOuterChain(NClass* Class, bool bIgnoreSelf) const
+{
+    for (NObject* Object = const_cast<NObject*>(bIgnoreSelf ? GetOuter() : this); Object; Object = Object->GetOuter())
+    {
+        if (Object->GetClass()->IsSubclassOf(Class))
+        {
+            return Object;
+        }
+    }
+
+    Log(Error, L"Failed to get object of class '{}' from outer chain.", Class->GetName());
+    
+    return nullptr;
+}
+
+bool NObject::IsObjectPartOfOuterChain(const NObject* InObject) const
+{
+    for (NObject* Object = const_cast<NObject*>(this); Object; Object = Object->GetOuter())
+    {
+        if (Object == InObject)
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 void NObject::Destroy()
 {
+    if (bIsInsideOnCreated)
+    {
+        Log(Error, L"{}::Destroy() was called inside {}::OnCreated(). This is not allowed.", GetClass()->GetName(), GetClass()->GetName());
+        __debugbreak();
+    }
+
     if (bHasFinishedConstruction)
     {
         OnDestroyed();

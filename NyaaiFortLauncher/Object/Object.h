@@ -4,7 +4,7 @@
 #include <vector>
 #include <utility>
 
-#include "Utils/Log.h"
+#include "Utils/CommandLine.h"
 #include "IntegerTypes.h"
 #include "DefaultValueOverrides.h"
 
@@ -93,7 +93,7 @@ private:
 // all structs with properties should have a no arg constructor for the sample object and should implement GetName
 struct FStructWithProperties
 {
-    void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
+    bool SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
     
     // Please implement this when deriving from FStructWithProperties
     static std::wstring GetName()
@@ -129,12 +129,20 @@ public:
 
     void FinishConstruction();
 
-    void SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
+    bool SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
 
     static NClass* StaticClass();
     virtual NClass* GetClass() const;
 
     inline NObject* GetOuter() const { return OuterPrivate; }
+    
+    NObject* GetObjectOfTypeFromOuterChain(NClass* Class, bool bIgnoreSelf) const;
+    template<class T> T* GetObjectOfTypeFromOuterChain(bool bIgnoreSelf) const
+    {
+        return reinterpret_cast<T*>(GetObjectOfTypeFromOuterChain(T::StaticClass(), bIgnoreSelf));
+    }
+    
+    bool IsObjectPartOfOuterChain(const NObject* InObject) const;
 
     void Destroy();
 
@@ -154,6 +162,7 @@ private:
     NObject* OuterPrivate = nullptr;
 
     bool bHasFinishedConstruction = false;
+    bool bIsInsideOnCreated = false;
 };
 
 template <class T>
@@ -217,11 +226,13 @@ public:
 
     void Reset(T* NewObject)
     {
-        if(Object)
-        {
-            Object->Destroy();
-        }
+        NObject* OldObject = Object;
         Object = reinterpret_cast<NObject*>(NewObject);
+
+        if(OldObject)
+        {
+            OldObject->Destroy();
+        }
     }
 
 private:
@@ -255,10 +266,10 @@ public:
 
     bool IsSubclassOf(const NClass* Other) const;
     
-    NObject* NewObjectRaw(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const;
+    NObject* NewObjectRaw(NObject* Outer = nullptr, bool bDeferConstruction = false, const FDefaultValueOverrides& DefaultValueOverrides = {}) const;
     
     template<class T>
-    T* NewObjectRaw(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    T* NewObjectRaw(NObject* Outer = nullptr, bool bDeferConstruction = false, const FDefaultValueOverrides& DefaultValueOverrides = {}) const
     {
         if (!IsSubclassOf(T::StaticClass()))
         {
@@ -266,18 +277,18 @@ public:
             return nullptr;
         }
         
-        return reinterpret_cast<T*>(NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction));
+        return reinterpret_cast<T*>(NewObjectRaw(Outer, bDeferConstruction, DefaultValueOverrides));
     }
     
-    NUniquePtr<NObject> NewObject(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    NUniquePtr<NObject> NewObject(NObject* Outer = nullptr, bool bDeferConstruction = false, const FDefaultValueOverrides& DefaultValueOverrides = {}) const
     {
-        return NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction);
+        return NewObjectRaw(Outer, bDeferConstruction, DefaultValueOverrides);
     }
     
     template<class T>
-    NUniquePtr<T> NewObject(NObject* Outer = nullptr, const FDefaultValueOverrides& DefaultValueOverrides = {}, bool bDeferConstruction = false) const
+    NUniquePtr<T> NewObject(NObject* Outer = nullptr, bool bDeferConstruction = false, const FDefaultValueOverrides& DefaultValueOverrides = {}) const
     {
-        return NewObjectRaw<T>(Outer, DefaultValueOverrides, bDeferConstruction);
+        return NewObjectRaw<T>(Outer, bDeferConstruction, DefaultValueOverrides);
     }
 
     static NClass* GetClassById(uint16 Id);

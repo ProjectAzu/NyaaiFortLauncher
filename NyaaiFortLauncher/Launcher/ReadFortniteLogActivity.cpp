@@ -1,6 +1,7 @@
 #include "ReadFortniteLogActivity.h"
 
-#include "FortLauncher.h"
+#include "CommandManager.h"
+#include "Launcher/FortLauncher.h"
 
 #include "Utils/WindowsInclude.h"
 
@@ -19,7 +20,7 @@ void NReadFortniteLogActivity::OnCreated()
         Log(Warning, L"bOnlyPrintLogWithColoredPrintPrefix is true but the ColoredPrintPrefix is not set, will not print anything");
     }
 
-    GetLauncher()->RegisterConsoleCommand(
+    GetCommandManager().RegisterConsoleCommand(
         this,
         L"fn",
         L"Forwards the command to fortnite",

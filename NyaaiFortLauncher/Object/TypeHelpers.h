@@ -340,7 +340,11 @@ struct TTypeHelpers<T, std::enable_if_t<std::is_base_of_v<FStructWithProperties,
         
         for (const auto& PropertySetData : PropertiesSetData)
         {
-            StructWithProperties->SetPropertyValue(PropertySetData.PropertyName, PropertySetData.SetValue);
+            if (!StructWithProperties->SetPropertyValue(PropertySetData.PropertyName, PropertySetData.SetValue))
+            {
+                Log(Error, L"Setting property '{}' in struct '{}' failed.", 
+                    PropertySetData.PropertyName, GetName());
+            }
         }
         
         return true;
@@ -406,11 +410,22 @@ struct TTypeHelpers<std::wstring>
 {
     static bool SetFromString(std::wstring* Property, const std::wstring& Value)
     {
+        if (Value.empty())
+        {
+            *Property = {};
+            return true;
+        }
+        
         return ParseCppStringLiteral(Value, *Property);
     }
     
     static std::wstring ToString(const std::wstring* Property)
     {
+        if (Property->empty())
+        {
+            return {};
+        }
+        
         const std::wstring escaped = EscapeForCppWideStringLiteral(*Property);
         return std::format(L"\"{}\"", escaped);
     }

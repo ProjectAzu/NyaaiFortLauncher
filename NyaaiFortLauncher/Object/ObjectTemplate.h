@@ -9,7 +9,15 @@ struct TObjectTemplate : FStructWithProperties
 
     template<class Other>
     TObjectTemplate(const TObjectTemplate<Other>& OtherTemplate)
-        : Class(OtherTemplate.Class), DefaultValueOverrides(OtherTemplate.DefaultValueOverrides)
+        : Class(OtherTemplate.GetClass()), DefaultValueOverrides(OtherTemplate.GetDefaultValueOverrides())
+    {
+    }
+    
+    TObjectTemplate(NSubClassOf<T> Class) : Class(Class)
+    {
+    }
+    
+    TObjectTemplate(NClass* Class) : Class(Class)
     {
     }
     
@@ -22,11 +30,11 @@ struct TObjectTemplate : FStructWithProperties
     {
         if (!Class)
         {
-            Log(Error, L"Cannot initialize template, no class.");
+            Log(Error, L"{}::NewObjectRaw:, Cannot initialize template, no class.", GetName());
             return nullptr;
         }
         
-        return reinterpret_cast<T*>(Class->NewObjectRaw(Outer, DefaultValueOverrides, bDeferConstruction));
+        return reinterpret_cast<T*>(Class->NewObjectRaw(Outer, bDeferConstruction, DefaultValueOverrides));
     }
     
     NUniquePtr<T> NewObject(NObject* Outer = nullptr, bool bDeferConstruction = false) const
@@ -39,13 +47,17 @@ struct TObjectTemplate : FStructWithProperties
     {
         if (!Class)
         {
-            Log(Error, L"Cannot make native template, no class.");
+            Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, no class is set.", 
+                GetName(), ReturnType::StaticClass()->GetName());
+            
             return nullptr;
         }
         
         if (!ReturnType::StaticClass()->IsSubclassOf(Class))
         {
-            Log(Error, L"Cannot make native template, bad return type.");
+            Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, '{}' is not a subclass of the set class '{}'.", 
+                GetName(), ReturnType::StaticClass()->GetName(), ReturnType::StaticClass()->GetName(), Class->GetName());
+            
             return nullptr;
         }
         
@@ -79,11 +91,49 @@ struct TObjectTemplate : FStructWithProperties
             DefaultValueOverrides.emplace_back(std::move(PropertySetData));
         }
     }
-
-    NPROPERTY(Class)
-    NSubClassOf<T> Class = T::StaticClass();
+    
+    void Reset(NSubClassOf<T> InClass)
+    {
+        DefaultValueOverrides.clear();
+        Class = InClass;
+    }
+    
+    // Modifies the currently set class while preserving the default value overrides
+    void ModifyClass(NSubClassOf<T> InClass)
+    {
+        if (!InClass)
+        {
+            Class = nullptr;
+            DefaultValueOverrides.clear();
+            
+            Log(Error, L"{}::ModifyClass: InClass can't be nullptr. If this is intended, use Reset(nullptr).", GetName());
+            
+            return;
+        }
+        
+        if (Class && !InClass->IsSubclassOf(Class))
+        {
+            DefaultValueOverrides.clear();
+            
+            Log(Error, L"{}::ModifyClass: InClass '{}' has to be a subclass of the currently set class '{}'.", 
+                GetName(), InClass->GetName(), Class->GetName());
+        }
+        
+        Class = InClass;
+    }
+    
+    NSubClassOf<T> GetClass() const { return Class; }
+    FDefaultValueOverrides GetDefaultValueOverrides() const { return DefaultValueOverrides; }
+    
+    operator bool() const
+    {
+        return Class.Get() != nullptr;
+    }
     
 protected:
+    NPROPERTY(Class)
+    NSubClassOf<T> Class = nullptr;
+    
     NPROPERTY(DefaultValueOverrides)
     FDefaultValueOverrides DefaultValueOverrides{};
 };

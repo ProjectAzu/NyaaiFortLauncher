@@ -173,6 +173,7 @@
     <ClInclude Include="Utils\CommandLineImplementation.h" />
     <ClInclude Include="Utils\ReplxxCommandLine.h" />
     <ClInclude Include="Utils\TextFileLoader.h" />
+    <ClInclude Include="Utils\UniqueHandle.h" />
     <ClInclude Include="Utils\Utf8.h" />
     <ClInclude Include="Utils\WindowsInclude.h" />
   </ItemGroup>
@@ -208,6 +209,7 @@
     <ClCompile Include="Utils\CommandLineImplementation.cpp" />
     <ClCompile Include="Utils\ReplxxCommandLine.cpp" />
     <ClCompile Include="Utils\TextFileLoader.cpp" />
+    <ClCompile Include="Utils\UniqueHandle.cpp" />
     <ClCompile Include="Utils\Utf8.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

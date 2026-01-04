@@ -220,7 +220,9 @@ public:
 
     inline T* operator->() const { return reinterpret_cast<T*>(Object); }
     inline T* Get() const { return reinterpret_cast<T*>(Object); }
-    explicit inline operator T*() const { return Get(); }
+    
+    operator T*() const & { return Get(); }
+    operator T*() const && = delete;
 
     T* Release()
     {

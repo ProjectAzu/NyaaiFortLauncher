@@ -42,7 +42,7 @@ struct FRegisteredCommand
 struct FManuallyQueuedCommand
 {
     std::wstring Command{};
-    int32 ContextLauncherId = -1;
+    NEngineObject* ContextObject = nullptr;
 };
 
 struct FCommandManager
@@ -61,7 +61,7 @@ struct FCommandManager
     
     void ProcessManuallyQueuedCommands(NEngine* Engine);
     
-    std::vector<FRegisteredCommand> GetRegisteredCommandsForContext(const NEngineObject* ContextObject);
+    std::vector<FRegisteredCommand> GetRegisteredCommandsForContext(const NEngineObject* ContextObject) const;
     
     template<class T>
     void RegisterConsoleCommand(T* Object, std::wstring Command, std::wstring Description, void(T::*Function)(const FCommandArguments& Args))
@@ -88,5 +88,5 @@ struct FCommandManager
     
 private:
     std::vector<FRegisteredCommand> RegisteredCommands{};
-    std::queue<FManuallyQueuedCommand> ManuallyQueuedCommands{};
+    std::vector<FManuallyQueuedCommand> ManuallyQueuedCommands{};
 };

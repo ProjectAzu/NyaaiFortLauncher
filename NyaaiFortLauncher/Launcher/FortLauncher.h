@@ -6,7 +6,7 @@
 
 #include "Activity.h"
 #include "Object/ObjectTemplate.h"
-#include "Utils/WindowsInclude.h"
+#include "Utils/UniqueHandle.h"
 
 struct FCommandArguments;
 class NActivity;

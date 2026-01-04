@@ -82,6 +82,14 @@ void FCommandManager::NotifyObjectDestroyed(NEngineObject* Object)
         RegisteredCommands[i] = std::move(RegisteredCommands.back());
         RegisteredCommands.pop_back();
     }
+    
+    for (auto& Entry : ManuallyQueuedCommands)
+    {
+        if (Entry.ContextObject && Entry.ContextObject->IsObjectPartOfOuterChain(Object))
+        {
+            Entry.ContextObject = Cast<NEngineObject>(Object->GetOuter());
+        }
+    }
 }
 
 FRegisteredCommand* FCommandManager::FindRegisteredCommand(const std::wstring& Command, const NEngineObject* ContextObject)
@@ -149,22 +157,15 @@ void FCommandManager::EnqueueCommand(const std::wstring& Command, NEngineObject*
 {
     FManuallyQueuedCommand ManuallyQueuedCommand{};
     ManuallyQueuedCommand.Command = Command;
+    ManuallyQueuedCommand.ContextObject = ContextObject;
     
-    if (auto Launcher = ContextObject->GetLauncher())
-    {
-        ManuallyQueuedCommand.ContextLauncherId = Launcher->GetLauncherId();
-    }
-    
-    ManuallyQueuedCommands.push(std::move(ManuallyQueuedCommand));
+    ManuallyQueuedCommands.push_back(std::move(ManuallyQueuedCommand));
 }
 
 void FCommandManager::ProcessManuallyQueuedCommands(NEngine* Engine)
 {
-    while (!ManuallyQueuedCommands.empty())
+    for (auto& Entry : ManuallyQueuedCommands)
     {
-        auto Entry = ManuallyQueuedCommands.front();
-        ManuallyQueuedCommands.pop();
-        
         const auto FirstSpace = std::ranges::find_if(Entry.Command,
             [](wchar_t ch)
             {
@@ -178,31 +179,13 @@ void FCommandManager::ProcessManuallyQueuedCommands(NEngine* Engine)
             Log(Error, L"Manually queued command was empty.");
             continue;
         }
-        
-        NEngineObject* ContextObject = nullptr;
-        if (Entry.ContextLauncherId >= 0)
-        {
-            for (const auto Launcher : Engine->GetLauncherInstances())
-            {
-                if (Launcher->GetLauncherId() == Entry.ContextLauncherId)
-                {
-                    ContextObject = Launcher;
-                    break;
-                }
-            }   
-            
-            if (!ContextObject)
-            {
-                continue;
-            }
-        }
 
-        if (!ContextObject)
+        if (!Entry.ContextObject)
         {
-            ContextObject = Engine;
+            Entry.ContextObject = Engine;
         }
         
-        FRegisteredCommand* RegisteredCommand = FindRegisteredCommand(Command, ContextObject);
+        FRegisteredCommand* RegisteredCommand = FindRegisteredCommand(Command, Entry.ContextObject);
         if (!RegisteredCommand)
         {
             Log(Error, L"Unable to find command '{}'.", Command);
@@ -218,9 +201,11 @@ void FCommandManager::ProcessManuallyQueuedCommands(NEngine* Engine)
         FCommandArguments Args(ArgString);
         RegisteredCommand->ExecuteCommandFunction(RegisteredCommand->OwningObject, Args);
     }
+    
+    ManuallyQueuedCommands.clear();
 }
 
-std::vector<FRegisteredCommand> FCommandManager::GetRegisteredCommandsForContext(const NEngineObject* ContextObject)
+std::vector<FRegisteredCommand> FCommandManager::GetRegisteredCommandsForContext(const NEngineObject* ContextObject) const
 {
     std::vector<FRegisteredCommand> Result{};
     

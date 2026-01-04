@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Object/Object.h"
-#include "Utils/WindowsInclude.h"
+#include "Utils/UniqueHandle.h"
 
 class NFortLauncher;
 class NEngine;

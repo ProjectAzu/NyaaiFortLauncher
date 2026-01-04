@@ -58,13 +58,18 @@ void NFortLauncher::OnDestroyed()
 
 void NFortLauncher::Tick(double DeltaTime)
 {
-    Super::Tick(DeltaTime);
+    if (WaitForSingleObject(FortniteProcessHandle.Get(), 0) != WAIT_TIMEOUT)
+    {
+        bWantsToExit = true;
+    }
     
     if (bWantsToExit)
     {
         Destroy();
         return;
     }
+    
+    Super::Tick(DeltaTime);
 }
 
 bool NFortLauncher::RunLauncher()

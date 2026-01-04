@@ -103,7 +103,7 @@ void NEngine::OnCreated()
     
     auto CurrentTime = std::chrono::high_resolution_clock::now();
 
-    while (true)
+    while (!ShouldProgramExit())
     {
         auto NewTime = std::chrono::high_resolution_clock::now();
         double DeltaTime = std::chrono::duration<double>(NewTime - CurrentTime).count();

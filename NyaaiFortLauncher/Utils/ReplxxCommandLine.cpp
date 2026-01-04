@@ -99,10 +99,10 @@ void NReplxxCommandLine::OnCreated()
 	GReplxx->install_window_change_handler();
 	
 	GReplxx->bind_key(ShutdownReplKey, &ShutdownHandler);
-	GReplxx->bind_key(replxx::Replxx::KEY::control('C'), &CtrlCHandler);
 	
-	GReplxx->bind_key_internal(replxx::Replxx::KEY::control('D'), "send_eof");
-
+	// actually ctrl c is annoying so fuck this
+	//GReplxx->bind_key(replxx::Replxx::KEY::control('C'), &CtrlCHandler);
+	
 	bInitialized = true;
 	
 	GInputThread = std::jthread(InputWorker);

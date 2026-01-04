@@ -47,6 +47,11 @@ void NEngine::OnCreated()
         return;
     }
     
+    if (auto Title = GetConsoleTitleToSet())
+    {
+        SetConsoleTitleW(Title->c_str());
+    }
+    
     GetCommandManager().RegisterConsoleCommand(
         this,
         L"help",
@@ -198,6 +203,25 @@ TObjectTemplate<NFortLauncher> NEngine::GetDefaultLauncherTemplate() const
     }
     
     return LauncherTemplate;
+}
+
+std::optional<std::wstring> NEngine::GetConsoleTitleToSet() const
+{
+    if (ProgramLaunchArgs.empty())
+    {
+        return std::nullopt;
+    }
+    
+    std::filesystem::path Path{ProgramLaunchArgs[0]};
+    
+    auto Filename = Path.filename().wstring();
+    
+    if (Filename.empty())
+    {
+        return std::nullopt;
+    }
+    
+    return Filename;
 }
 
 void NEngine::PrintClassesInfo()

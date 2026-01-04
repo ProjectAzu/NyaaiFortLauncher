@@ -23,6 +23,8 @@ protected:
     
     virtual TObjectTemplate<NFortLauncher> GetDefaultLauncherTemplate() const;
     
+    virtual std::optional<std::wstring> GetConsoleTitleToSet() const;
+    
 private:
     static void PrintClassesInfo();
     

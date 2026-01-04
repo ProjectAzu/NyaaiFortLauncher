@@ -87,6 +87,20 @@ void NEngine::OnCreated()
         &ThisClass::RestartCommand
     );
     
+    Log(Info, L"Running on engine init actions.");
+    
+    for (const auto& ActionTemplate : OnEngineInitActions)
+    {
+        NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);
+    }
+    
+    Log(Info, L"Starting default activities");
+    
+    for (const auto& ActivityTemplate : DefaultActivities)
+    {
+        StartChildActivity(ActivityTemplate);
+    }
+    
     if (auto DefaultLauncherTemplate = GetDefaultLauncherTemplate())
     {
         StartChildActivity(DefaultLauncherTemplate);   
@@ -111,7 +125,7 @@ void NEngine::OnCreated()
         
         Tick(DeltaTime);
         
-        std::this_thread::sleep_for(std::chrono::milliseconds(25));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }
 

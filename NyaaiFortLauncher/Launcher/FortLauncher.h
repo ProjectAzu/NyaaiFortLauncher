@@ -41,6 +41,9 @@ public:
 
     NPROPERTY(FortniteLaunchArguments)
     std::wstring FortniteLaunchArguments{};
+    
+    NPROPERTY(OnLauncherCreatedActions)
+    std::vector<TObjectTemplate<NAction>> OnLauncherCreatedActions{};
 
     NPROPERTY(PreFortniteLaunchActions)
     std::vector<TObjectTemplate<NAction>> PreFortniteLaunchActions{};

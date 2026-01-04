@@ -19,6 +19,12 @@ void NFortLauncher::OnCreated()
     LauncherId = GetEngine()->GetNewLauncherId();
 
     Log(Info, L"Launcher starting, Id: {}", LauncherId);
+    
+    Log(Info, L"Running on launcher created actions");
+    for (const auto& ActionTemplate : OnLauncherCreatedActions)
+    {
+        NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);
+    }
 
     Log(Info, L"Fortnite exe path: {}", FortniteExePath.wstring());
     if (!exists(FortniteExePath) || !is_regular_file(FortniteExePath) || FortniteExePath.extension().wstring() != L".exe")

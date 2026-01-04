@@ -2,6 +2,7 @@
 
 #include "Activity.h"
 #include "CommandManager.h"
+#include "Actions/Action.h"
 #include "Utils/CommandLineImplementation.h"
 
 class NActivity;
@@ -49,11 +50,15 @@ public:
 public:
     NPROPERTY(bUsingExternalTicking)
     bool bUsingExternalTicking = false;
-
-    uint32 meow = 3;
     
     NPROPERTY(CommandLineTemplate)
     TObjectTemplate<NCommandLine> CommandLineTemplate{};
+    
+    NPROPERTY(OnEngineInitActions)
+    std::vector<TObjectTemplate<NAction>> OnEngineInitActions{};
+    
+    NPROPERTY(DefaultActivities)
+    std::vector<TObjectTemplate<NActivity>> DefaultActivities{};
     
 private:
     FCommandManager CommandManager{};

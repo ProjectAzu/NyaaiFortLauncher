@@ -220,7 +220,7 @@ public:
 
     inline T* operator->() const { return reinterpret_cast<T*>(Object); }
     inline T* Get() const { return reinterpret_cast<T*>(Object); }
-    inline operator T*() const { return Get(); }
+    explicit inline operator T*() const { return Get(); }
 
     T* Release()
     {
@@ -231,17 +231,16 @@ public:
 
     void Reset(T* NewObject)
     {
-        NObject* OldObject = Object;
-        Object = reinterpret_cast<NObject*>(NewObject);
-
-        if(OldObject)
+        if(Object)
         {
-            OldObject->Destroy();
+            Object->Destroy();
         }
+        
+        Object = reinterpret_cast<NObject*>(NewObject);
     }
 
 private:
-    NObject* Object;
+    NObject* Object = nullptr;
 };
 
 class NClass

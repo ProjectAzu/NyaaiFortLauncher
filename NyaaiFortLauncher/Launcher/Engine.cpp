@@ -219,15 +219,15 @@ void NEngine::PrintClassesInfo()
         {
             LogRaw(L"\tThis class has no properties\n");
         }
-        else for (const auto Property : Properties)
+        else for (const auto& Property : Properties)
         {
             LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
-                Property->GetTypeName(),
-                Property->GetName(), 
-                Property->GetAsString(DefaultObject))
+                Property.GetTypeName(),
+                Property.GetName(), 
+                Property.GetAsString(DefaultObject))
                 );
             
-            auto InfoOfStructsUsedInType = Property->GetInfoOfStructsWithPropertiesUsedInType();
+            auto InfoOfStructsUsedInType = Property.GetInfoOfStructsWithPropertiesUsedInType();
             
             for (auto& Info : InfoOfStructsUsedInType)
             {
@@ -258,12 +258,12 @@ void NEngine::PrintClassesInfo()
         {
             LogRaw(L"\tThis struct has no properties\n");
         }
-        else for (const auto Property : Properties)
+        else for (const auto& Property : Properties)
         {
             LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
-                Property->GetTypeName(),
-                Property->GetName(), 
-                Property->GetAsString(StructInfo.SampleObjectHolder.get()))
+                Property.GetTypeName(),
+                Property.GetName(), 
+                Property.GetAsString(StructInfo.SampleObjectHolder.get()))
             );
         }
     }

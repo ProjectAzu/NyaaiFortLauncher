@@ -354,11 +354,11 @@ struct TTypeHelpers<T, std::enable_if_t<std::is_base_of_v<FStructWithProperties,
     {
         FDefaultValueOverrides DefaultValueOverrides{};
         
-        for (const auto Property : StructWithProperties->GetPropertiesArrayConstRef())
+        for (const auto& Property : StructWithProperties->GetPropertiesArrayConstRef())
         {
             FPropertySetData PropertySetData{};
-            PropertySetData.PropertyName = Property->GetName();
-            PropertySetData.SetValue = Property->GetAsString(StructWithProperties);
+            PropertySetData.PropertyName = Property.GetName();
+            PropertySetData.SetValue = Property.GetAsString(StructWithProperties);
             
             DefaultValueOverrides.emplace_back(std::move(PropertySetData));
         }
@@ -382,9 +382,9 @@ struct TTypeHelpers<T, std::enable_if_t<std::is_base_of_v<FStructWithProperties,
         
         TypeNamesInResult.insert(Elem.TypeName);
         
-        for (auto Property : Elem.SampleObjectHolder->Properties)
+        for (const auto& Property : Elem.SampleObjectHolder->Properties)
         {
-            for (auto& Info : Property->GetInfoOfStructsWithPropertiesUsedInType())
+            for (auto& Info : Property.GetInfoOfStructsWithPropertiesUsedInType())
             {
                 if (TypeNamesInResult.contains(Info.TypeName))
                 {

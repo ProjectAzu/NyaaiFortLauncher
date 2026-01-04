@@ -10,7 +10,7 @@ void NEngineObject::OnDestroyed()
 {
     Super::OnDestroyed();
     
-    GetEngine()->NotifyObjectDestroyed(this);
+    GetEngine()->NotifyObjectDestroyed(this); 
     
     for (auto& ChildProcessHandle : ChildProcesses)
     {

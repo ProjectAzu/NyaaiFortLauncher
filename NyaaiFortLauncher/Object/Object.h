@@ -26,7 +26,7 @@ NClass* ClassName::StaticClass() { return &ClassName##_Class; } \
 NClass* ClassName::GetClass() const { return &ClassName##_Class; }
 
 #define NPROPERTY(Name) \
-FProperty Name##_Property{ \
+FPropertyCreator Name##_PropertyCreator{ \
         L#Name, this, &(Name), \
         reinterpret_cast<bool(*)(void*, const std::wstring&)>(&TTypeHelpers<decltype(Name)>::SetFromString), \
         &TTypeHelpers<decltype(Name)>::GetName, \
@@ -37,20 +37,25 @@ FProperty Name##_Property{ \
 class NObject;
 class NClass;
 
-class FProperty
+struct FPropertyCreator
 {
-public:
     // this is so ugly lmao
-    FProperty(const wchar_t* Name, NObject* OwningObject, void* Property,
+    FPropertyCreator(const wchar_t* Name, NObject* OwningObject, void* NativeProperty,
         bool(*Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(), 
         std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*FInfoOfStructsWithPropertiesUsedInTypeGetter)(),
         std::wstring(*ValueToStringConverter)(const void* Value));
     
-    FProperty(const wchar_t* Name, struct FStructWithProperties* OwningObject, void* Property, 
+    FPropertyCreator(const wchar_t* Name, struct FStructWithProperties* OwningObject, void* NativeProperty, 
         bool(*Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(), 
         std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*FInfoOfStructsWithPropertiesUsedInTypeGetter)(),
         std::wstring(*ValueToStringConverter)(const void* Value));
+};
 
+struct FProperty
+{
+public:
+    friend struct FPropertyCreator;
+    
     const wchar_t* GetName() const { return Name; }
     std::wstring GetTypeName() const { return TypeNameGetter(); }
 
@@ -80,12 +85,12 @@ public:
     }
     
 private:
-    const wchar_t* Name;
-    std::wstring(*TypeNameGetter)();
-    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*InfoOfStructsWithPropertiesUsedInTypeGetter)();
-    std::wstring(*ValueToStringConverter)(const void* Value);
-    uint16 Offset;
-    bool(*Setter)(void* PropertyPtr, const std::wstring& Value);
+    const wchar_t* Name = nullptr;
+    std::wstring(*TypeNameGetter)() = nullptr;
+    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*InfoOfStructsWithPropertiesUsedInTypeGetter)() = nullptr;
+    std::wstring(*ValueToStringConverter)(const void* Value) = nullptr;
+    uint16 Offset = 0;
+    bool(*Setter)(void* PropertyPtr, const std::wstring& Value) = nullptr;
 };
 
 #define STRUCT_WITH_PROPERTIES_SIMPLE_NAME_GETTER(Name) static std::wstring GetName() { return L#Name; }
@@ -102,15 +107,15 @@ struct FStructWithProperties
         return L"Struct with unknown name";
     }
     
-    const std::vector<FProperty*>& GetPropertiesArrayConstRef() const { return Properties; }
+    const std::vector<FProperty>& GetPropertiesArrayConstRef() const { return Properties; }
     
 private:
-    friend class FProperty;
+    friend struct FPropertyCreator;
 
     template<typename, typename>
     friend struct TTypeHelpers;
     
-    std::vector<FProperty*> Properties{};
+    std::vector<FProperty> Properties{};
 };
 
 class NObject
@@ -152,17 +157,17 @@ public:
     // Warning - OnDestroyed is only called if OnCreated was called (If construction was finished)
     virtual void OnDestroyed();
     
-    const std::vector<FProperty*>& GetPropertiesArrayConstRef() const { return Properties; }
+    const std::vector<FProperty>& GetPropertiesArrayConstRef() const { return  Properties; }
 
 private:
-    friend class FProperty;
-    std::vector<FProperty*> Properties{};
-
     friend class NClass;
     NObject* OuterPrivate = nullptr;
 
     bool bHasFinishedConstruction = false;
     bool bIsInsideOnCreated = false;
+    
+    friend struct FPropertyCreator;
+    std::vector<FProperty> Properties{};
 };
 
 template <class T>

@@ -47,6 +47,8 @@ public:
 public:
     NPROPERTY(bUsingExternalTicking)
     bool bUsingExternalTicking = false;
+
+    uint32 meow = 3;
     
     NPROPERTY(CommandLineTemplate)
     TObjectTemplate<NCommandLine> CommandLineTemplate{};

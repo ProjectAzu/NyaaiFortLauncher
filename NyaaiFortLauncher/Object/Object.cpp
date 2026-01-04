@@ -12,11 +12,11 @@ static std::unordered_map<std::wstring, NClass*>* AllClassesByByName{};
 
 bool FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
 {
-    for (const auto Property : Properties)
+    for (auto& Property : Properties)
     {
-        if (Property->GetName() == PropertyName)
+        if (Property.GetName() == PropertyName)
         {
-            if (!Property->Set(this, Value))
+            if (!Property.Set(this, Value))
             {
                 Log(Error, L"Setting property {} to {} in a struct failed.", PropertyName, Value);
                 return false;
@@ -103,32 +103,36 @@ bool NClass::IsSubclassOf(const NClass* Other) const
     return false;
 }
 
-FProperty::FProperty(const wchar_t* Name, NObject* OwningObject, void* Property,
-    bool(*Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(), 
-    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*InfoOfStructsWithPropertiesUsedInTypeGetter)(),
-    std::wstring(*ValueToStringConverter)(const void* Value))
-    : Name(Name)    
-    , TypeNameGetter(TypeNameGetter)
-    , InfoOfStructsWithPropertiesUsedInTypeGetter(InfoOfStructsWithPropertiesUsedInTypeGetter)
-    , ValueToStringConverter(ValueToStringConverter)
-    , Setter(Setter)
+FPropertyCreator::FPropertyCreator(const wchar_t* Name, NObject* OwningObject, void* NativeProperty,
+    bool(* Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(* TypeNameGetter)(),
+    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(* FInfoOfStructsWithPropertiesUsedInTypeGetter)(),
+    std::wstring(* ValueToStringConverter)(const void* Value))
 {
-    Offset = static_cast<uint16>(reinterpret_cast<uint64>(Property) - reinterpret_cast<uint64>(OwningObject));
-    OwningObject->Properties.push_back(this);
+    FProperty Property{};
+    Property.Offset = static_cast<uint16>(reinterpret_cast<uint64>(NativeProperty) - reinterpret_cast<uint64>(OwningObject));
+    Property.Name = Name;
+    Property.InfoOfStructsWithPropertiesUsedInTypeGetter = FInfoOfStructsWithPropertiesUsedInTypeGetter;
+    Property.ValueToStringConverter = ValueToStringConverter;
+    Property.Setter = Setter;
+    Property.TypeNameGetter = TypeNameGetter;
+    
+    OwningObject->Properties.emplace_back(Property);
 }
 
-FProperty::FProperty(const wchar_t* Name, struct FStructWithProperties* OwningObject, void* Property,
-    bool(* Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(*TypeNameGetter)(),
-    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(*InfoOfStructsWithPropertiesUsedInTypeGetter)(),
-    std::wstring(*ValueToStringConverter)(const void* Value))
-    : Name(Name)
-    , TypeNameGetter(TypeNameGetter)
-    , InfoOfStructsWithPropertiesUsedInTypeGetter(InfoOfStructsWithPropertiesUsedInTypeGetter)
-    , ValueToStringConverter(ValueToStringConverter)
-    , Setter(Setter)
+FPropertyCreator::FPropertyCreator(const wchar_t* Name, struct FStructWithProperties* OwningObject, void* NativeProperty,
+    bool(* Setter)(void* PropertyPtr, const std::wstring& Value), std::wstring(* TypeNameGetter)(),
+    std::vector<struct FInfoOfStructWithPropertiesUsedInType>(* FInfoOfStructsWithPropertiesUsedInTypeGetter)(),
+    std::wstring(* ValueToStringConverter)(const void* Value))
 {
-    Offset = static_cast<uint16>(reinterpret_cast<uint64>(Property) - reinterpret_cast<uint64>(OwningObject));
-    OwningObject->Properties.push_back(this);
+    FProperty Property{};
+    Property.Offset = static_cast<uint16>(reinterpret_cast<uint64>(NativeProperty) - reinterpret_cast<uint64>(OwningObject));
+    Property.Name = Name;
+    Property.InfoOfStructsWithPropertiesUsedInTypeGetter = FInfoOfStructsWithPropertiesUsedInTypeGetter;
+    Property.ValueToStringConverter = ValueToStringConverter;
+    Property.Setter = Setter;
+    Property.TypeNameGetter = TypeNameGetter;
+    
+    OwningObject->Properties.emplace_back(Property);
 }
 
 NObject* NClass::NewObjectRaw(NObject* Outer, bool bDeferConstruction, const FDefaultValueOverrides& DefaultValueOverrides) const
@@ -209,11 +213,11 @@ void NObject::FinishConstruction()
 
 bool NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value)
 {
-    for (const auto Property : Properties)
+    for (auto& Property : Properties)
     {
-        if (Property->GetName() == PropertyName)
+        if (Property.GetName() == PropertyName)
         {
-            if (!Property->Set(this, Value))
+            if (!Property.Set(this, Value))
             {
                 Log(Error, L"Setting property {} to {} in an object of class {} failed.",
                     PropertyName, Value, GetClass()->GetName());
@@ -243,8 +247,6 @@ NObject* NObject::GetObjectOfTypeFromOuterChain(NClass* Class, bool bIgnoreSelf)
             return Object;
         }
     }
-
-    Log(Error, L"Failed to get object of class '{}' from outer chain.", Class->GetName());
     
     return nullptr;
 }

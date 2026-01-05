@@ -19,6 +19,8 @@ public:
     
     virtual void Tick(double DeltaTime) override;
     
+    virtual bool ShouldEngineExit() const;
+    
 protected:
     virtual bool ShouldPrintHelpAndExit() const;
     
@@ -37,7 +39,8 @@ private:
     void SetCommandsContextLauncherIdCommand(const FCommandArguments& Args);
     void StartCommand(const FCommandArguments& Args);
     void RestartCommand(const FCommandArguments& Args);
-    
+    void ExitCommand(const FCommandArguments& Args);
+
 public:
     void NotifyObjectDestroyed(NEngineObject* Object);
     
@@ -66,4 +69,6 @@ private:
     int32 LastUnusedLauncherId = 0;
     
     int32 CommandsContextLauncherId = -1;
+    
+    bool bWantsToExit = false;
 };

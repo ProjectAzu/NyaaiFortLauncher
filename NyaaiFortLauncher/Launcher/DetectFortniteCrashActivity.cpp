@@ -234,7 +234,7 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
         if (CrashThread.empty())   CrashThread = L"?";
         if (CrashThreadId.empty()) CrashThreadId = L"?";
 
-        Log(Error, L"Detected fortnite crash on thread '{}' at address '{}'.", CrashThread, CrashOffset);
+        Log(Error, L"Detected fortnite crash on thread '{}' at address '{}'", CrashThread, CrashOffset);
         Log(Error, L"Crash info folder: 'file:///{}'", CrashContextFilePath.parent_path().generic_wstring());
 
         Log(Error, L"CallStack:");

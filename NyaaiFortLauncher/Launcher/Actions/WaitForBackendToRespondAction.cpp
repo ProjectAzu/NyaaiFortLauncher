@@ -13,14 +13,14 @@ static bool IsUrlResponding(const std::wstring& InUrl)
     CURL* CurlHandle = curl_easy_init();
     if (!CurlHandle)
     {
-        Log(Error, L"Failed to initialize CURL handle.");
+        Log(Error, L"Failed to initialize CURL handle");
         return false;
     }
 
     const std::string UrlUtf8 = WideToUtf8(InUrl);
     if (UrlUtf8.empty())
     {
-        Log(Error, L"URL conversion to UTF-8 failed.");
+        Log(Error, L"URL conversion to UTF-8 failed");
         curl_easy_cleanup(CurlHandle);
         return false;
     }

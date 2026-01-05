@@ -76,7 +76,7 @@ void NEngine::OnCreated()
     GetCommandManager().RegisterConsoleCommand(
         this,
         L"start",
-        L"Starts a launcher instance if none are currently running.",
+        L"Starts a launcher instance if none are currently running",
         &ThisClass::StartCommand
     );
     
@@ -87,7 +87,14 @@ void NEngine::OnCreated()
         &ThisClass::RestartCommand
     );
     
-    Log(Info, L"Running on engine init actions.");
+    GetCommandManager().RegisterConsoleCommand(
+        this,
+        L"exit",
+        L"Exits the engine",
+        &ThisClass::ExitCommand
+    );
+    
+    Log(Info, L"Running on engine init actions");
     
     for (const auto& ActionTemplate : OnEngineInitActions)
     {
@@ -107,7 +114,7 @@ void NEngine::OnCreated()
     }
     else
     {
-        Log(Info, L"GetDefaultLauncherTemplate returned nullptr. A default launcher instance will not be started.");
+        Log(Info, L"GetDefaultLauncherTemplate returned nullptr. A default launcher instance will not be started");
     }
     
     if (bUsingExternalTicking)
@@ -117,7 +124,7 @@ void NEngine::OnCreated()
     
     auto CurrentTime = std::chrono::high_resolution_clock::now();
 
-    while (!ShouldProgramExit())
+    while (!ShouldEngineExit())
     {
         auto NewTime = std::chrono::high_resolution_clock::now();
         double DeltaTime = std::chrono::duration<double>(NewTime - CurrentTime).count();
@@ -146,6 +153,11 @@ void NEngine::Tick(double DeltaTime)
     CommandManager.ProcessCommands(GetCommandsContextObject());
 }
 
+bool NEngine::ShouldEngineExit() const
+{
+    return ShouldProgramExit() || bWantsToExit;
+}
+
 bool NEngine::ShouldPrintHelpAndExit() const
 {
     if (ProgramLaunchArgs.empty())
@@ -167,7 +179,7 @@ TObjectTemplate<NFortLauncher> NEngine::GetDefaultLauncherTemplate() const
     
     if (ProgramLaunchArgs.size() != 1)
     {
-        Log(Error, L"Please provide a {} config file as a command line argument or do -help.", ConfigFileExtension);
+        Log(Error, L"Please provide a {} config file as a command line argument or do -help", ConfigFileExtension);
         return {};
     }
 
@@ -176,19 +188,19 @@ TObjectTemplate<NFortLauncher> NEngine::GetDefaultLauncherTemplate() const
     std::filesystem::path ConfigPath{};
     if (!ConvertStringToCleanAbsolutePath(ConfigPathString, ConfigPath))
     {
-        Log(Error, L"Could not convert command line argument '{}' into a valid path.", ConfigPathString);
+        Log(Error, L"Could not convert command line argument '{}' into a valid path", ConfigPathString);
         return {};
     }
 
     if (!ConfigPath.has_filename())
     {
-        Log(Error, L"'{}' is not a path to a file.", ConfigPath.wstring());
+        Log(Error, L"'{}' is not a path to a file", ConfigPath.wstring());
         return {};
     }
 
     if (ConfigPath.extension() != ConfigFileExtension)
     {
-        Log(Error, L"The config file type is '{}' instead of '{}'.",
+        Log(Error, L"The config file type is '{}' instead of '{}'",
             ConfigPath.extension().wstring(), ConfigFileExtension);
         return {};
     }
@@ -200,14 +212,14 @@ TObjectTemplate<NFortLauncher> NEngine::GetDefaultLauncherTemplate() const
     }
     catch (...)
     {
-        Log(Error, L"Could not read/convert the '{}' Config file.", ConfigPath.wstring());
+        Log(Error, L"Could not read/convert the '{}' Config file", ConfigPath.wstring());
         return {};
     }
     
     TObjectTemplate<NFortLauncher> LauncherTemplate{};
     if (!TTypeHelpers<TObjectTemplate<NFortLauncher>>::SetFromString(&LauncherTemplate, ConfigAsWString))
     {
-        Log(Error, L"Malformatted config file '{}'.", ConfigPath.wstring());
+        Log(Error, L"Malformatted config file '{}'", ConfigPath.wstring());
         return {};
     }
     
@@ -376,7 +388,7 @@ void NEngine::PrintLauncherInstancesListCommand(const FCommandArguments& Args)
 
     if (Launchers.empty())
     {
-        Log(Info, L"There are currently no running launcher instances.");
+        Log(Info, L"There are currently no running launcher instances");
         return;
     }
     
@@ -390,7 +402,7 @@ void NEngine::PrintLauncherInstancesListCommand(const FCommandArguments& Args)
 void NEngine::SetCommandsContextLauncherIdCommand(const FCommandArguments& Args)
 {
     CommandsContextLauncherId = Args.GetArgumentAtIndex<int32>(0);
-    Log(Info, L"Set CommandsContextLauncherId to {}.", CommandsContextLauncherId);
+    Log(Info, L"Set CommandsContextLauncherId to {}", CommandsContextLauncherId);
 }
 
 void NEngine::StartCommand(const FCommandArguments& Args)
@@ -417,7 +429,7 @@ void NEngine::RestartCommand(const FCommandArguments& Args)
     auto Launcher = GetCommandsContextLauncher();
     if (!Launcher)
     {
-        Log(Error, L"Can't restart, no context launcher.");
+        Log(Error, L"Can't restart, no context launcher");
         return;
     }
     
@@ -432,6 +444,12 @@ void NEngine::RestartCommand(const FCommandArguments& Args)
     }
     
     StartChildActivity(GetDefaultLauncherTemplate());
+}
+
+void NEngine::ExitCommand(const FCommandArguments& Args)
+{
+    Log(Info, L"Requested engine exit");
+    bWantsToExit = true;
 }
 
 void NEngine::NotifyObjectDestroyed(NEngineObject* Object)

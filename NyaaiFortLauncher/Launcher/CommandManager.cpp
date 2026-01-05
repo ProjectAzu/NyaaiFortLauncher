@@ -138,7 +138,7 @@ void FCommandManager::ProcessCommands(const NEngineObject* ContextObject)
         FRegisteredCommand* RegisteredCommand = FindRegisteredCommand(Command, ContextObject);
         if (!RegisteredCommand)
         {
-            Log(Error, L"Unable to find command '{}'. Type 'help' to list available commands.", Command);
+            Log(Error, L"Unable to find command '{}'. Type 'help' to list available commands", Command);
             continue;
         }
 
@@ -176,7 +176,7 @@ void FCommandManager::ProcessManuallyQueuedCommands(NEngine* Engine)
 
         if (Command.empty())
         {
-            Log(Error, L"Manually queued command was empty.");
+            Log(Error, L"Manually queued command was empty");
             continue;
         }
 
@@ -188,7 +188,7 @@ void FCommandManager::ProcessManuallyQueuedCommands(NEngine* Engine)
         FRegisteredCommand* RegisteredCommand = FindRegisteredCommand(Command, Entry.ContextObject);
         if (!RegisteredCommand)
         {
-            Log(Error, L"Unable to find command '{}'.", Command);
+            Log(Error, L"Unable to find command '{}'", Command);
             continue;
         }
         

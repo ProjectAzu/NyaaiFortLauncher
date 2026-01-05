@@ -27,7 +27,7 @@ public:
     
     int32 GetLauncherId() const { return LauncherId; }
     
-    void RequestExit() { bWantsToExit = true; }
+    void RequestStop() { bWantsToStop = true; }
 
 private:
     bool RunLauncher();
@@ -62,7 +62,7 @@ private:
     FUniqueHandle FortniteStdOutReadPipeHandle = nullptr;
     FUniqueHandle FortniteStdInWritePipeHandle = nullptr;
     
-    bool bWantsToExit = false;
+    bool bWantsToStop = false;
     
     int32 LauncherId = 0;
 };

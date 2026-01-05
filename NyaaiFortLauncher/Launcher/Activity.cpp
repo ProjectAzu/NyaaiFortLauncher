@@ -35,14 +35,14 @@ void NActivity::OnDestroyed()
         ParentActivity->ChildActivities.pop_back();
     }
 
-    Log(Info, L"Activity '{}' is being destroyed.", GetClass()->GetName());
+    Log(Info, L"Activity '{}' is being destroyed", GetClass()->GetName());
     
     Super::OnDestroyed();
 }
 
 NActivity* NActivity::StartChildActivity(const TObjectTemplate<NActivity>& ActivityTemplate)
 {
-    Log(Info, L"Starting child activity '{}' in an object of class '{}'.",
+    Log(Info, L"Starting child activity '{}' in an object of class '{}'",
         ActivityTemplate.GetClass()->GetName(),
         GetClass()->GetName()
         );

@@ -14,7 +14,7 @@ static void InitializeJobObjectIfNeeded()
         {
             DWORD LastError = GetLastError();
             Log(Error, 
-                L"Failed to create Job Object (Error code {}) -- child processes won't be killed automatically.",
+                L"Failed to create Job Object (Error code {}) -- child processes won't be killed automatically",
                 LastError);
             return;
         }
@@ -145,7 +145,7 @@ void NCreateProcessAction::Execute()
     }
 
     Log(Info, 
-        L"Launched '{}' PID: {}, TID: {} as child process of '{}'.", 
+        L"Launched '{}' PID: {}, TID: {} as child process of '{}'", 
         FilePath.wstring(), 
         ResultProcessInfo.dwProcessId, 
         ResultProcessInfo.dwThreadId,

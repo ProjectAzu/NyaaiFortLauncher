@@ -70,7 +70,7 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
             }
             else
             {
-                Log(Error, L"ArrayElementsParser: Expected '{{' at position {}, but found '{}'.", i, Char);
+                Log(Error, L"ArrayElementsParser: Expected '{{' at position {}, but found '{}'", i, Char);
                 return false;
             }
         }
@@ -124,7 +124,7 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
 
                 if (BraceDepth < 0)
                 {
-                    Log(Error, L"ArrayElementsParser: Mismatched braces at position {}.", i);
+                    Log(Error, L"ArrayElementsParser: Mismatched braces at position {}", i);
                     return false;
                 }
 
@@ -156,11 +156,11 @@ bool ParseStringArray(const std::wstring& InData, std::vector<std::wstring>& Res
     if (State == EParseState::GatheringElement)
     {
         if (bInString)
-            Log(Error, L"ArrayElementsParser: Unexpected end of input: missing '\"' in string literal.");
+            Log(Error, L"ArrayElementsParser: Unexpected end of input: missing '\"' in string literal");
         else if (bEscape)
-            Log(Error, L"ArrayElementsParser: Unexpected end of input after '\\' in string literal.");
+            Log(Error, L"ArrayElementsParser: Unexpected end of input after '\\' in string literal");
         else
-            Log(Error, L"ArrayElementsParser: Unexpected end of input while parsing element: missing '}}'.");
+            Log(Error, L"ArrayElementsParser: Unexpected end of input while parsing element: missing '}}'");
 
         return false;
     }
@@ -212,7 +212,7 @@ bool ParsePropertiesSetData(const std::wstring& StringToParse, FDefaultValueOver
         if (ColonPos == std::wstring::npos)
         {
             // No colon found => invalid syntax
-            Log(Error, L"Expected ':' but none was found. Parsing aborted.");
+            Log(Error, L"Expected ':' but none was found. Parsing aborted");
             return false;
         }
 
@@ -230,7 +230,7 @@ bool ParsePropertiesSetData(const std::wstring& StringToParse, FDefaultValueOver
         // 4) Expect an opening brace
         if (Index >= StringToParse.size() || StringToParse[Index] != L'{')
         {
-            Log(Error, L"Expected '{{' after property name '{}'.", RawPropertyName);
+            Log(Error, L"Expected '{{' after property name '{}'", RawPropertyName);
             return false;
         }
 
@@ -309,19 +309,19 @@ bool ParsePropertiesSetData(const std::wstring& StringToParse, FDefaultValueOver
 
         if (bInString)
         {
-            Log(Error, L"Missing closing '\"' inside value for property '{}'.", RawPropertyName);
+            Log(Error, L"Missing closing '\"' inside value for property '{}'", RawPropertyName);
             return false;
         }
 
         if (bEscape)
         {
-            Log(Error, L"Unexpected end of value after '\\' inside string for property '{}'.", RawPropertyName);
+            Log(Error, L"Unexpected end of value after '\\' inside string for property '{}'", RawPropertyName);
             return false;
         }
 
         if (BraceDepth != 0)
         {
-            Log(Error, L"Missing '}}' for property '{}'.", RawPropertyName);
+            Log(Error, L"Missing '}}' for property '{}'", RawPropertyName);
             return false;
         }
 
@@ -350,7 +350,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
     size_t i = InData.find(L'"');
     if (i == std::wstring_view::npos)
     {
-        Log(Error, L"String parser: No opening '\"' found in input.");
+        Log(Error, L"String parser: No opening '\"' found in input");
         return false;
     }
 
@@ -388,7 +388,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
             ++i;
             if (i >= InData.size())
             {
-                Log(Error, L"String parser: Unexpected end of input after '\\'.");
+                Log(Error, L"String parser: Unexpected end of input after '\\'");
                 return false;
             }
 
@@ -426,7 +426,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
                     ++i; // consume 'x'
                     if (i >= InData.size() || !IsHex(InData[i]))
                     {
-                        Log(Error, L"String parser: Invalid hex escape '\\x' (no digits).");
+                        Log(Error, L"String parser: Invalid hex escape '\\x' (no digits)");
                         return false;
                     }
                     unsigned int val = 0;
@@ -443,7 +443,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
                     ++i; // consume 'u'/'U'
                     if (i + digits > InData.size())
                     {
-                        Log(Error, L"String parser: Incomplete universal character name.");
+                        Log(Error, L"String parser: Incomplete universal character name");
                         return false;
                     }
                     unsigned int val = 0;
@@ -452,7 +452,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
                         wchar_t h = InData[i + k];
                         if (!IsHex(h))
                         {
-                            Log(Error, L"String parser: Invalid universal character name (non-hex digit).");
+                            Log(Error, L"String parser: Invalid universal character name (non-hex digit)");
                             return false;
                         }
                         val = (val * 16u) + unsigned(HexVal(h));
@@ -477,7 +477,7 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
                 }
                 else
                 {
-                    Log(Warning, L"String parser: Unknown escape sequence '\\{}'. Storing as literal.", e);
+                    Log(Warning, L"String parser: Unknown escape sequence '\\{}'. Storing as literal", e);
                     OutParsedValue.push_back(e);
                     ++i;
                 }
@@ -488,12 +488,12 @@ bool ParseCppStringLiteral(const std::wstring_view InData, std::wstring& OutPars
         // If we ran out of input without a closing quote, error.
         if (i > InData.size())
         {
-            Log(Error, L"String parser: Unexpected parsing state.");
+            Log(Error, L"String parser: Unexpected parsing state");
             return false;
         }
         if (i == InData.size() && (InData.empty() || InData.back() != L'"'))
         {
-            Log(Error, L"String parser: No matching closing '\"' found for string literal.");
+            Log(Error, L"String parser: No matching closing '\"' found for string literal");
             return false;
         }
 
@@ -575,7 +575,7 @@ bool ConvertStringToCleanAbsolutePath(const std::wstring& InInput, std::filesyst
         const DWORD RequiredChars = SearchPathW(nullptr, InInput.c_str(), nullptr, 0, nullptr, nullptr);
         if (RequiredChars == 0)
         {
-            Log(Error, L"SearchPathW failed to resolve '{}' (GetLastError={}).", InInput, GetLastError());
+            Log(Error, L"SearchPathW failed to resolve '{}' (GetLastError={})", InInput, GetLastError());
             return false;
         }
 
@@ -586,7 +586,7 @@ bool ConvertStringToCleanAbsolutePath(const std::wstring& InInput, std::filesyst
         if (WrittenChars == 0 || WrittenChars >= RequiredChars)
         {
             Log(Error,
-                L"SearchPathW returned an unexpected length for '{}' (Written={}, Required={}, GetLastError={}).",
+                L"SearchPathW returned an unexpected length for '{}' (Written={}, Required={}, GetLastError={})",
                 InInput, WrittenChars, RequiredChars, GetLastError());
             return false;
         }
@@ -600,13 +600,13 @@ bool ConvertStringToCleanAbsolutePath(const std::wstring& InInput, std::filesyst
     const std::filesystem::path AbsolutePath = std::filesystem::absolute(CandidatePath, ErrorCode);
     if (ErrorCode)
     {
-        Log(Error, L"absolute() failed for '{}' (ec={}, path='{}').", InInput, ErrorCode.value(), CandidatePath.wstring());
+        Log(Error, L"absolute() failed for '{}' (ec={}, path='{}')", InInput, ErrorCode.value(), CandidatePath.wstring());
         return false;
     }
 
     if (!std::filesystem::exists(AbsolutePath, ErrorCode) || ErrorCode)
     {
-        Log(Error, L"Path does not exist or is not accessible: '{}' (from '{}').", AbsolutePath.wstring(), InInput);
+        Log(Error, L"Path does not exist or is not accessible: '{}' (from '{}')", AbsolutePath.wstring(), InInput);
         return false;
     }
 
@@ -614,7 +614,7 @@ bool ConvertStringToCleanAbsolutePath(const std::wstring& InInput, std::filesyst
     if (ErrorCode)
     {
         Log(Warning,
-            L"weakly_canonical() failed for '{}' (ec={}). Using cleaned absolute path instead.",
+            L"weakly_canonical() failed for '{}' (ec={}). Using cleaned absolute path instead",
             AbsolutePath.wstring(), ErrorCode.value());
 
         OutPath = AbsolutePath.lexically_normal();

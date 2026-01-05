@@ -28,7 +28,7 @@ struct TTypeHelpers
     // SetFromString and ToString should be compatible
     static bool SetFromString(T* Property, const std::wstring& Value)
     {
-        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type.");
+        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type");
         std::wstringstream(RemoveUnnecessaryCharsFromString(Value)) >> *Property;
         return true;
     }
@@ -36,7 +36,7 @@ struct TTypeHelpers
     // SetFromString and ToString should be compatible
     static std::wstring ToString(const T* Value)
     {
-        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type.");
+        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type");
         
         std::wstringstream Stream{};
         Stream << *Value;
@@ -45,13 +45,13 @@ struct TTypeHelpers
     
     static std::wstring GetName()
     {
-        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type.");
+        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type");
         return L"Unknown";
     }
     
     static std::vector<FInfoOfStructWithPropertiesUsedInType> GetInfoOfStructsWithPropertiesUsedInType()
     {
-        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type.");
+        Log(Warning, L"Using default TTypeHelpers, please add TTypeHelpers for this type");
         return {};
     }
 };
@@ -342,7 +342,7 @@ struct TTypeHelpers<T, std::enable_if_t<std::is_base_of_v<FStructWithProperties,
         {
             if (!StructWithProperties->SetPropertyValue(PropertySetData.PropertyName, PropertySetData.SetValue))
             {
-                Log(Error, L"Setting property '{}' in struct '{}' failed.", 
+                Log(Error, L"Setting property '{}' in struct '{}' failed", 
                     PropertySetData.PropertyName, GetName());
             }
         }
@@ -451,7 +451,7 @@ struct TTypeHelpers<bool>
         }
         else
         {
-            Log(Error, L"Bool property setter failed.");
+            Log(Error, L"Bool property setter failed");
             return false;
         }
 
@@ -484,7 +484,7 @@ struct TTypeHelpers<class NClass*>
 
         if (!*Property)
         {
-            Log(Error, L"NClass property setter failed, did not find class.");
+            Log(Error, L"NClass property setter failed, did not find class");
             return false;
         }
 
@@ -521,7 +521,7 @@ struct TTypeHelpers<NSubClassOf<T>>
         
         if (Class && !*Property)
         {
-            Log(Error, L"{} setter failed, class is not a subclass of {}.", GetName(), T::StaticClass()->GetName());
+            Log(Error, L"{} setter failed, class is not a subclass of {}", GetName(), T::StaticClass()->GetName());
             return false;
         }
 

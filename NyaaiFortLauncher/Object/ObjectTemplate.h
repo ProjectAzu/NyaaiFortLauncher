@@ -30,7 +30,7 @@ struct TObjectTemplate : FStructWithProperties
     {
         if (!Class)
         {
-            Log(Error, L"{}::NewObjectRaw:, Cannot initialize template, no class.", GetName());
+            Log(Error, L"{}::NewObjectRaw:, Cannot initialize template, no class", GetName());
             return nullptr;
         }
         
@@ -47,7 +47,7 @@ struct TObjectTemplate : FStructWithProperties
     {
         if (!Class)
         {
-            Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, no class is set.", 
+            Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, no class is set", 
                 GetName(), ReturnType::StaticClass()->GetName());
             
             return nullptr;
@@ -55,7 +55,7 @@ struct TObjectTemplate : FStructWithProperties
         
         if (!ReturnType::StaticClass()->IsSubclassOf(Class))
         {
-            Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, '{}' is not a subclass of the set class '{}'.", 
+            Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, '{}' is not a subclass of the set class '{}'", 
                 GetName(), ReturnType::StaticClass()->GetName(), ReturnType::StaticClass()->GetName(), Class->GetName());
             
             return nullptr;
@@ -106,7 +106,7 @@ struct TObjectTemplate : FStructWithProperties
             Class = nullptr;
             DefaultValueOverrides.clear();
             
-            Log(Error, L"{}::ModifyClass: InClass can't be nullptr. If this is intended, use Reset(nullptr).", GetName());
+            Log(Error, L"{}::ModifyClass: InClass can't be nullptr. If this is intended, use Reset(nullptr)", GetName());
             
             return;
         }
@@ -115,7 +115,7 @@ struct TObjectTemplate : FStructWithProperties
         {
             DefaultValueOverrides.clear();
             
-            Log(Error, L"{}::ModifyClass: InClass '{}' has to be a subclass of the currently set class '{}'.", 
+            Log(Error, L"{}::ModifyClass: InClass '{}' has to be a subclass of the currently set class '{}'", 
                 GetName(), InClass->GetName(), Class->GetName());
         }
         

@@ -6,7 +6,7 @@ void NCopyFileAction::Execute()
 {
 	if (!std::filesystem::exists(From))
 	{
-		Log(Error, L"Can't copy file \"{}\" as it doesn't exist.", From.wstring());
+		Log(Error, L"Can't copy file \"{}\" as it doesn't exist", From.wstring());
 		return;
 	}
 

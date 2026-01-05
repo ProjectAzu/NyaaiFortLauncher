@@ -152,7 +152,7 @@
     <ClInclude Include="Launcher\Actions\CreateProcessAction.h" />
     <ClInclude Include="Launcher\Actions\InjectDllIntoFortniteAction.h" />
     <ClInclude Include="Launcher\Actions\PrintLogAction.h" />
-    <ClInclude Include="Launcher\Actions\RequestExitAction.h" />
+    <ClInclude Include="Launcher\Actions\RequestStopAction.h" />
     <ClInclude Include="Launcher\Actions\RequestRelaunchAction.h" />
     <ClInclude Include="Launcher\Actions\RunCommandAction.h" />
     <ClInclude Include="Launcher\Actions\WaitForBackendToRespondAction.h" />
@@ -192,7 +192,7 @@
     <ClCompile Include="Launcher\Actions\CreateProcessAction.cpp" />
     <ClCompile Include="Launcher\Actions\InjectDllIntoFortniteAction.cpp" />
     <ClCompile Include="Launcher\Actions\PrintLogAction.cpp" />
-    <ClCompile Include="Launcher\Actions\RequestExitAction.cpp" />
+    <ClCompile Include="Launcher\Actions\RequestStopAction.cpp" />
     <ClCompile Include="Launcher\Actions\RequestRelaunchAction.cpp" />
     <ClCompile Include="Launcher\Actions\RunCommandAction.cpp" />
     <ClCompile Include="Launcher\Actions\WaitForBackendToRespondAction.cpp" />

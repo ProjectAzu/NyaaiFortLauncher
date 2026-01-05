@@ -29,9 +29,9 @@ void NFortLauncher::OnCreated()
     Log(Info, L"Fortnite exe path: {}", FortniteExePath.wstring());
     if (!exists(FortniteExePath) || !is_regular_file(FortniteExePath) || FortniteExePath.extension().wstring() != L".exe")
     {
-        Log(Error, L"The fortnite exe path is not valid.");
+        Log(Error, L"The fortnite exe path is not valid");
         
-        RequestExit();
+        RequestStop();
         return;
     }
 
@@ -46,7 +46,7 @@ void NFortLauncher::OnCreated()
     
     if (!RunLauncher())
     {
-        RequestExit();
+        RequestStop();
         return;
     }
 }
@@ -66,10 +66,10 @@ void NFortLauncher::Tick(double DeltaTime)
 {
     if (WaitForSingleObject(FortniteProcessHandle.Get(), 0) != WAIT_TIMEOUT)
     {
-        bWantsToExit = true;
+        bWantsToStop = true;
     }
     
-    if (bWantsToExit)
+    if (bWantsToStop)
     {
         Destroy();
         return;
@@ -201,5 +201,5 @@ bool NFortLauncher::LaunchFortniteProcess()
 
 void NFortLauncher::StopCommand(const FCommandArguments& Args)
 {
-    bWantsToExit = true;
+    bWantsToStop = true;
 }

@@ -18,7 +18,7 @@ bool FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, c
         {
             if (!Property.Set(this, Value))
             {
-                Log(Error, L"Setting property {} to {} in a struct failed.", PropertyName, Value);
+                Log(Error, L"Setting property {} to {} in a struct failed", PropertyName, Value);
                 return false;
             }
             
@@ -26,7 +26,7 @@ bool FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, c
         }
     }
 
-    Log(Error, L"SetPropertyValue: Failed to find property {} in a struct.", PropertyName);
+    Log(Error, L"SetPropertyValue: Failed to find property {} in a struct", PropertyName);
     return false;
 }
 
@@ -171,7 +171,7 @@ NClass* NClass::GetClassByName(const std::wstring& Name)
         return Search->second;
     }
 
-    Log(Error, L"GetClassByName: Failed to find class {}.", Name);
+    Log(Error, L"GetClassByName: Failed to find class {}", Name);
 
     return nullptr;
 }
@@ -200,7 +200,7 @@ void NObject::FinishConstruction()
 {
     if (bHasFinishedConstruction)
     {
-        Log(Error, L"Finish construction was called on an object that has already finished construction {}.", GetClass()->GetName());
+        Log(Error, L"Finish construction was called on an object that has already finished construction {}", GetClass()->GetName());
         return;
     }
     
@@ -219,7 +219,7 @@ bool NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstr
         {
             if (!Property.Set(this, Value))
             {
-                Log(Error, L"Setting property {} to {} in an object of class {} failed.",
+                Log(Error, L"Setting property {} to {} in an object of class {} failed",
                     PropertyName, Value, GetClass()->GetName());
                 
                 return false;
@@ -229,7 +229,7 @@ bool NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstr
         }
     }
 
-    Log(Error, L"SetPropertyValue: Failed to find property {} in class {}.",
+    Log(Error, L"SetPropertyValue: Failed to find property {} in class {}",
         PropertyName, GetClass()->GetName());
     
     return false;
@@ -268,7 +268,7 @@ void NObject::Destroy()
 {
     if (bIsInsideOnCreated)
     {
-        Log(Error, L"{}::Destroy() was called inside {}::OnCreated(). This is not allowed.", GetClass()->GetName(), GetClass()->GetName());
+        Log(Error, L"{}::Destroy() was called inside {}::OnCreated(). This is not allowed", GetClass()->GetName(), GetClass()->GetName());
         __debugbreak();
     }
 

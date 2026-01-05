@@ -13,6 +13,6 @@ void NAction::Execute()
 {
     if (bPrintExecutingActionMessage)
     {
-        Log(Info, L"Executing action {}.", GetClass()->GetName());
+        Log(Info, L"Executing action {}", GetClass()->GetName());
     }
 }

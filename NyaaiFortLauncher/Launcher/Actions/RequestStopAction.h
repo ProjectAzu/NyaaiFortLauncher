@@ -1,9 +1,9 @@
 #pragma once
 #include "Action.h"
 
-class NRequestExitAction : public NAction
+class NRequestStopAction : public NAction
 {
-    GENERATE_BASE_H(NRequestExitAction)
+    GENERATE_BASE_H(NRequestStopAction)
     
 public:
     virtual void Execute() override;

@@ -42,7 +42,7 @@ void InitCommandLine(const TObjectTemplate<NCommandLine>& CommandLineTemplate)
 	
 	if (CommandLine)
 	{
-		Log(Error, L"Cannot init command line as it is already init.");
+		Log(Error, L"Cannot init command line as it is already init");
 		return;
 	}
 	

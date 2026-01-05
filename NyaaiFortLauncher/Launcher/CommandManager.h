@@ -70,7 +70,7 @@ struct FCommandManager
         
         if (FindRegisteredCommand(Command, Object))
         {
-            Log(Error, L"Cannot register command '{}' because it's already registered.", Command);
+            Log(Error, L"Cannot register command '{}' because it's already registered", Command);
             return;
         }
         

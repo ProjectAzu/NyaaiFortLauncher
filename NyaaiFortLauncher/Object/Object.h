@@ -279,7 +279,7 @@ public:
     {
         if (!IsSubclassOf(T::StaticClass()))
         {
-            Log(Error, L"NewObject bad return type. {} is not a subclass of {}.", GetName(), T::StaticClass()->GetName());
+            Log(Error, L"NewObject bad return type. {} is not a subclass of {}", GetName(), T::StaticClass()->GetName());
             return nullptr;
         }
         

@@ -10,7 +10,7 @@
 
 namespace
 {
-    static_assert(sizeof(wchar_t) == 2, "This loader expects Windows wchar_t (UTF-16).");
+    static_assert(sizeof(wchar_t) == 2, "This loader expects Windows wchar_t (UTF-16)");
 
     std::vector<std::uint8_t> ReadAllBytes(const std::filesystem::path& path)
     {

@@ -33,9 +33,6 @@
     <ClInclude Include="Launcher\Actions\PrintLogAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\Actions\RequestExitAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Launcher\Actions\RequestRelaunchAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -99,6 +96,12 @@
     <ClInclude Include="Utils\WindowsInclude.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Launcher\Actions\RequestStopAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\UniqueHandle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NyaaiFortLauncher.rc">
@@ -124,9 +127,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Launcher\Actions\PrintLogAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\Actions\RequestExitAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Launcher\Actions\RequestRelaunchAction.cpp">
@@ -178,6 +178,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\Actions\RequestStopAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\UniqueHandle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

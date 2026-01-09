@@ -54,9 +54,16 @@ void NDetectFortniteCrashActivity::OnCreated()
         std::filesystem::path{ Buffer } / L"FortniteGame" / L"Saved" / L"Crashes";
 
     free(Buffer);
+    
+    if (!std::filesystem::exists(FortniteCrashesFolderPath))
+    {
+        if (!std::filesystem::create_directory(FortniteCrashesFolderPath))
+        {
+            return;
+        }
+    }
 
-    if (!std::filesystem::exists(FortniteCrashesFolderPath) ||
-        !std::filesystem::is_directory(FortniteCrashesFolderPath))
+    if (!std::filesystem::is_directory(FortniteCrashesFolderPath))
     {
         return;
     }
@@ -69,7 +76,7 @@ void NDetectFortniteCrashActivity::OnCreated()
         }
     }
 
-    CrashDirChangeHandle = ::FindFirstChangeNotificationW(
+    CrashDirChangeHandle = FindFirstChangeNotificationW(
         FortniteCrashesFolderPath.c_str(),
         TRUE,
         FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_SIZE |
@@ -82,11 +89,11 @@ void NDetectFortniteCrashActivity::OnDestroyed()
 
     if (CrashDirChangeHandle != INVALID_HANDLE_VALUE)
     {
-        ::FindCloseChangeNotification(CrashDirChangeHandle);
+        FindCloseChangeNotification(CrashDirChangeHandle);
     }
 }
 
-void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
+void NDetectFortniteCrashActivity::Tick(double DeltaTime)
 {
     if (FortniteProcessId == 0)
     {
@@ -98,11 +105,11 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
         return;
     }
 
-    const DWORD Result = ::WaitForSingleObject(CrashDirChangeHandle, 0);
+    const DWORD Result = WaitForSingleObject(CrashDirChangeHandle, 0);
     const bool DirectoryChanged = Result == WAIT_OBJECT_0;
     if (DirectoryChanged)
     {
-        ::FindNextChangeNotification(CrashDirChangeHandle);
+        FindNextChangeNotification(CrashDirChangeHandle);
     }
 
     if (!DirectoryChanged && PendingCrashContextFilePaths.empty())
@@ -244,7 +251,7 @@ void NDetectFortniteCrashActivity::Tick(double /*DeltaTime*/)
         }
 
         // Wait for fortnite to exit naturally so it can save the crash dump
-        ::WaitForSingleObject(GetLauncher()->GetFortniteProcessHandle(), 5000);
+        WaitForSingleObject(GetLauncher()->GetFortniteProcessHandle(), 5000);
 
         for (const auto& ActionTemplate : OnFortniteCrashActions)
         {

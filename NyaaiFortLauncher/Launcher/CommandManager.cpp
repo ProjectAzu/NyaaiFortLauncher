@@ -188,7 +188,7 @@ void FCommandManager::ProcessManuallyQueuedCommands(NEngine* Engine)
         FRegisteredCommand* RegisteredCommand = FindRegisteredCommand(Command, Entry.ContextObject);
         if (!RegisteredCommand)
         {
-            Log(Error, L"Unable to find command '{}'", Command);
+            Log(Error, L"Unable to find manually queued command '{}'", Command);
             continue;
         }
         

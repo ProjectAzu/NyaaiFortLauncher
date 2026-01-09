@@ -3,6 +3,63 @@
 #include "Object.h"
 
 template<class T>
+struct TNativeTemplate
+{
+    template<class>
+    friend struct TObjectTemplate;
+    
+    TNativeTemplate() = default;
+    
+    TNativeTemplate(NSubClassOf<T> Class)
+    {
+        if (Class)
+        {
+            Object = Class->template NewObject<T>(nullptr, true, {});
+        }
+    }
+    
+    template<class OtherT>
+    TNativeTemplate(const TNativeTemplate<OtherT>& OtherNativeTemplate)
+    {
+        if (!OtherNativeTemplate)
+        {
+            return;
+        }
+        
+        FDefaultValueOverrides DefaultValueOverrides{};
+        
+        for (const FProperty Property : OtherNativeTemplate->GetPropertiesArrayConstRef())
+        {
+            FPropertySetData PropertySetData{};
+            PropertySetData.PropertyName = Property.GetName();
+            PropertySetData.SetValue = Property.GetAsString(OtherNativeTemplate.Get());
+            
+            DefaultValueOverrides.emplace_back(std::move(PropertySetData));
+        }
+        
+        Object = OtherNativeTemplate->GetClass()->NewObject(nullptr, DefaultValueOverrides, true);   
+    }
+    
+    T* Get() const
+    {
+        return Object;
+    }
+    
+    T* operator->() const
+    {
+        return Get();
+    }
+    
+    operator bool() const
+    {
+        return Get() != nullptr;
+    }
+    
+private:
+    NUniquePtr<T> Object = nullptr;
+};
+
+template<class T>
 struct TObjectTemplate : FStructWithProperties
 {
     TObjectTemplate() = default;
@@ -19,6 +76,12 @@ struct TObjectTemplate : FStructWithProperties
     
     TObjectTemplate(NClass* Class) : Class(Class)
     {
+    }
+    
+    template<class OtherT>
+    TObjectTemplate(const TNativeTemplate<OtherT>& NativeTemplate) : TObjectTemplate()
+    {
+        SetFromNativeTemplate(NativeTemplate);
     }
     
     static std::wstring GetName()
@@ -43,7 +106,7 @@ struct TObjectTemplate : FStructWithProperties
     }
     
     template<class ReturnType>
-    NUniquePtr<ReturnType> MakeNativeTemplate() const
+    TNativeTemplate<ReturnType> MakeNativeTemplate() const
     {
         if (!Class)
         {
@@ -61,16 +124,21 @@ struct TObjectTemplate : FStructWithProperties
             return nullptr;
         }
         
+        TNativeTemplate<ReturnType> Result{};
+        
         // using deferred init and never finishing construction because it's a template object
-        return reinterpret_cast<ReturnType*>(Class->NewObject(nullptr, DefaultValueOverrides, true));
+        Result.Object = Class->template NewObject<ReturnType>(nullptr, true, DefaultValueOverrides);
+
+        return Result;
     }
     
-    NUniquePtr<T> MakeNativeTemplate() const
+    TNativeTemplate<T> MakeNativeTemplate() const
     {
         return MakeNativeTemplate<T>();
     }
     
-    void SetFromNativeTemplate(const T* NativeTemplate)
+    template<class NativeTemplateT>
+    void SetFromNativeTemplate(const TNativeTemplate<NativeTemplateT>& NativeTemplate)
     {
         DefaultValueOverrides.clear();
         
@@ -82,14 +150,27 @@ struct TObjectTemplate : FStructWithProperties
         
         Class = NativeTemplate->GetClass();
         
-        for (const FProperty* Property : NativeTemplate->GetPropertiesArrayConstRef())
+        for (const FProperty Property : NativeTemplate->GetPropertiesArrayConstRef())
         {
             FPropertySetData PropertySetData{};
-            PropertySetData.PropertyName = Property->GetName();
-            PropertySetData.SetValue = Property->GetAsString(NativeTemplate);
+            PropertySetData.PropertyName = Property.GetName();
+            PropertySetData.SetValue = Property.GetAsString(NativeTemplate.Get());
             
             DefaultValueOverrides.emplace_back(std::move(PropertySetData));
         }
+    }
+    
+    template<class OtherT>
+    TObjectTemplate<T>& operator=(const TNativeTemplate<OtherT>& NativeTemplate)
+    {
+        SetFromNativeTemplate(NativeTemplate);
+        return *this;
+    }
+    
+    template<class OtherT>
+    operator TNativeTemplate<OtherT>() const
+    {
+        return MakeNativeTemplate<OtherT>();
     }
     
     void Reset(NSubClassOf<T> InClass)

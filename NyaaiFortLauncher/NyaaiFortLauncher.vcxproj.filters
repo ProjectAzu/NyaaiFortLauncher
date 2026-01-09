@@ -102,6 +102,9 @@
     <ClInclude Include="Utils\UniqueHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Launcher\AzuServerFortLauncher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NyaaiFortLauncher.rc">
@@ -184,6 +187,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utils\UniqueHandle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\AzuServerFortLauncher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

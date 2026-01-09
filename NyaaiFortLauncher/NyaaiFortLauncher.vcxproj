@@ -151,6 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Launcher\AzuServerFortLauncher.h" />
     <ClInclude Include="Launcher\Actions\Action.h" />
     <ClInclude Include="Launcher\Actions\CopyFileAction.h" />
     <ClInclude Include="Launcher\Actions\CreateProcessAction.h" />
@@ -191,6 +192,7 @@
     <Content Include="Object\ObjectTemplate.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Launcher\AzuServerFortLauncher.cpp" />
     <ClCompile Include="Launcher\Actions\Action.cpp" />
     <ClCompile Include="Launcher\Actions\CopyFileAction.cpp" />
     <ClCompile Include="Launcher\Actions\CreateProcessAction.cpp" />

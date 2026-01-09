@@ -3,41 +3,30 @@
 #include "Object.h"
 
 template<class T>
-struct TNativeTemplate
+struct TNativeObjectTemplate
 {
     template<class>
     friend struct TObjectTemplate;
     
-    TNativeTemplate() = default;
+    TNativeObjectTemplate() = default;
     
-    TNativeTemplate(NSubClassOf<T> Class)
+    TNativeObjectTemplate(NSubClassOf<T> Class)
     {
         if (Class)
         {
             Object = Class->template NewObject<T>(nullptr, true, {});
         }
     }
+        
+    TNativeObjectTemplate(const TNativeObjectTemplate& Other)
+    {
+        SetFromObject(Other.Object.Get());
+    }
     
     template<class OtherT>
-    TNativeTemplate(const TNativeTemplate<OtherT>& OtherNativeTemplate)
+    TNativeObjectTemplate(const TNativeObjectTemplate<OtherT>& Other)
     {
-        if (!OtherNativeTemplate)
-        {
-            return;
-        }
-        
-        FDefaultValueOverrides DefaultValueOverrides{};
-        
-        for (const FProperty Property : OtherNativeTemplate->GetPropertiesArrayConstRef())
-        {
-            FPropertySetData PropertySetData{};
-            PropertySetData.PropertyName = Property.GetName();
-            PropertySetData.SetValue = Property.GetAsString(OtherNativeTemplate.Get());
-            
-            DefaultValueOverrides.emplace_back(std::move(PropertySetData));
-        }
-        
-        Object = OtherNativeTemplate->GetClass()->NewObject(nullptr, DefaultValueOverrides, true);   
+        SetFromObject(Other.Object.Get());
     }
     
     T* Get() const
@@ -56,6 +45,30 @@ struct TNativeTemplate
     }
     
 private:
+    void SetFromObject(T* InObject)
+    {
+        Object = nullptr;
+        
+        if (!InObject)
+        {
+            return;
+        }
+        
+        FDefaultValueOverrides DefaultValueOverrides{};
+        
+        for (const FProperty& Property : InObject->GetPropertiesArrayConstRef())
+        {
+            FPropertySetData PropertySetData{};
+            PropertySetData.PropertyName = Property.GetName();
+            PropertySetData.SetValue = Property.GetAsString(InObject);
+            
+            DefaultValueOverrides.emplace_back(std::move(PropertySetData));
+        }
+        
+        Object = InObject->GetClass()->template NewObject<T>(nullptr, true, DefaultValueOverrides);   
+    }
+    
+    // This object should be made with deferred init and never finish construction because it's a template object
     NUniquePtr<T> Object = nullptr;
 };
 
@@ -79,7 +92,7 @@ struct TObjectTemplate : FStructWithProperties
     }
     
     template<class OtherT>
-    TObjectTemplate(const TNativeTemplate<OtherT>& NativeTemplate) : TObjectTemplate()
+    TObjectTemplate(const TNativeObjectTemplate<OtherT>& NativeTemplate) : TObjectTemplate()
     {
         SetFromNativeTemplate(NativeTemplate);
     }
@@ -106,14 +119,14 @@ struct TObjectTemplate : FStructWithProperties
     }
     
     template<class ReturnType>
-    TNativeTemplate<ReturnType> MakeNativeTemplate() const
+    TNativeObjectTemplate<ReturnType> MakeNativeTemplate() const
     {
         if (!Class)
         {
             Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, no class is set", 
                 GetName(), ReturnType::StaticClass()->GetName());
             
-            return nullptr;
+            return {};
         }
         
         if (!ReturnType::StaticClass()->IsSubclassOf(Class))
@@ -121,24 +134,23 @@ struct TObjectTemplate : FStructWithProperties
             Log(Error, L"{}::MakeNativeTemplate<{}>: Cannot make native template, '{}' is not a subclass of the set class '{}'", 
                 GetName(), ReturnType::StaticClass()->GetName(), ReturnType::StaticClass()->GetName(), Class->GetName());
             
-            return nullptr;
+            return {};
         }
         
-        TNativeTemplate<ReturnType> Result{};
+        TNativeObjectTemplate<ReturnType> Result{};
         
-        // using deferred init and never finishing construction because it's a template object
         Result.Object = Class->template NewObject<ReturnType>(nullptr, true, DefaultValueOverrides);
 
         return Result;
     }
     
-    TNativeTemplate<T> MakeNativeTemplate() const
+    TNativeObjectTemplate<T> MakeNativeTemplate() const
     {
         return MakeNativeTemplate<T>();
     }
     
     template<class NativeTemplateT>
-    void SetFromNativeTemplate(const TNativeTemplate<NativeTemplateT>& NativeTemplate)
+    void SetFromNativeTemplate(const TNativeObjectTemplate<NativeTemplateT>& NativeTemplate)
     {
         DefaultValueOverrides.clear();
         
@@ -150,7 +162,7 @@ struct TObjectTemplate : FStructWithProperties
         
         Class = NativeTemplate->GetClass();
         
-        for (const FProperty Property : NativeTemplate->GetPropertiesArrayConstRef())
+        for (const FProperty& Property : NativeTemplate->GetPropertiesArrayConstRef())
         {
             FPropertySetData PropertySetData{};
             PropertySetData.PropertyName = Property.GetName();
@@ -161,14 +173,14 @@ struct TObjectTemplate : FStructWithProperties
     }
     
     template<class OtherT>
-    TObjectTemplate<T>& operator=(const TNativeTemplate<OtherT>& NativeTemplate)
+    TObjectTemplate<T>& operator=(const TNativeObjectTemplate<OtherT>& NativeTemplate)
     {
         SetFromNativeTemplate(NativeTemplate);
         return *this;
     }
     
     template<class OtherT>
-    operator TNativeTemplate<OtherT>() const
+    operator TNativeObjectTemplate<OtherT>() const
     {
         return MakeNativeTemplate<OtherT>();
     }
@@ -204,7 +216,7 @@ struct TObjectTemplate : FStructWithProperties
     }
     
     NSubClassOf<T> GetClass() const { return Class; }
-    FDefaultValueOverrides GetDefaultValueOverrides() const { return DefaultValueOverrides; }
+    const FDefaultValueOverrides& GetDefaultValueOverrides() const { return DefaultValueOverrides; }
     
     operator bool() const
     {

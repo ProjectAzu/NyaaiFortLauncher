@@ -26,9 +26,12 @@ void NAzuServerFortLauncher::OnCreated()
 
 	FortniteExePath = FortnitePath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping.exe";
 
-	FortniteLaunchArguments =
+	// += so stuff can still be added in the config
+	FortniteLaunchArguments +=
 		L"-epicapp=Fortnite -epicenv=Prod -epiclocale=en-us -epicportal -skippatchcheck -nobe -fromfl=eac -fltoken=3db3ba5dcbd2e16703f3978d"
-		L" -AUTH_LOGIN=server3@server.com -AUTH_PASSWORD=hardpass123 -AUTH_TYPE=epic -nosplash -nullrhi -nosound";
+		L" -AUTH_TYPE=epic -nosplash -nullrhi -nosound";
+	
+	FortniteLaunchArguments += std::format(L" -AUTH_LOGIN={} -AUTH_PASSWORD={}", Login, Password);
 
 	{
 		TNativeObjectTemplate<NCreateProcessAction> Template{NCreateProcessAction::StaticClass()};
@@ -52,7 +55,7 @@ void NAzuServerFortLauncher::OnCreated()
 		TNativeObjectTemplate<NInjectDllIntoFortniteAction> Template{NInjectDllIntoFortniteAction::StaticClass()};
 
 		Template->DllPath = RedirectDllPath;
-		Template->DllThreadDescription = L"http 78.47.120.58 8080";
+		Template->DllThreadDescription = RedirectDllThreadDescription;
 		
 		PostFortniteLaunchActions.emplace_back(Template);
 	}

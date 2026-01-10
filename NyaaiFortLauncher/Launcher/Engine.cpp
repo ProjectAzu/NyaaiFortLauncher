@@ -179,7 +179,7 @@ TObjectTemplate<NFortLauncher> NEngine::GetDefaultLauncherTemplate() const
     
     if (ProgramLaunchArgs.size() != 1)
     {
-        Log(Error, L"Please provide a {} config file as a command line argument or do -help", ConfigFileExtension);
+        Log(Error, L"Launch args num != 1, Please provide a {} config file as a command line argument or do -help", ConfigFileExtension);
         return {};
     }
 
@@ -221,11 +221,6 @@ TObjectTemplate<NFortLauncher> NEngine::GetDefaultLauncherTemplate() const
     {
         Log(Error, L"Malformatted config file '{}'", ConfigPath.wstring());
         return {};
-    }
-    
-    if (!LauncherTemplate.GetClass())
-    {
-        LauncherTemplate.ModifyClass(NFortLauncher::StaticClass());
     }
     
     return LauncherTemplate;

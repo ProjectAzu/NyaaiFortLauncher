@@ -606,6 +606,103 @@ struct TTypeHelpers<std::vector<T>>
     }
 };
 
+template<class T>
+struct TTypeHelpers<TObjectTemplate<T>>
+{
+    static bool SetFromString(TObjectTemplate<T>* Property, const std::wstring& Value)
+    {
+        *Property = {};
+        
+        std::wstring ClassString{};
+        
+        int32 OpeningBraceIndex = -1;
+        
+        for (int32 i = 0; i < static_cast<int32>(Value.size()); i++)
+        {
+            if (Value[i] == L'{')
+            {
+                OpeningBraceIndex = i;
+                break;
+            }
+            
+            ClassString += Value[i];
+        }
+        
+        std::wstring DefaultValueOverridesString{};
+        
+        if (OpeningBraceIndex >= 0)
+        {
+            auto CleanString = RemoveUnnecessaryCharsFromString(Value);
+            
+            if (CleanString.empty())
+            {
+                Log(Error, L"{} Setter failed, no closing brace at end", GetName());
+            }
+            
+            if (CleanString.back() != L'}')
+            {
+                Log(Error, L"{} Setter failed, no closing brace at end, instead found: {}", GetName(), ClassString.back());
+                return false;
+            }
+            
+            int32 ClosingBraceIndex = -1;
+            
+            for (int32 i = static_cast<int32>(Value.size()) - 1; i > OpeningBraceIndex; i--)
+            {
+                if (Value[i] == L'}')
+                {
+                    ClosingBraceIndex = i;
+                    break;
+                }
+            }
+            
+            if (ClosingBraceIndex > OpeningBraceIndex)
+            {
+                DefaultValueOverridesString = std::wstring(Value.begin() + OpeningBraceIndex + 1, Value.begin() + ClosingBraceIndex);   
+            }
+        }
+        
+        NSubClassOf<T> Class{};
+        if (!TTypeHelpers<NSubClassOf<T>>::SetFromString(&Class, ClassString))
+        {
+            return false;
+        }
+        
+        if (!Class)
+        {
+            return true;
+        }
+        
+        FDefaultValueOverrides DefaultValueOverrides{};
+        if (!TTypeHelpers<FDefaultValueOverrides>::SetFromString(&DefaultValueOverrides, DefaultValueOverridesString))
+        {
+            return false;
+        }
+        
+        *Property = TObjectTemplate<T>(Class, DefaultValueOverrides);
+        
+        return true;
+    }
+    
+    static std::wstring ToString(const TObjectTemplate<T>* Value)
+    {
+        if (!Value->GetClass())
+        {
+            return {};
+        }
+        
+        FDefaultValueOverrides DefaultValueOverrides = Value->GetDefaultValueOverrides();
+        
+        return std::format(L"{}{{{}}}",
+            Value->GetClass()->GetName(), 
+            TTypeHelpers<FDefaultValueOverrides>::ToString(&DefaultValueOverrides)
+            );
+    }
+    
+    static std::wstring GetName() { return std::format(L"TObjectTemplate<{}>", T::StaticClass()->GetName()); }
+    static std::vector<FInfoOfStructWithPropertiesUsedInType> GetInfoOfStructsWithPropertiesUsedInType() { return {}; }
+};
+
 bool ConvertStringToCleanAbsolutePath(const std::wstring& Input, std::filesystem::path& OutResult);
 
 template<>

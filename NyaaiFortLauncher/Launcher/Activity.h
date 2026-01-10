@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Launcher/EngineObject.h"
-#include "Object/ObjectTemplate.h"
 
 class NActivity : public NEngineObject
 {

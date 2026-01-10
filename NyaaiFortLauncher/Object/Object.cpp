@@ -5,8 +5,6 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "DefaultValueOverrides.h"
-
 static std::vector<NClass*>* AllClassesSortedByHierarchyAndName{};
 static std::unordered_map<std::wstring, NClass*>* AllClassesByByName{};
 
@@ -171,7 +169,7 @@ NClass* NClass::GetClassByName(const std::wstring& Name)
         return Search->second;
     }
 
-    Log(Error, L"GetClassByName: Failed to find class {}", Name);
+    Log(Error, L"GetClassByName: Failed to find class '{}'", Name);
 
     return nullptr;
 }

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Activity.h"
-#include "Object/ObjectTemplate.h"
 
 #include <unordered_set>
 

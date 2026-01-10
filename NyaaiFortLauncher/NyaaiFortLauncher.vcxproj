@@ -168,10 +168,8 @@
     <ClInclude Include="Launcher\EngineObject.h" />
     <ClInclude Include="Launcher\FortLauncher.h" />
     <ClInclude Include="Launcher\ReadFortniteLogActivity.h" />
-    <ClInclude Include="Object\DefaultValueOverrides.h" />
     <ClInclude Include="Object\IntegerTypes.h" />
     <ClInclude Include="Object\Object.h" />
-    <ClInclude Include="Object\ObjectTemplate.h" />
     <ClInclude Include="Object\TypeHelpers.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils\CommandLine.h" />
@@ -187,9 +185,6 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\NyaaiFortLauncher.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Object\ObjectTemplate.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Launcher\AzuServerFortLauncher.cpp" />

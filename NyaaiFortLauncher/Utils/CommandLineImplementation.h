@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "Object/Object.h"
-#include "Object/ObjectTemplate.h"
 
 #include "CommandLine.h"
 

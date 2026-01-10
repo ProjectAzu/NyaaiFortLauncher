@@ -3,10 +3,10 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <concepts>
 
 #include "Utils/CommandLine.h"
 #include "IntegerTypes.h"
-#include "DefaultValueOverrides.h"
 
 #define GENERATE_BASE_H(ClassName) \
 public: \
@@ -36,6 +36,14 @@ FPropertyCreator Name##_PropertyCreator{ \
 
 class NObject;
 class NClass;
+
+struct FPropertySetData
+{
+    std::wstring PropertyName{};
+    std::wstring SetValue;
+};
+
+typedef std::vector<FPropertySetData> FDefaultValueOverrides;
 
 struct FPropertyCreator
 {
@@ -359,5 +367,169 @@ template<class T> inline T* Cast(NObject* Object)
 {
     return Object ? (Object->GetClass()->IsSubclassOf(T::StaticClass()) ? reinterpret_cast<T*>(Object) : nullptr) : nullptr;
 }
+
+template<class T>
+struct TObjectTemplate
+{
+    TObjectTemplate() = default;
+
+    TObjectTemplate(const TObjectTemplate& OtherTemplate)
+    {
+        CopyFrom(OtherTemplate);
+    }
+
+    template<class OtherT>
+    TObjectTemplate(const TObjectTemplate<OtherT>& OtherTemplate)
+    {
+        CopyFrom(OtherTemplate);
+    }
+
+    TObjectTemplate(NSubClassOf<T> Class)
+    {
+        Reset(Class);
+    }
+
+    TObjectTemplate(NClass* Class)
+    {
+        if (Class)
+        {
+            TemplateObject = Class->template NewObject<T>(nullptr, true);
+        }
+    }
+
+    TObjectTemplate(TObjectTemplate&&) noexcept = default;
+    TObjectTemplate& operator=(TObjectTemplate&&) noexcept = default;
+
+    TObjectTemplate& operator=(const TObjectTemplate& OtherTemplate)
+    {
+        CopyFrom(OtherTemplate);
+        return *this;
+    }
+
+    template<class OtherT>
+    TObjectTemplate& operator=(const TObjectTemplate<OtherT>& OtherTemplate)
+    {
+        CopyFrom(OtherTemplate);
+        return *this;
+    }
+
+    TObjectTemplate(NSubClassOf<T> Class, const FDefaultValueOverrides& DefaultValueOverrides)
+    {
+        if (!Class)
+        {
+            TemplateObject.Reset(nullptr);
+            return;
+        }
+
+        TemplateObject.Reset(Class->template NewObjectRaw<T>(nullptr, true, DefaultValueOverrides));
+    }
+
+    T* NewObjectRaw(NObject* Outer = nullptr, bool bDeferConstruction = false) const
+    {
+        if (!TemplateObject)
+        {
+            Log(Error, L"TObjectTemplate<T>::NewObjectRaw:, Cannot initialize template, no TemplateObject");
+            return nullptr;
+        }
+
+        return TemplateObject->GetClass()->template NewObjectRaw<T>(Outer, bDeferConstruction, GetDefaultValueOverrides());
+    }
+
+    NUniquePtr<T> NewObject(NObject* Outer = nullptr, bool bDeferConstruction = false) const
+    {
+        return NewObjectRaw(Outer, bDeferConstruction);
+    }
+
+    void Reset(NSubClassOf<T> InClass)
+    {
+        if (!InClass)
+        {
+            TemplateObject.Reset(nullptr);
+            return;
+        }
+
+        TemplateObject = InClass->template NewObject<T>(nullptr, true);
+    }
+
+    // Modifies the currently set class while preserving the default value overrides
+    void ModifyClass(NSubClassOf<T> InClass)
+    {
+        if (!InClass)
+        {
+            TemplateObject.Reset(nullptr);
+
+            Log(Error, L"TObjectTemplate<T>::ModifyClass: InClass can't be nullptr. If this is intended, use Reset(nullptr)");
+
+            return;
+        }
+
+        if (TemplateObject && !InClass->IsSubclassOf(TemplateObject->GetClass()))
+        {
+            Log(Error, L"TObjectTemplate<T>::ModifyClass: InClass '{}' has to be a subclass of the currently set class '{}'",
+                InClass->GetName(), TemplateObject->GetClass()->GetName());
+
+            Reset(InClass);
+
+            return;
+        }
+
+        TemplateObject.Reset(InClass->template NewObjectRaw<T>(nullptr, true, GetDefaultValueOverrides()));
+    }
+
+    NSubClassOf<T> GetClass() const
+    {
+        return TemplateObject ? TemplateObject->GetClass() : nullptr;
+    }
+
+    FDefaultValueOverrides GetDefaultValueOverrides() const
+    {
+        if (!TemplateObject)
+        {
+            return {};
+        }
+
+        const auto& Properties = TemplateObject->GetPropertiesArrayConstRef();
+
+        FDefaultValueOverrides DefaultValueOverrides{};
+        DefaultValueOverrides.reserve(Properties.size());
+
+        for (const FProperty& Property : Properties)
+        {
+            FPropertySetData PropertySetData{};
+            PropertySetData.PropertyName = Property.GetName();
+            PropertySetData.SetValue = Property.GetAsString(TemplateObject);
+
+            DefaultValueOverrides.emplace_back(std::move(PropertySetData));
+        }
+
+        return DefaultValueOverrides;
+    }
+
+    T* operator->() const
+    {
+        return TemplateObject;
+    }
+
+    operator bool() const
+    {
+        return TemplateObject != nullptr;
+    }
+
+private:
+    template<class OtherT>
+    void CopyFrom(const TObjectTemplate<OtherT>& OtherTemplate)
+    {
+        if (!OtherTemplate.GetClass())
+        {
+            TemplateObject.Reset(nullptr);
+            return;
+        }
+
+        TemplateObject.Reset(OtherTemplate.NewObjectRaw(nullptr, true));
+    }
+
+    NUniquePtr<T> TemplateObject = nullptr;
+};
+
 
 #include "TypeHelpers.h"

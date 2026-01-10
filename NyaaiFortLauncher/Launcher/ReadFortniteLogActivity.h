@@ -2,7 +2,6 @@
 
 #include "Activity.h"
 #include "Launcher/Actions/Action.h"
-#include "Object/ObjectTemplate.h"
 #include "Utils/Utf8.h"
 
 struct FCommandArguments;

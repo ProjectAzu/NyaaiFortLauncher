@@ -34,7 +34,7 @@ void NAzuServerFortLauncher::OnCreated()
 	FortniteLaunchArguments += std::format(L" -AUTH_LOGIN={} -AUTH_PASSWORD={}", Login, Password);
 
 	{
-		TNativeObjectTemplate<NCreateProcessAction> Template{NCreateProcessAction::StaticClass()};
+		TObjectTemplate<NCreateProcessAction> Template{NCreateProcessAction::StaticClass()};
 		
 		Template->FilePath = FortnitePath / L"FortniteGame\\Binaries\\Win64\\FortniteLauncher.exe";
 		Template->bCreateSuspended = true;
@@ -43,7 +43,7 @@ void NAzuServerFortLauncher::OnCreated()
 	}
 
 	{
-		TNativeObjectTemplate<NCreateProcessAction> Template{NCreateProcessAction::StaticClass()};
+		TObjectTemplate<NCreateProcessAction> Template{NCreateProcessAction::StaticClass()};
 
 		Template->FilePath = FortnitePath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping_EAC.exe";
 		Template->bCreateSuspended = true;
@@ -52,7 +52,7 @@ void NAzuServerFortLauncher::OnCreated()
 	}
 
 	{
-		TNativeObjectTemplate<NInjectDllIntoFortniteAction> Template{NInjectDllIntoFortniteAction::StaticClass()};
+		TObjectTemplate<NInjectDllIntoFortniteAction> Template{NInjectDllIntoFortniteAction::StaticClass()};
 
 		Template->DllPath = RedirectDllPath;
 		Template->DllThreadDescription = RedirectDllThreadDescription;
@@ -61,7 +61,7 @@ void NAzuServerFortLauncher::OnCreated()
 	}
 	
 	{
-		TNativeObjectTemplate<NInjectDllIntoFortniteAction> Template{NInjectDllIntoFortniteAction::StaticClass()};
+		TObjectTemplate<NInjectDllIntoFortniteAction> Template{NInjectDllIntoFortniteAction::StaticClass()};
 
 		Template->DllPath = GameServerDllPath;
 		Template->DllThreadDescription = AzuGameModeClass;
@@ -70,7 +70,7 @@ void NAzuServerFortLauncher::OnCreated()
 	}
 	
 	{
-		TNativeObjectTemplate<NReadFortniteLogActivity> ActivityTemplate{NReadFortniteLogActivity::StaticClass()};
+		TObjectTemplate<NReadFortniteLogActivity> ActivityTemplate{NReadFortniteLogActivity::StaticClass()};
 		
 		ActivityTemplate->bPrintFortniteLog = true;
 		ActivityTemplate->ColoredPrintPrefix = L"[Azu";
@@ -82,7 +82,7 @@ void NAzuServerFortLauncher::OnCreated()
 			LogTriggeredAction.TriggerString = L"[UFortOnlineAccount::LoginStepUpdated] CreatingParty --> Completed";
 			LogTriggeredAction.bTriggerOnlyOnce = true;
 			
-			TNativeObjectTemplate<NRunCommandAction> ActionTemplate{NRunCommandAction::StaticClass()};
+			TObjectTemplate<NRunCommandAction> ActionTemplate{NRunCommandAction::StaticClass()};
 			ActionTemplate->Command = L"fn NotifyFortniteHasLoaded";
 		
 			LogTriggeredAction.Action = ActionTemplate;
@@ -97,7 +97,7 @@ void NAzuServerFortLauncher::OnCreated()
 			LogTriggeredAction.bTriggerOnlyOnce = true;
 			
 			{
-				TNativeObjectTemplate<NPrintLogAction> ActionTemplate{NPrintLogAction::StaticClass()};
+				TObjectTemplate<NPrintLogAction> ActionTemplate{NPrintLogAction::StaticClass()};
 				ActionTemplate->LogLevel = L"Error";
 				ActionTemplate->Message = L"Fortnite forced logout, relaunching";
 		
@@ -114,7 +114,7 @@ void NAzuServerFortLauncher::OnCreated()
 			
 			LogTriggeredAction.TriggerString = L"errors.com.epicgames.account.invalid_account_credentials";
 			
-			TNativeObjectTemplate<NPrintLogAction> ActionTemplate{NPrintLogAction::StaticClass()};
+			TObjectTemplate<NPrintLogAction> ActionTemplate{NPrintLogAction::StaticClass()};
 			ActionTemplate->LogLevel = L"Error";
 			ActionTemplate->Message = L"Invalid fortnite account credentials";
 		
@@ -128,7 +128,7 @@ void NAzuServerFortLauncher::OnCreated()
 			
 			LogTriggeredAction.TriggerString = L"request failed, libcurl error: 7 (Couldn't connect to server)";
 			
-			TNativeObjectTemplate<NPrintLogAction> ActionTemplate{NPrintLogAction::StaticClass()};
+			TObjectTemplate<NPrintLogAction> ActionTemplate{NPrintLogAction::StaticClass()};
 			ActionTemplate->LogLevel = L"Error";
 			ActionTemplate->Message = L"Fortnite could not connect to the backend";
 		

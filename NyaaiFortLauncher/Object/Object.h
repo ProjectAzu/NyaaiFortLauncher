@@ -165,7 +165,7 @@ public:
     // Warning - OnDestroyed is only called if OnCreated was called (If construction was finished)
     virtual void OnDestroyed();
     
-    const std::vector<FProperty>& GetPropertiesArrayConstRef() const { return  Properties; }
+    const std::vector<FProperty>& GetPropertiesArrayConstRef() const { return Properties; }
 
 private:
     friend class NClass;

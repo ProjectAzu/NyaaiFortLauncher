@@ -69,7 +69,7 @@ void NReadFortniteLogActivity::ReadAndProcessPipe(void* StdOutReadPipeHandle)
         char Buffer[MaxChunk];
         DWORD BytesRead = 0;
 
-        if (!::ReadFile(StdOutReadPipeHandle, Buffer, BytesToRead, &BytesRead, nullptr) || BytesRead == 0)
+        if (!ReadFile(StdOutReadPipeHandle, Buffer, BytesToRead, &BytesRead, nullptr) || BytesRead == 0)
         {
             Log(Error, L"ReadFile failed with error: {}", GetLastError());
             return;
@@ -256,7 +256,7 @@ void NReadFortniteLogActivity::ForwardCommandToFortniteCommand(const FCommandArg
     const std::string CommandBytes = WideToUtf8(CommandRaw);
 
     DWORD BytesWritten = 0;
-    if (!::WriteFile(
+    if (!WriteFile(
         PipeHandle,
         CommandBytes.data(),
         static_cast<uint32>(CommandBytes.size()),

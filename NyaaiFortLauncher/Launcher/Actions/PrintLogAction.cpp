@@ -29,5 +29,5 @@ void NPrintLogAction::Execute()
         Log(Error, L"NPrintLogAction, Bad log level specified '{}'", LogLevel);
     }
 
-    Log(ParsedLogLevel, Message.c_str());
+    LogImplementation(ParsedLogLevel, Message);
 }

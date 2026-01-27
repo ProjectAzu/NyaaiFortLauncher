@@ -508,11 +508,11 @@ struct TTypeHelpers<class NClass*>
 template<class T>
 struct TTypeHelpers<NSubClassOf<T>>
 {
-    static bool SetFromString(NSubClassOf<T>* Property, const std::wstring& OutValue)
+    static bool SetFromString(NSubClassOf<T>* Property, const std::wstring& Value)
     {
         NClass* Class = nullptr;
         
-        if (!TTypeHelpers<NClass*>::SetFromString(&Class, OutValue))
+        if (!TTypeHelpers<NClass*>::SetFromString(&Class, Value))
         {
             return false;
         }

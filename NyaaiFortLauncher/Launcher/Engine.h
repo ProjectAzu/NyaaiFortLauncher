@@ -17,28 +17,26 @@ public:
     virtual void OnCreated() override;
     virtual void OnDestroyed() override;
     
+    void RunTickLoop();
+    
     virtual void Tick(double DeltaTime) override;
     
     virtual bool ShouldEngineExit() const;
     
+    NFortLauncher* GetCommandsContextLauncher() const;
+    NEngineObject* GetCommandsContextObject() const;
+    
+    void RequestExit() { bWantsToExit = true; }
+    
 protected:
     virtual bool ShouldPrintHelpAndExit() const;
-    
-    virtual TObjectTemplate<NFortLauncher> GetDefaultLauncherTemplate() const;
-    
-    virtual std::optional<std::wstring> GetConsoleTitleToSet() const;
     
 private:
     static void PrintClassesInfo();
     
-    NFortLauncher* GetCommandsContextLauncher() const;
-    NEngineObject* GetCommandsContextObject() const;
-    
     void HelpCommand(const FCommandArguments& Args);
     void PrintLauncherInstancesListCommand(const FCommandArguments& Args);
     void SetCommandsContextLauncherIdCommand(const FCommandArguments& Args);
-    void StartCommand(const FCommandArguments& Args);
-    void RestartCommand(const FCommandArguments& Args);
     void ExitCommand(const FCommandArguments& Args);
 
 public:
@@ -51,9 +49,6 @@ public:
     int32 GetNewLauncherId() { return LastUnusedLauncherId++; }
     
 public:
-    NPROPERTY(bUsingExternalTicking)
-    bool bUsingExternalTicking = false;
-    
     NPROPERTY(CommandLineTemplate)
     TObjectTemplate<NCommandLine> CommandLineTemplate{};
     

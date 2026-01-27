@@ -27,6 +27,7 @@ public:
     int32 GetLauncherId() const { return LauncherId; }
     
     void RequestStop() { bWantsToStop = true; }
+    bool DoesWantToStop() const { return bWantsToStop; }
 
 private:
     bool RunLauncher();

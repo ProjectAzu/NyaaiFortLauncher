@@ -7,7 +7,6 @@
 #include "FortLauncher.h"
 #include "Utils/CommandLineImplementation.h"
 #include "Utils/ReplxxCommandLine.h"
-#include "Utils/TextFileLoader.h"
 
 GENERATE_BASE_CPP(NEngine)
 
@@ -39,17 +38,14 @@ void NEngine::OnCreated()
     
     InitCommandLine(CommandLineTemplate);
     
+    Log(Info, L"Starting {}", GetClass()->GetName());
+    
     curl_global_init(CURL_GLOBAL_ALL);
     
     if (ShouldPrintHelpAndExit())
     {
         PrintClassesInfo();
         return;
-    }
-    
-    if (auto Title = GetConsoleTitleToSet())
-    {
-        SetConsoleTitleW(Title->c_str());
     }
     
     GetCommandManager().RegisterConsoleCommand(
@@ -75,20 +71,6 @@ void NEngine::OnCreated()
     
     GetCommandManager().RegisterConsoleCommand(
         this,
-        L"start",
-        L"Starts a launcher instance if none are currently running",
-        &ThisClass::StartCommand
-    );
-    
-    GetCommandManager().RegisterConsoleCommand(
-        this,
-        L"restart",
-        L"Kills the context launcher instance and starts a new default one",
-        &ThisClass::RestartCommand
-    );
-    
-    GetCommandManager().RegisterConsoleCommand(
-        this,
         L"exit",
         L"Exits the engine",
         &ThisClass::ExitCommand
@@ -107,21 +89,19 @@ void NEngine::OnCreated()
     {
         StartChildActivity(ActivityTemplate);
     }
+}
+
+void NEngine::OnDestroyed()
+{
+    Super::OnDestroyed();
     
-    if (auto DefaultLauncherTemplate = GetDefaultLauncherTemplate())
-    {
-        StartChildActivity(DefaultLauncherTemplate);   
-    }
-    else
-    {
-        Log(Info, L"GetDefaultLauncherTemplate returned nullptr. A default launcher instance will not be started");
-    }
+    CleanupCommandLine();
     
-    if (bUsingExternalTicking)
-    {
-        return;
-    }
-    
+    curl_global_cleanup();
+}
+
+void NEngine::RunTickLoop()
+{
     auto CurrentTime = std::chrono::high_resolution_clock::now();
 
     while (!ShouldEngineExit())
@@ -134,15 +114,6 @@ void NEngine::OnCreated()
         
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-}
-
-void NEngine::OnDestroyed()
-{
-    Super::OnDestroyed();
-    
-    CleanupCommandLine();
-    
-    curl_global_cleanup();
 }
 
 void NEngine::Tick(double DeltaTime)
@@ -166,83 +137,6 @@ bool NEngine::ShouldPrintHelpAndExit() const
     }
     
     return ProgramLaunchArgs[0] == L"help" || ProgramLaunchArgs[0] == L"-help" || ProgramLaunchArgs[0] == L"--help";
-}
-
-TObjectTemplate<NFortLauncher> NEngine::GetDefaultLauncherTemplate() const
-{
-    if (ProgramLaunchArgs.empty())
-    {
-        return {};
-    }
-    
-    static constexpr auto ConfigFileExtension = L".nfort";
-    
-    if (ProgramLaunchArgs.size() != 1)
-    {
-        Log(Error, L"Launch args num != 1, Please provide a {} config file as a command line argument or do -help", ConfigFileExtension);
-        return {};
-    }
-
-    std::wstring ConfigPathString = ProgramLaunchArgs[0];
-
-    std::filesystem::path ConfigPath{};
-    if (!ConvertStringToCleanAbsolutePath(ConfigPathString, ConfigPath))
-    {
-        Log(Error, L"Could not convert command line argument '{}' into a valid path", ConfigPathString);
-        return {};
-    }
-
-    if (!ConfigPath.has_filename())
-    {
-        Log(Error, L"'{}' is not a path to a file", ConfigPath.wstring());
-        return {};
-    }
-
-    if (ConfigPath.extension() != ConfigFileExtension)
-    {
-        Log(Error, L"The config file type is '{}' instead of '{}'",
-            ConfigPath.extension().wstring(), ConfigFileExtension);
-        return {};
-    }
-
-    std::wstring ConfigAsWString{};
-    try
-    {
-        ConfigAsWString = Utils::LoadTextFileToWString(ConfigPath);
-    }
-    catch (...)
-    {
-        Log(Error, L"Could not read/convert the '{}' Config file", ConfigPath.wstring());
-        return {};
-    }
-    
-    TObjectTemplate<NFortLauncher> LauncherTemplate{};
-    if (!TTypeHelpers<TObjectTemplate<NFortLauncher>>::SetFromString(&LauncherTemplate, ConfigAsWString))
-    {
-        Log(Error, L"Malformatted config file '{}'", ConfigPath.wstring());
-        return {};
-    }
-    
-    return LauncherTemplate;
-}
-
-std::optional<std::wstring> NEngine::GetConsoleTitleToSet() const
-{
-    if (ProgramLaunchArgs.empty())
-    {
-        return std::nullopt;
-    }
-    
-    std::filesystem::path Path{ProgramLaunchArgs[0]};
-    
-    auto Filename = Path.filename().wstring();
-    
-    if (Filename.empty())
-    {
-        return std::nullopt;
-    }
-    
-    return Filename;
 }
 
 void NEngine::PrintClassesInfo()
@@ -398,47 +292,6 @@ void NEngine::SetCommandsContextLauncherIdCommand(const FCommandArguments& Args)
 {
     CommandsContextLauncherId = Args.GetArgumentAtIndex<int32>(0);
     Log(Info, L"Set CommandsContextLauncherId to {}", CommandsContextLauncherId);
-}
-
-void NEngine::StartCommand(const FCommandArguments& Args)
-{
-    auto Launchers = GetLauncherInstances();
-    if (!Launchers.empty())
-    {
-        Log(Error, L"There already is a launcher instance running");
-        return;
-    }
-    
-    auto Template = GetDefaultLauncherTemplate();
-    if (!Template)
-    {
-        Log(Error, L"GetDefaultLauncherTemplate returned nullptr, can't start");
-        return;
-    }
-    
-    StartChildActivity(GetDefaultLauncherTemplate());
-}
-
-void NEngine::RestartCommand(const FCommandArguments& Args)
-{
-    auto Launcher = GetCommandsContextLauncher();
-    if (!Launcher)
-    {
-        Log(Error, L"Can't restart, no context launcher");
-        return;
-    }
-    
-    Launcher->Destroy();
-    Launcher = nullptr;
-    
-    auto Template = GetDefaultLauncherTemplate();
-    if (!Template)
-    {
-        Log(Error, L"GetDefaultLauncherTemplate returned nullptr, can't start");
-        return;
-    }
-    
-    StartChildActivity(GetDefaultLauncherTemplate());
 }
 
 void NEngine::ExitCommand(const FCommandArguments& Args)

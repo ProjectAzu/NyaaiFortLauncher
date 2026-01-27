@@ -1,12 +1,12 @@
 #include "AzuServerFortLauncher.h"
 
-#include "DetectFortniteCrashActivity.h"
-#include "ReadFortniteLogActivity.h"
-#include "Actions/CreateProcessAction.h"
-#include "Actions/InjectDllIntoFortniteAction.h"
-#include "Actions/PrintLogAction.h"
-#include "Actions/RequestRelaunchAction.h"
-#include "Actions/RunCommandAction.h"
+#include "Launcher/DetectFortniteCrashActivity.h"
+#include "Launcher/ReadFortniteLogActivity.h"
+#include "Launcher/Actions/CreateProcessAction.h"
+#include "Launcher/Actions/InjectDllIntoFortniteAction.h"
+#include "Launcher/Actions/PrintLogAction.h"
+#include "Launcher/Actions/RequestRelaunchAction.h"
+#include "Launcher/Actions/RunCommandAction.h"
 
 GENERATE_BASE_CPP(NAzuServerFortLauncher)
 

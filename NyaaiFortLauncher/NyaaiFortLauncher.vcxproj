@@ -151,7 +151,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Launcher\AzuServerFortLauncher.h" />
     <ClInclude Include="Launcher\Actions\Action.h" />
     <ClInclude Include="Launcher\Actions\CopyFileAction.h" />
     <ClInclude Include="Launcher\Actions\CreateProcessAction.h" />
@@ -162,7 +161,10 @@
     <ClInclude Include="Launcher\Actions\RunCommandAction.h" />
     <ClInclude Include="Launcher\Actions\WaitForBackendToRespondAction.h" />
     <ClInclude Include="Launcher\Activity.h" />
+    <ClInclude Include="Launcher\Azu\AzuServerFortLauncher.h" />
+    <ClInclude Include="Launcher\Azu\AzuShippingClientEngine.h" />
     <ClInclude Include="Launcher\CommandManager.h" />
+    <ClInclude Include="Launcher\DefaultEngine.h" />
     <ClInclude Include="Launcher\DetectFortniteCrashActivity.h" />
     <ClInclude Include="Launcher\Engine.h" />
     <ClInclude Include="Launcher\EngineObject.h" />
@@ -187,7 +189,6 @@
     <Image Include="Resources\NyaaiFortLauncher.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Launcher\AzuServerFortLauncher.cpp" />
     <ClCompile Include="Launcher\Actions\Action.cpp" />
     <ClCompile Include="Launcher\Actions\CopyFileAction.cpp" />
     <ClCompile Include="Launcher\Actions\CreateProcessAction.cpp" />
@@ -198,7 +199,10 @@
     <ClCompile Include="Launcher\Actions\RunCommandAction.cpp" />
     <ClCompile Include="Launcher\Actions\WaitForBackendToRespondAction.cpp" />
     <ClCompile Include="Launcher\Activity.cpp" />
+    <ClCompile Include="Launcher\Azu\AzuServerFortLauncher.cpp" />
+    <ClCompile Include="Launcher\Azu\AzuShippingClientEngine.cpp" />
     <ClCompile Include="Launcher\CommandManager.cpp" />
+    <ClCompile Include="Launcher\DefaultEngine.cpp" />
     <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp" />
     <ClCompile Include="Launcher\Engine.cpp" />
     <ClCompile Include="Launcher\EngineObject.cpp" />

@@ -27,6 +27,18 @@ void NAzuShippingClientEngine::OnCreated()
         return;
     }
 	
+	if (!std::filesystem::exists(FortniteBuildPath))
+	{
+		Log(Error, L"The fortnite build path '{}' doesn't exist", FortniteBuildPath.wstring());
+		return;
+	}
+
+	if (!std::filesystem::is_directory(FortniteBuildPath))
+	{
+		Log(Error, L"The fortnite build path '{}' isn't a directory", FortniteBuildPath.wstring());
+		return;
+	}
+	
     if (ProgramLaunchArgs.size() < 2)
     {
         Log(Error, L"No login arg");
@@ -40,18 +52,6 @@ void NAzuShippingClientEngine::OnCreated()
         return;
     }
     Password = ProgramLaunchArgs[2];
-    
-	if (!std::filesystem::exists(FortniteBuildPath))
-	{
-		Log(Error, L"The fortnite path '{}' doesn't exist", FortniteBuildPath.wstring());
-		return;
-	}
-
-	if (!std::filesystem::is_directory(FortniteBuildPath))
-	{
-		Log(Error, L"The fortnite path '{}' isn't a directory", FortniteBuildPath.wstring());
-		return;
-	}
 	
 	GetCommandManager().RegisterConsoleCommand(
 		this,
@@ -69,18 +69,6 @@ void NAzuShippingClientEngine::OnCreated()
 
 bool NAzuShippingClientEngine::StartLauncherInstance()
 {
-	if (!std::filesystem::exists(FortniteBuildPath))
-	{
-		Log(Error, L"The fortnite path '{}' doesn't exist", FortniteBuildPath.wstring());
-		return false;
-	}
-
-	if (!std::filesystem::is_directory(FortniteBuildPath))
-	{
-		Log(Error, L"The fortnite path '{}' isn't a directory", FortniteBuildPath.wstring());
-		return false;
-	}
-	
 	TObjectTemplate<NFortLauncher> LauncherTemplate{NFortLauncher::StaticClass()};
 
 	LauncherTemplate->FortniteExePath = FortniteBuildPath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping.exe";

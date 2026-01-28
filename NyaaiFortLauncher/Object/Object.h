@@ -5,7 +5,7 @@
 #include <utility>
 #include <concepts>
 
-#include "Utils/CommandLine.h"
+#include "Utils/CommandLine/CommandLine.h"
 #include "IntegerTypes.h"
 
 #define GENERATE_BASE_H(ClassName) \

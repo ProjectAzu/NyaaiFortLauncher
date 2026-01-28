@@ -60,6 +60,8 @@ void NFortLauncher::OnDestroyed()
     {
         NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);
     }
+    
+    GetEngine()->NotifyLauncherBeingDestroyed(this);
 }
 
 void NFortLauncher::Tick(double DeltaTime)

@@ -3,7 +3,7 @@
 #include "Activity.h"
 #include "CommandManager.h"
 #include "Actions/Action.h"
-#include "Utils/CommandLineImplementation.h"
+#include "Utils/CommandLine/CommandLineImplementation.h"
 
 class NActivity;
 
@@ -22,6 +22,8 @@ public:
     virtual void Tick(double DeltaTime) override;
     
     virtual bool ShouldEngineExit() const;
+    
+    virtual void NotifyLauncherBeingDestroyed(NFortLauncher* Launcher);
     
     NFortLauncher* GetCommandsContextLauncher() const;
     NEngineObject* GetCommandsContextObject() const;

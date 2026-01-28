@@ -5,8 +5,7 @@
 #include <curl/curl.h>
 
 #include "FortLauncher.h"
-#include "Utils/CommandLineImplementation.h"
-#include "Utils/ReplxxCommandLine.h"
+#include "Utils/CommandLine/ReplxxCommandLine.h"
 
 GENERATE_BASE_CPP(NEngine)
 
@@ -127,6 +126,10 @@ void NEngine::Tick(double DeltaTime)
 bool NEngine::ShouldEngineExit() const
 {
     return ShouldProgramExit() || bWantsToExit;
+}
+
+void NEngine::NotifyLauncherBeingDestroyed(NFortLauncher* Launcher)
+{
 }
 
 bool NEngine::ShouldPrintHelpAndExit() const

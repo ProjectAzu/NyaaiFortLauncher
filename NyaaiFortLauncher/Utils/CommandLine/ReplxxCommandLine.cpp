@@ -5,8 +5,8 @@
 
 #include <replxx/replxx.hxx>
 
-#include "Utf8.h"
-#include "WindowsInclude.h"
+#include "Utils/Utf8.h"
+#include "Utils/WindowsInclude.h"
 
 GENERATE_BASE_CPP(NReplxxCommandLine)
 

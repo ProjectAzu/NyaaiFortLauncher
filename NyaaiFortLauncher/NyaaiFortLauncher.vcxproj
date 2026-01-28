@@ -174,9 +174,10 @@
     <ClInclude Include="Object\Object.h" />
     <ClInclude Include="Object\TypeHelpers.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Utils\CommandLine.h" />
-    <ClInclude Include="Utils\CommandLineImplementation.h" />
-    <ClInclude Include="Utils\ReplxxCommandLine.h" />
+    <ClInclude Include="Utils\CommandLine\CommandLine.h" />
+    <ClInclude Include="Utils\CommandLine\CommandLineImplementation.h" />
+    <ClInclude Include="Utils\CommandLine\CoutCommandLine.h" />
+    <ClInclude Include="Utils\CommandLine\ReplxxCommandLine.h" />
     <ClInclude Include="Utils\TextFileLoader.h" />
     <ClInclude Include="Utils\UniqueHandle.h" />
     <ClInclude Include="Utils\Utf8.h" />
@@ -211,8 +212,9 @@
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Object\Object.cpp" />
     <ClCompile Include="Object\TypeHelpers.cpp" />
-    <ClCompile Include="Utils\CommandLineImplementation.cpp" />
-    <ClCompile Include="Utils\ReplxxCommandLine.cpp" />
+    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.cpp" />
+    <ClCompile Include="Utils\CommandLine\CoutCommandLine.cpp" />
+    <ClCompile Include="Utils\CommandLine\ReplxxCommandLine.cpp" />
     <ClCompile Include="Utils\TextFileLoader.cpp" />
     <ClCompile Include="Utils\UniqueHandle.cpp" />
     <ClCompile Include="Utils\Utf8.cpp" />

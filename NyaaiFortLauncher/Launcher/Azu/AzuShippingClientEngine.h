@@ -7,7 +7,11 @@ class NAzuShippingClientEngine : public NEngine
     GENERATE_BASE_H(NAzuShippingClientEngine)
     
 public:
+    NAzuShippingClientEngine();
+    
     virtual void OnCreated() override;
+    
+    virtual void NotifyLauncherBeingDestroyed(NFortLauncher* Launcher) override;
     
 private:
     bool StartLauncherInstance();
@@ -18,4 +22,6 @@ private:
     std::filesystem::path FortniteBuildPath{};
     std::wstring Login{};
     std::wstring Password{};
+    
+    bool bIsRestarting = false;
 };

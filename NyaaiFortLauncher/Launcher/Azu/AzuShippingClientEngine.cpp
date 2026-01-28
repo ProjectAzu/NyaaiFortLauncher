@@ -8,8 +8,14 @@
 #include "Launcher/Actions/PrintLogAction.h"
 #include "Launcher/Actions/RequestRelaunchAction.h"
 #include "Launcher/Actions/RunCommandAction.h"
+#include "Utils/CommandLine/CoutCommandLine.h"
 
 GENERATE_BASE_CPP(NAzuShippingClientEngine)
+
+NAzuShippingClientEngine::NAzuShippingClientEngine()
+{
+	CommandLineTemplate = NCoutCommandLine::StaticClass();
+}
 
 void NAzuShippingClientEngine::OnCreated()
 {
@@ -63,6 +69,16 @@ void NAzuShippingClientEngine::OnCreated()
 	if (!StartLauncherInstance())
 	{
 		Log(Error, L"Starting a launcher instance failed, requesting exit");
+		RequestExit();
+	}
+}
+
+void NAzuShippingClientEngine::NotifyLauncherBeingDestroyed(NFortLauncher* Launcher)
+{
+	Super::NotifyLauncherBeingDestroyed(Launcher);
+	
+	if (!bIsRestarting)
+	{
 		RequestExit();
 	}
 }
@@ -187,6 +203,8 @@ void NAzuShippingClientEngine::RestartCommand(const FCommandArguments& Args)
 {
 	Log(Info, L"Restarting");
 	
+	bIsRestarting = true;
+	
 	for (const auto Launcher : GetLauncherInstances())
 	{
 		Launcher->Destroy();
@@ -197,4 +215,6 @@ void NAzuShippingClientEngine::RestartCommand(const FCommandArguments& Args)
 		Log(Error, L"Starting a launcher instance failed, requesting exit");
 		RequestExit();
 	}
+	
+	bIsRestarting = false;
 }

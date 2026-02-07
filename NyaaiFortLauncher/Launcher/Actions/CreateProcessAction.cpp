@@ -151,7 +151,6 @@ void NCreateProcessAction::Execute()
         ResultProcessInfo.dwThreadId,
         EngineObject ? EngineObject->GetClass()->GetName() : L"nullptr");
     
-    
     ResultProcessHandle = ResultProcessInfo.hProcess;
     ResultThreadHandle = ResultProcessInfo.hThread;
 

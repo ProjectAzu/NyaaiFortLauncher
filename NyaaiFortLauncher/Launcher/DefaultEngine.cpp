@@ -10,6 +10,11 @@ void NDefaultEngine::OnCreated()
 {
     Super::OnCreated();
     
+    if (ShouldEngineExit())
+    {
+        return;
+    }
+    
     static constexpr auto ConfigFileExtension = L".nfort";
     
     if (ProgramLaunchArgs.size() != 1)

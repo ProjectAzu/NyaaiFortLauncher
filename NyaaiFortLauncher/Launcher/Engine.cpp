@@ -44,6 +44,7 @@ void NEngine::OnCreated()
     if (ShouldPrintHelpAndExit())
     {
         PrintClassesInfo();
+        RequestExit();
         return;
     }
     

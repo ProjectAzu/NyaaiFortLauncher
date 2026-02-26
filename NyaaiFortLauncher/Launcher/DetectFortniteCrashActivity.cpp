@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "Utils/WindowsInclude.h"
-#include "Utils/TextFileLoader.h" // Utils::LoadTextFileToWStringAlwaysWorks
+#include "Utils/TextFileLoader.h"
 
 #include "FortLauncher.h"
 
@@ -45,7 +45,7 @@ void NDetectFortniteCrashActivity::OnCreated()
     wchar_t* Buffer = nullptr;
     size_t Size = 0;
 
-    if (_wdupenv_s(&Buffer, &Size, L"LOCALAPPDATA") || !Buffer)
+    if (_wdupenv_s(&Buffer, &Size, L"LOCALAPPDATA") != 0 || !Buffer)
     {
         return;
     }
@@ -54,6 +54,20 @@ void NDetectFortniteCrashActivity::OnCreated()
         std::filesystem::path{ Buffer } / L"FortniteGame" / L"Saved" / L"Crashes";
 
     free(Buffer);
+    
+    {
+        std::error_code ErrorCode{};
+        std::filesystem::create_directories(FortniteCrashesFolderPath, ErrorCode);
+        
+        if (ErrorCode)
+        {
+            Log(Error, 
+                L"NDetectFortniteCrashActivity: Could not create directory: '{}'", 
+                FortniteCrashesFolderPath.wstring());
+            
+            return;
+        }
+    }
     
     if (!std::filesystem::exists(FortniteCrashesFolderPath))
     {

@@ -25,10 +25,10 @@ void NAzuServerFortLauncher::OnCreated()
 	}
 
 	FortniteExePath = FortnitePath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping.exe";
-
+	
 	// += so stuff can still be added in the config
 	FortniteLaunchArguments +=
-		L"-epicapp=Fortnite -epicenv=Prod -epiclocale=en-us -epicportal -skippatchcheck -nobe -fromfl=eac -fltoken=3db3ba5dcbd2e16703f3978d"
+		L" -epicapp=Fortnite -epicenv=Prod -epiclocale=en-us -epicportal -skippatchcheck -nobe -fromfl=eac -fltoken=3db3ba5dcbd2e16703f3978d"
 		L" -AUTH_TYPE=epic -nosplash -nullrhi -nosound";
 	
 	FortniteLaunchArguments += std::format(L" -AUTH_LOGIN={} -AUTH_PASSWORD={}", Login, Password);

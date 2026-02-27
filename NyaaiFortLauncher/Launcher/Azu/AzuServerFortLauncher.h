@@ -19,7 +19,7 @@ public:
 	std::filesystem::path RedirectDllPath{};
 	
 	NPROPERTY(RedirectDllThreadDescription)
-	std::wstring RedirectDllThreadDescription{L"http 78.47.120.58 8080"};
+	std::wstring RedirectDllThreadDescription{L"http 127.0.0.1 3551"};
 	
 	NPROPERTY(AzuGameModeClass)
 	std::wstring AzuGameModeClass{L"NAzuGameModeSolo"};

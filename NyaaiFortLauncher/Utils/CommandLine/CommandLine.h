@@ -10,8 +10,6 @@
 
 class NCommandLine;
 
-extern std::vector<std::wstring> ProgramLaunchArgs;
-
 enum ELogLevel : uint8
 {
     Temp,
@@ -44,11 +42,16 @@ constexpr const wchar_t* LogLevelToColorCode(ELogLevel Level)
     }
 }
 
+void InitCommandLineArgs(int32 ArgsNum, wchar_t* ArgsArrayPtr[]);
+bool HasCommandLineArg(const wchar_t* Arg);
+std::optional<std::wstring> GetCommandLineArgValue(const wchar_t* Arg);
+std::optional<std::wstring> GetCommandLinePositionalArg(uint32 Index);
+
 void LogRaw(const std::wstring& Message);
 void LogImplementation(ELogLevel Level, const std::wstring& Message);
 void EnqueueCommand(const std::wstring& Command);
 std::optional<std::wstring> GetPendingCommand();
-bool ShouldProgramExit();
+bool IsCommandLineRequestingProgramExit();
 
 template<typename... Args>
 inline void Log(ELogLevel Level, const wchar_t* Format, Args&&... Arguments)

@@ -17,13 +17,14 @@ void NDefaultEngine::OnCreated()
     
     static constexpr auto ConfigFileExtension = L".nfort";
     
-    if (ProgramLaunchArgs.size() != 1)
+    std::optional<std::wstring> FirstCommandLinePositionalArg = GetCommandLinePositionalArg(0);
+    if (!FirstCommandLinePositionalArg)
     {
-        Log(Error, L"Launch args num != 1, Please provide a {} config file as a command line argument or do -help", ConfigFileExtension);
+        Log(Error, L"Please provide a path to a {} config file as the first command line positional argument or do --help", ConfigFileExtension);
         return;
     }
     
-    std::wstring ConfigPathString = ProgramLaunchArgs[0];
+    std::wstring ConfigPathString = FirstCommandLinePositionalArg.value();
     
     if (!ConvertStringToCleanAbsolutePath(ConfigPathString, ConfigPath))
     {

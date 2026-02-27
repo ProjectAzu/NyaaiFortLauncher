@@ -60,6 +60,86 @@ void CleanupCommandLine()
 	}
 }
 
+static std::vector<std::wstring> PositionalCommandLineArgs{};
+static std::vector<std::pair<std::wstring, std::wstring>> CommandLineArgs{};
+
+void InitCommandLineArgs(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
+{
+	bool bIsExpectingValue = false;
+	
+	for (int32 i = 1; i < ArgsNum; i++)
+	{
+		std::wstring Arg{ArgsArrayPtr[i]};
+		
+		if (Arg.empty())
+		{
+			continue;
+		}
+		
+		if (Arg[0] == L'-')
+		{
+			bIsExpectingValue = true;
+			CommandLineArgs.emplace_back().first = Arg;
+			
+			continue;
+		}
+		
+		if (bIsExpectingValue)
+		{
+			bIsExpectingValue = false;
+			CommandLineArgs.back().second = Arg;
+		}
+		else
+		{
+			PositionalCommandLineArgs.push_back(Arg);
+		}
+	}
+}
+
+bool HasCommandLineArg(const wchar_t* Arg)
+{
+	for (const auto& Elem : CommandLineArgs)
+	{
+		if (Elem.first == Arg)
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+std::optional<std::wstring> GetCommandLineArgValue(const wchar_t* Arg)
+{
+	for (const auto& Elem : CommandLineArgs)
+	{
+		if (Elem.first != Arg)
+		{
+			continue;
+		}
+		
+		if (Elem.second.empty())
+		{
+			Log(Error, L"Command line arg '{}' requires a value to be specified", Arg);
+			return std::nullopt;
+		}
+		
+		return Elem.second;
+	}
+	
+	return std::nullopt;
+}
+
+std::optional<std::wstring> GetCommandLinePositionalArg(uint32 Index)
+{
+	if (Index < static_cast<uint32>(PositionalCommandLineArgs.size()))
+	{
+		return PositionalCommandLineArgs[Index];
+	}
+	
+	return std::nullopt;
+}
+
 void LogRaw(const std::wstring& Message)
 {
 	std::scoped_lock Lock{CommandLineMutex};
@@ -107,7 +187,7 @@ std::optional<std::wstring> GetPendingCommand()
 	return CommandLine->GetPendingCommand();
 }
 
-bool ShouldProgramExit()
+bool IsCommandLineRequestingProgramExit()
 {
 	std::scoped_lock Lock{CommandLineMutex};
 	

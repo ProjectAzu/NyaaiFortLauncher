@@ -162,7 +162,6 @@
     <ClInclude Include="Launcher\Actions\WaitForBackendToRespondAction.h" />
     <ClInclude Include="Launcher\Activity.h" />
     <ClInclude Include="Launcher\Azu\AzuServerFortLauncher.h" />
-    <ClInclude Include="Launcher\Azu\AzuShippingClientEngine.h" />
     <ClInclude Include="Launcher\CommandManager.h" />
     <ClInclude Include="Launcher\DefaultEngine.h" />
     <ClInclude Include="Launcher\DetectFortniteCrashActivity.h" />
@@ -201,7 +200,6 @@
     <ClCompile Include="Launcher\Actions\WaitForBackendToRespondAction.cpp" />
     <ClCompile Include="Launcher\Activity.cpp" />
     <ClCompile Include="Launcher\Azu\AzuServerFortLauncher.cpp" />
-    <ClCompile Include="Launcher\Azu\AzuShippingClientEngine.cpp" />
     <ClCompile Include="Launcher\CommandManager.cpp" />
     <ClCompile Include="Launcher\DefaultEngine.cpp" />
     <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp" />

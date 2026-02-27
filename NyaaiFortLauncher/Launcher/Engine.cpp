@@ -35,7 +35,19 @@ void NEngine::OnCreated()
     
     ApplyInvariantLocale();
     
-    InitCommandLine(CommandLineTemplate);
+    if (auto CommandLineClassOverride = GetCommandLineArgValue(L"--CommandLineClass"))
+    {
+        NSubClassOf<NCommandLine> Class{};
+        if (TTypeHelpers<NSubClassOf<NCommandLine>>::SetFromString(&Class, CommandLineClassOverride.value()))
+        {
+            CommandLineTemplate = Class;
+        }
+    }
+    
+    if (CommandLineTemplate.GetClass())
+    {
+        InitCommandLine(CommandLineTemplate);   
+    }
     
     Log(Info, L"Starting {}", GetClass()->GetName());
     
@@ -126,7 +138,7 @@ void NEngine::Tick(double DeltaTime)
 
 bool NEngine::ShouldEngineExit() const
 {
-    return ShouldProgramExit() || bWantsToExit;
+    return IsCommandLineRequestingProgramExit() || bWantsToExit;
 }
 
 void NEngine::NotifyLauncherBeingDestroyed(NFortLauncher* Launcher)
@@ -135,12 +147,7 @@ void NEngine::NotifyLauncherBeingDestroyed(NFortLauncher* Launcher)
 
 bool NEngine::ShouldPrintHelpAndExit() const
 {
-    if (ProgramLaunchArgs.empty())
-    {
-        return false;
-    }
-    
-    return ProgramLaunchArgs[0] == L"help" || ProgramLaunchArgs[0] == L"-help" || ProgramLaunchArgs[0] == L"--help";
+    return HasCommandLineArg(L"-h") || HasCommandLineArg(L"--help");
 }
 
 void NEngine::PrintClassesInfo()

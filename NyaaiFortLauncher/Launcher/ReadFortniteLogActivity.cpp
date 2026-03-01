@@ -212,6 +212,7 @@ void NReadFortniteLogActivity::ProcessLogTriggeredActions(wchar_t Char)
         {
             LogTriggeredAction.TriggerStringCharsFound = 0;
             
+            if (LogTriggeredAction.Action)
             {
                 NUniquePtr<NAction> Action = LogTriggeredAction.Action.NewObject(this);
             }

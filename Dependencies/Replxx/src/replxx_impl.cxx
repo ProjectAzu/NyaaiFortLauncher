@@ -1772,7 +1772,7 @@ Replxx::ACTION_RESULT Replxx::ReplxxImpl::uppercase_word( char32_t ) {
 // ctrl-T, transpose characters
 Replxx::ACTION_RESULT Replxx::ReplxxImpl::transpose_characters( char32_t ) {
 	if ( _pos > 0 && _data.length() > 1 ) {
-		size_t leftCharPos = ( _pos == _data.length() ) ? _pos - 2 : _pos - 1;
+		int leftCharPos = ( _pos == _data.length() ) ? _pos - 2 : _pos - 1;
 		char32_t aux = _data[leftCharPos];
 		_data[leftCharPos] = _data[leftCharPos + 1];
 		_data[leftCharPos + 1] = aux;

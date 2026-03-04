@@ -113,7 +113,7 @@ int virtual_render( char32_t const* display_, int size_, int& x_, int& y_, int s
 		++ pos;
 	}
 	if ( rendered_ && renderedSize_ ) {
-		*renderedSize_ = out - rendered_;
+		*renderedSize_ = static_cast<int>(out - rendered_);
 	}
 	return ( visibleCount );
 }

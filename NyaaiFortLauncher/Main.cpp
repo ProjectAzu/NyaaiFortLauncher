@@ -1,5 +1,3 @@
-#ifndef NYAAIFORTLAUNCHER_STATIC
-
 #include "Utils/WindowsInclude.h"
 #include "Launcher/Engine.h"
 #include "Utils/TextFileLoader.h"
@@ -207,5 +205,3 @@ int wmain(int32 ArgsNum, wchar_t* ArgsArrayPtr[])
     
     return 0;
 }
-
-#endif

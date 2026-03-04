@@ -63,28 +63,13 @@
     <ClInclude Include="Launcher\ReadFortniteLogActivity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Object\DefaultValueOverrides.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Object\IntegerTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Object\Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Object\ObjectTemplate.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Object\TypeHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\CommandLine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\CommandLineImplementation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\ReplxxCommandLine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils\TextFileLoader.h">
@@ -102,7 +87,28 @@
     <ClInclude Include="Utils\UniqueHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\AzuServerFortLauncher.h">
+    <ClInclude Include="Launcher\Azu\AzuServerFortLauncher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\BuildStoreActivity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Launcher\BasicEngine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\CommandLine\CommandLine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\CommandLine\CommandLineImplementation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\CommandLine\CoutCommandLine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\CommandLine\ReplxxCommandLine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\FileSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -168,12 +174,6 @@
     <ClCompile Include="Object\TypeHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utils\CommandLineImplementation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\ReplxxCommandLine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Utils\TextFileLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -189,7 +189,25 @@
     <ClCompile Include="Utils\UniqueHandle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\AzuServerFortLauncher.cpp">
+    <ClCompile Include="Launcher\Azu\AzuServerFortLauncher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\BuildStoreActivity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Launcher\BasicEngine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\CoutCommandLine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\ReplxxCommandLine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\FileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

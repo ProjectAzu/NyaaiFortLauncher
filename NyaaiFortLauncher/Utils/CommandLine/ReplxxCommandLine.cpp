@@ -3,7 +3,7 @@
 #include <mutex>
 #include <thread>
 
-#include <replxx/replxx.hxx>
+#include <replxx.hxx>
 
 #include "Utils/Utf8.h"
 #include "Utils/WindowsInclude.h"

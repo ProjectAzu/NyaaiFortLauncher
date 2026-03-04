@@ -32,7 +32,7 @@ It's really useful cause it prints a clickable link to the folder with the crash
 NyaaiFortLauncher works by launching .nfort config files.
 A config file is a text file that defines a NEngine object (`TObjectTemplate<NEngine>`).
 
-You can run NyaaiFortLauncher.exe --help to see the list of classes or you can look in the code
+**You can run NyaaiFortLauncher.exe --help to see the list of classes or you can look in the code**
 
 You should associate .nfort config files with NyaaiFortLauncher.exe so you can double click configs to launch them.
 

@@ -19,7 +19,17 @@ static void PrintClassesInfo()
     for (const auto Class : NObject::StaticClass()->GetAllDerivedClasses())
     {
         LogRaw(L"\n");
-        LogRaw(std::format(L"{}:\n", Class->GetName()));
+        
+        if (Class->GetSuper())
+        {
+            LogRaw(std::format(L"class {} : {}\n", Class->GetName(), Class->GetSuper()->GetName()));   
+        }
+        else
+        {
+            LogRaw(std::format(L"class {}\n", Class->GetName()));
+        }
+        
+        LogRaw(L"{\n");
         
         auto DefaultObject = Class->GetDefaultObject();
         const auto& Properties = DefaultObject->GetPropertiesArrayConstRef();
@@ -50,6 +60,8 @@ static void PrintClassesInfo()
                 InfoOfEncounteredStructs.emplace_back(std::move(Info));
             }
         }
+        
+        LogRaw(L"}\n");
     }
     
     LogRaw(L"\n");
@@ -59,7 +71,9 @@ static void PrintClassesInfo()
     for (const auto& StructInfo : InfoOfEncounteredStructs)
     {
         LogRaw(L"\n");
-        LogRaw(std::format(L"{}:\n", StructInfo.TypeName));
+        LogRaw(std::format(L"struct {}\n", StructInfo.TypeName));
+        
+        LogRaw(L"{\n");
         
         const auto& Properties = StructInfo.SampleObjectHolder->GetPropertiesArrayConstRef();
         
@@ -75,6 +89,8 @@ static void PrintClassesInfo()
                 Property.GetAsString(StructInfo.SampleObjectHolder.get()))
             );
         }
+        
+        LogRaw(L"}\n");
     }
     
     LogRaw(L"\n");

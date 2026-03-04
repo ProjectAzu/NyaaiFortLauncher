@@ -27,5 +27,6 @@ public:
     NPROPERTY(FortniteBuildPaths)
     std::vector<std::filesystem::path> FortniteBuildPaths{};
     
+    NPROPERTY(SelectedBuildIndex)
     uint32 SelectedBuildIndex = 0;
 };

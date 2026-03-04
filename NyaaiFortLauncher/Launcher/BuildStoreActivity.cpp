@@ -36,19 +36,24 @@ void NBuildStoreActivity::OnCreated()
     }
     
     Log(Info, L"BuildStore: Default build is: '{}'.", 
-        FortniteBuildPaths.front().wstring());
+        GetSelectedFortniteBuildPath().value().wstring());
     
     ListBuilds();
 }
 
 std::optional<std::filesystem::path> NBuildStoreActivity::GetSelectedFortniteBuildPath() const
 {
+    if (FortniteBuildPaths.empty())
+    {
+        return std::nullopt;
+    }
+    
     if (SelectedBuildIndex < FortniteBuildPaths.size())
     {
         return FortniteBuildPaths[SelectedBuildIndex];
     }
     
-    return std::nullopt;
+    return FortniteBuildPaths.back();
 }
 
 void NBuildStoreActivity::ListBuildsCommand(const FCommandArguments& Args)

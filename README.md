@@ -36,9 +36,9 @@ A config file is a text file that defines a NEngine object (`TObjectTemplate<NEn
 
 You should associate .nfort config files with NyaaiFortLauncher.exe so you can double click configs to launch them.
 
-In the below example I use the NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instanes).
+In the below example I use NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instanes).
 
-NyaaiFortLauncher is not bound to a specific launcher instance. In the NBasicEngine you can use the stop command to stop a launcher instance, and then you can start a new one using the start command. This is useful when frequently recompiling dlls during developement, you dont have to open and close a console, you can just keep one open all the time.
+NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during developement, you dont have to close and open a console, you can just keep one open all the times.
 
 Config example:
 ```
@@ -186,6 +186,6 @@ When a launcher instance starts it will pull the selected build from the build s
 
 You can change the selected build with the `SelectBuild {Name or Index}` command. You can print the list of builds with the `ListBuilds` command.
 
-You might also want to set `bAutoStartLauncher: {false}` on the engine, so you can select the build before starting.
+You might also want to set `bAutoStartLauncher: {false}` on the engine, so it doesn't auto start with the default build.
 
 You can set the default build in the build store by doing `SelectedBuildIndex: {Index}`. By default it's set to 0.

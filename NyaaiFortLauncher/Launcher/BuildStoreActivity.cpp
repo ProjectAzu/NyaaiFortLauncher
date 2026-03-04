@@ -18,7 +18,7 @@ void NBuildStoreActivity::OnCreated()
     GetCommandManager().RegisterConsoleCommand(
         this,
         L"SelectBuild",
-        L"Usage: SelectBuild {Index}",
+        L"Usage: SelectBuild {BuildName or Index}",
         &ThisClass::SelectBuildCommand
     );
     
@@ -69,15 +69,47 @@ void NBuildStoreActivity::QuerySelectedBuildCommand(const FCommandArguments& Arg
 
 void NBuildStoreActivity::SelectBuildCommand(const FCommandArguments& Args)
 {
-    uint32 Index = Args.GetArgumentAtIndex<uint32>(0);
-    
-    if (Index >= FortniteBuildPaths.size())
+    std::wstring BuildName = Args.GetArgumentAtIndex<std::wstring>(0);
+    if (BuildName.empty())
     {
-        Log(Error, L"Index '{}' is not a valid build index, use the ListBuilds command to list builds", Index);
+        Log(Error, L"Provide a build name or index");
         return;
     }
     
-    SelectedBuildIndex = Index;
+    std::wstring BuildNameToLower = BuildName;
+    std::ranges::transform(BuildNameToLower, BuildNameToLower.begin(),
+                           [](wchar_t c) { return static_cast<wchar_t>(std::towlower(static_cast<wint_t>(c))); });
+    
+    bool bFoundBuildFromName = false;
+    
+    for (uint32 i = 0; i < FortniteBuildPaths.size(); i++)
+    {
+        std::wstring BuildPathString = FortniteBuildPaths[i].wstring();
+        
+        std::ranges::transform(BuildPathString, BuildPathString.begin(),
+                       [](wchar_t c) { return static_cast<wchar_t>(std::towlower(static_cast<wint_t>(c))); });
+        
+        if (BuildPathString.contains(BuildNameToLower))
+        {
+            SelectedBuildIndex = i;
+            bFoundBuildFromName = true;
+            break;
+        }
+    }
+    
+    if (!bFoundBuildFromName)
+    {
+        uint32 Index = Args.GetArgumentAtIndex<uint32>(0);
+    
+        if (Index >= FortniteBuildPaths.size())
+        {
+            Log(Error, L"'{}' is not a valid build name or index, use the ListBuilds command to list builds", BuildName);
+            return;
+        }
+        
+        SelectedBuildIndex = Index;
+    }
+    
     Log(Info, L"Selected build '{}'", GetSelectedFortniteBuildPath().value().wstring());
 }
 

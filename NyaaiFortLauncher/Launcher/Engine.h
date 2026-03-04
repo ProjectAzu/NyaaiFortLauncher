@@ -12,7 +12,6 @@ class NEngine : public NActivity
     
 public:
     virtual void OnCreated() override;
-    virtual void OnDestroyed() override;
     
     void RunTickLoop();
     

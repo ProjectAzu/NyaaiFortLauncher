@@ -39,9 +39,6 @@
     <ClInclude Include="Launcher\Actions\RunCommandAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Launcher\Actions\WaitForBackendToRespondAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Launcher\Activity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -142,9 +139,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Launcher\Actions\RunCommandAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\Actions\WaitForBackendToRespondAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Launcher\Activity.cpp">

@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <thread>
-#include <curl/curl.h>
 
 #include "FortLauncher.h"
 
@@ -30,8 +29,6 @@ void NEngine::OnCreated()
     ApplyInvariantLocale();
     
     Log(Info, L"Starting {}", GetClass()->GetName());
-    
-    curl_global_init(CURL_GLOBAL_ALL);
     
     GetCommandManager().RegisterConsoleCommand(
         this,
@@ -74,13 +71,6 @@ void NEngine::OnCreated()
     {
         StartChildActivity(ActivityTemplate);
     }
-}
-
-void NEngine::OnDestroyed()
-{
-    Super::OnDestroyed();
-    
-    curl_global_cleanup();
 }
 
 void NEngine::RunTickLoop()

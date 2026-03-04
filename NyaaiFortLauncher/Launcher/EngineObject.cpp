@@ -2,6 +2,7 @@
 
 #include "Engine.h"
 #include "FortLauncher.h"
+#include "Utils/FileSystem.h"
 #include "Utils/WindowsInclude.h"
 
 GENERATE_BASE_CPP(NEngineObject)
@@ -40,4 +41,21 @@ FCommandManager& NEngineObject::GetCommandManager() const
 void NEngineObject::AddChildProcess(FUniqueHandle Handle)
 {
     ChildProcesses.push_back(std::move(Handle));
+}
+
+std::filesystem::path NEngineObject::ResolvePossiblyFortniteBuildRelativePath(const std::filesystem::path& Path) const
+{
+    std::vector<std::filesystem::path> AbsoluteSearchRoots{};
+    
+    if (auto Launcher = GetLauncher())
+    {
+        if (!Launcher->FortniteBuildPath.empty() && Launcher->FortniteBuildPath.is_absolute())
+        {
+            AbsoluteSearchRoots.push_back(Launcher->FortniteBuildPath);
+        }
+    }
+    
+    std::filesystem::path Result{};
+    Utils::ConvertPathToAbsolutePath(Path.wstring(), AbsoluteSearchRoots, Result);
+    return Result;
 }

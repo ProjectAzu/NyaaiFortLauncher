@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <queue>
+
 #include "Object/Object.h"
 
 #include "CommandLine.h"

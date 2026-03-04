@@ -12,19 +12,17 @@ GENERATE_BASE_CPP(NAzuServerFortLauncher)
 
 void NAzuServerFortLauncher::OnCreated()
 {
-	if (!std::filesystem::exists(FortnitePath))
+	if (!std::filesystem::exists(FortniteBuildPath))
 	{
-		Log(Error, L"The fortnite path '{}' doesn't exist", FortnitePath.wstring());
+		Log(Error, L"The fortnite path '{}' doesn't exist", FortniteBuildPath.wstring());
 		return;
 	}
 
-	if (!std::filesystem::is_directory(FortnitePath))
+	if (!std::filesystem::is_directory(FortniteBuildPath))
 	{
-		Log(Error, L"The fortnite path '{}' isn't a directory", FortnitePath.wstring());
+		Log(Error, L"The fortnite path '{}' isn't a directory", FortniteBuildPath.wstring());
 		return;
 	}
-
-	FortniteExePath = FortnitePath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping.exe";
 	
 	// += so stuff can still be added in the config
 	FortniteLaunchArguments +=
@@ -36,7 +34,7 @@ void NAzuServerFortLauncher::OnCreated()
 	{
 		TObjectTemplate<NCreateProcessAction> Template{NCreateProcessAction::StaticClass()};
 		
-		Template->FilePath = FortnitePath / L"FortniteGame\\Binaries\\Win64\\FortniteLauncher.exe";
+		Template->FilePath = FortniteBuildPath / L"FortniteGame\\Binaries\\Win64\\FortniteLauncher.exe";
 		Template->bCreateSuspended = true;
 
 		PreFortniteLaunchActions.emplace_back(Template);
@@ -45,7 +43,7 @@ void NAzuServerFortLauncher::OnCreated()
 	{
 		TObjectTemplate<NCreateProcessAction> Template{NCreateProcessAction::StaticClass()};
 
-		Template->FilePath = FortnitePath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping_EAC.exe";
+		Template->FilePath = FortniteBuildPath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping_EAC.exe";
 		Template->bCreateSuspended = true;
 
 		PreFortniteLaunchActions.emplace_back(Template);

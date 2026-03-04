@@ -36,8 +36,11 @@ private:
     void StopCommand(const FCommandArguments& Args);
 
 public:
+    NPROPERTY(FortniteBuildPath)
+    std::filesystem::path FortniteBuildPath{};
+    
     NPROPERTY(FortniteExePath)
-    std::filesystem::path FortniteExePath{};
+    std::filesystem::path FortniteExePath = L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping.exe";
 
     NPROPERTY(FortniteLaunchArguments)
     std::wstring FortniteLaunchArguments{};

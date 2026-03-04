@@ -6,9 +6,11 @@
 
 #include <cwctype>
 
+#include "BuildStoreActivity.h"
 #include "CommandManager.h"
 #include "Engine.h"
 #include "Actions/CreateProcessAction.h"
+#include "Utils/FileSystem.h"
 
 GENERATE_BASE_CPP(NFortLauncher)
 
@@ -25,15 +27,29 @@ void NFortLauncher::OnCreated()
     {
         NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);
     }
-
-    Log(Info, L"Fortnite exe path: {}", FortniteExePath.wstring());
-    if (!exists(FortniteExePath) || !is_regular_file(FortniteExePath) || FortniteExePath.extension().wstring() != L".exe")
+    
+    if (auto BuildStore = GetEngine()->FindChildActivity<NBuildStoreActivity>())
     {
-        Log(Error, L"The fortnite exe path is not valid");
+        Log(Info, L"Found NBuildStoreActivity, pulling the fortnite build path from it");
         
+        auto BuildPathFromBuildStore = BuildStore->GetSelectedFortniteBuildPath();
+        if (!BuildPathFromBuildStore)
+        {
+            Log(Error, L"BuildStore->GetSelectedFortniteBuildPath() returned nullopt, the launcher won't start");
+            RequestStop();
+            return;
+        }
+        
+        FortniteBuildPath = BuildPathFromBuildStore.value();
+    }
+    
+    if (!Utils::ConvertPathToAbsolutePath(FortniteBuildPath, {}, FortniteBuildPath))
+    {
         RequestStop();
         return;
     }
+    
+    Log(Info, L"Fortnite build path: {}", FortniteBuildPath.wstring());
 
     Log(Info, L"Fortnite launch arguments: {}", FortniteLaunchArguments);
     

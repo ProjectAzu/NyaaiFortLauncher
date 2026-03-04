@@ -162,8 +162,9 @@
     <ClInclude Include="Launcher\Actions\WaitForBackendToRespondAction.h" />
     <ClInclude Include="Launcher\Activity.h" />
     <ClInclude Include="Launcher\Azu\AzuServerFortLauncher.h" />
+    <ClInclude Include="Launcher\BuildStoreActivity.h" />
     <ClInclude Include="Launcher\CommandManager.h" />
-    <ClInclude Include="Launcher\DefaultEngine.h" />
+    <ClInclude Include="Launcher\BasicEngine.h" />
     <ClInclude Include="Launcher\DetectFortniteCrashActivity.h" />
     <ClInclude Include="Launcher\Engine.h" />
     <ClInclude Include="Launcher\EngineObject.h" />
@@ -177,6 +178,7 @@
     <ClInclude Include="Utils\CommandLine\CommandLineImplementation.h" />
     <ClInclude Include="Utils\CommandLine\CoutCommandLine.h" />
     <ClInclude Include="Utils\CommandLine\ReplxxCommandLine.h" />
+    <ClInclude Include="Utils\FileSystem.h" />
     <ClInclude Include="Utils\TextFileLoader.h" />
     <ClInclude Include="Utils\UniqueHandle.h" />
     <ClInclude Include="Utils\Utf8.h" />
@@ -200,8 +202,9 @@
     <ClCompile Include="Launcher\Actions\WaitForBackendToRespondAction.cpp" />
     <ClCompile Include="Launcher\Activity.cpp" />
     <ClCompile Include="Launcher\Azu\AzuServerFortLauncher.cpp" />
+    <ClCompile Include="Launcher\BuildStoreActivity.cpp" />
     <ClCompile Include="Launcher\CommandManager.cpp" />
-    <ClCompile Include="Launcher\DefaultEngine.cpp" />
+    <ClCompile Include="Launcher\BasicEngine.cpp" />
     <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp" />
     <ClCompile Include="Launcher\Engine.cpp" />
     <ClCompile Include="Launcher\EngineObject.cpp" />
@@ -213,6 +216,7 @@
     <ClCompile Include="Utils\CommandLine\CommandLineImplementation.cpp" />
     <ClCompile Include="Utils\CommandLine\CoutCommandLine.cpp" />
     <ClCompile Include="Utils\CommandLine\ReplxxCommandLine.cpp" />
+    <ClCompile Include="Utils\FileSystem.cpp" />
     <ClCompile Include="Utils\TextFileLoader.cpp" />
     <ClCompile Include="Utils\UniqueHandle.cpp" />
     <ClCompile Include="Utils\Utf8.cpp" />

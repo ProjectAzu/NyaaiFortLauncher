@@ -5,14 +5,8 @@
 #include <curl/curl.h>
 
 #include "FortLauncher.h"
-#include "Utils/CommandLine/ReplxxCommandLine.h"
 
 GENERATE_BASE_CPP(NEngine)
-
-NEngine::NEngine()
-{
-    CommandLineTemplate = NReplxxCommandLine::StaticClass();
-}
 
 static void ApplyInvariantLocale()
 {
@@ -35,30 +29,9 @@ void NEngine::OnCreated()
     
     ApplyInvariantLocale();
     
-    if (auto CommandLineClassOverride = GetCommandLineArgValue(L"--CommandLineClass"))
-    {
-        NSubClassOf<NCommandLine> Class{};
-        if (TTypeHelpers<NSubClassOf<NCommandLine>>::SetFromString(&Class, CommandLineClassOverride.value()))
-        {
-            CommandLineTemplate = Class;
-        }
-    }
-    
-    if (CommandLineTemplate.GetClass())
-    {
-        InitCommandLine(CommandLineTemplate);   
-    }
-    
     Log(Info, L"Starting {}", GetClass()->GetName());
     
     curl_global_init(CURL_GLOBAL_ALL);
-    
-    if (ShouldPrintHelpAndExit())
-    {
-        PrintClassesInfo();
-        RequestExit();
-        return;
-    }
     
     GetCommandManager().RegisterConsoleCommand(
         this,
@@ -97,7 +70,7 @@ void NEngine::OnCreated()
     
     Log(Info, L"Starting default activities");
     
-    for (const auto& ActivityTemplate : DefaultActivities)
+    for (const auto& ActivityTemplate : Activities)
     {
         StartChildActivity(ActivityTemplate);
     }
@@ -106,8 +79,6 @@ void NEngine::OnCreated()
 void NEngine::OnDestroyed()
 {
     Super::OnDestroyed();
-    
-    CleanupCommandLine();
     
     curl_global_cleanup();
 }
@@ -143,82 +114,6 @@ bool NEngine::ShouldEngineExit() const
 
 void NEngine::NotifyLauncherBeingDestroyed(NFortLauncher* Launcher)
 {
-}
-
-bool NEngine::ShouldPrintHelpAndExit() const
-{
-    return HasCommandLineArg(L"-h") || HasCommandLineArg(L"--help");
-}
-
-void NEngine::PrintClassesInfo()
-{
-    Log(Info, L"Printing list of classes and their properties with default values:");
-    
-    std::unordered_set<std::wstring> SetOfEncounteredStructTypeNames{};
-    std::vector<FInfoOfStructWithPropertiesUsedInType> InfoOfEncounteredStructs{};
-    
-    for (const auto Class : NObject::StaticClass()->GetAllDerivedClasses())
-    {
-        LogRaw(L"\n");
-        LogRaw(std::format(L"{}:\n", Class->GetName()));
-        
-        auto DefaultObject = Class->GetDefaultObject();
-        const auto& Properties = DefaultObject->GetPropertiesArrayConstRef();
-        
-        if (Properties.empty())
-        {
-            LogRaw(L"\tThis class has no properties\n");
-        }
-        else for (const auto& Property : Properties)
-        {
-            LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
-                Property.GetTypeName(),
-                Property.GetName(), 
-                Property.GetAsString(DefaultObject))
-                );
-            
-            auto InfoOfStructsUsedInType = Property.GetInfoOfStructsWithPropertiesUsedInType();
-            
-            for (auto& Info : InfoOfStructsUsedInType)
-            {
-                if (SetOfEncounteredStructTypeNames.contains(Info.TypeName))
-                {
-                    continue;
-                }
-                
-                SetOfEncounteredStructTypeNames.insert(Info.TypeName);
-                
-                InfoOfEncounteredStructs.emplace_back(std::move(Info));
-            }
-        }
-    }
-    
-    LogRaw(L"\n");
-    
-    Log(Info,L"Printing list of encountered structs and their properties with default values:");
-    
-    for (const auto& StructInfo : InfoOfEncounteredStructs)
-    {
-        LogRaw(L"\n");
-        LogRaw(std::format(L"{}:\n", StructInfo.TypeName));
-        
-        const auto& Properties = StructInfo.SampleObjectHolder->GetPropertiesArrayConstRef();
-        
-        if (Properties.empty())
-        {
-            LogRaw(L"\tThis struct has no properties\n");
-        }
-        else for (const auto& Property : Properties)
-        {
-            LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
-                Property.GetTypeName(),
-                Property.GetName(), 
-                Property.GetAsString(StructInfo.SampleObjectHolder.get()))
-            );
-        }
-    }
-    
-    LogRaw(L"\n");
 }
 
 NFortLauncher* NEngine::GetCommandsContextLauncher() const
@@ -325,7 +220,7 @@ std::vector<NFortLauncher*> NEngine::GetLauncherInstances() const
 {
     std::vector<NFortLauncher*> Launchers{};
     
-    for (const auto& Activity : GetChildActivities())
+    for (const auto& Activity : GetChildActivitiesIncludingNested())
     {
         if (auto Launcher = Cast<NFortLauncher>(Activity))
         {

@@ -8,9 +8,6 @@ class NAzuServerFortLauncher : public NFortLauncher
 
 public:
 	virtual void OnCreated() override;
-
-	NPROPERTY(FortnitePath)
-	std::filesystem::path FortnitePath{};
 	
 	NPROPERTY(GameServerDllPath)
 	std::filesystem::path GameServerDllPath{};

@@ -21,6 +21,8 @@ public:
     
     void AddChildProcess(FUniqueHandle Handle);
     
+    std::filesystem::path ResolvePossiblyFortniteBuildRelativePath(const std::filesystem::path& Path) const;
+    
 private:
     std::vector<FUniqueHandle> ChildProcesses{};
 };

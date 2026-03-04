@@ -1,8 +1,9 @@
 ﻿#include <mutex>
+#include <utility>
 
 #include "CommandLineImplementation.h"
 
-std::vector<std::wstring> ProgramLaunchArgs{};
+static std::vector<std::wstring> ProgramLaunchArgs{};
 
 static NCommandLine* CommandLine = nullptr;
 static std::mutex CommandLineMutex{};
@@ -38,15 +39,17 @@ std::optional<std::wstring> NCommandLine::GetPendingCommand()
 
 void InitCommandLine(const TObjectTemplate<NCommandLine>& CommandLineTemplate)
 {
-	std::scoped_lock Lock{CommandLineMutex};
-	
-	if (CommandLine)
 	{
-		Log(Error, L"Cannot init command line as it is already init");
-		return;
+		std::scoped_lock lock{CommandLineMutex};
+
+		if (!CommandLine)
+		{
+			CommandLine = CommandLineTemplate.NewObjectRaw();
+			return;
+		}
 	}
-	
-	CommandLine = CommandLineTemplate.NewObjectRaw();
+
+	Log(Error, L"Cannot init command line as it is already init");
 }
 
 void CleanupCommandLine()

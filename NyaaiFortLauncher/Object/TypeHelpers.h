@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cwctype>
 #include <string>
 #include <sstream>
 #include <utility>
@@ -521,7 +522,7 @@ struct TTypeHelpers<NSubClassOf<T>>
         
         if (Class && !*Property)
         {
-            Log(Error, L"{} setter failed, class is not a subclass of {}", GetName(), T::StaticClass()->GetName());
+            Log(Error, L"{} setter failed, {} is not a subclass of {}", GetName(), Class->GetName(), T::StaticClass()->GetName());
             return false;
         }
 
@@ -703,8 +704,6 @@ struct TTypeHelpers<TObjectTemplate<T>>
     static std::vector<FInfoOfStructWithPropertiesUsedInType> GetInfoOfStructsWithPropertiesUsedInType() { return {}; }
 };
 
-bool ConvertStringToCleanAbsolutePath(const std::wstring& Input, std::filesystem::path& OutResult);
-
 template<>
 struct TTypeHelpers<std::filesystem::path>
 {
@@ -715,8 +714,21 @@ struct TTypeHelpers<std::filesystem::path>
         {
             return false;
         }
-
-        return ConvertStringToCleanAbsolutePath(ParsedString, *Property);
+        
+        std::wstring StringWithoutWhitespaces = ParsedString;
+        std::erase_if(StringWithoutWhitespaces, [](wchar_t Char)
+        {
+            return std::iswspace(Char) != 0;
+        });
+    
+        if (StringWithoutWhitespaces.empty())
+        {
+            *Property = std::filesystem::path{};
+            return true;
+        }
+        
+        *Property = ParsedString;
+        return true;
     }
     
     static std::wstring ToString(const std::filesystem::path* Property)

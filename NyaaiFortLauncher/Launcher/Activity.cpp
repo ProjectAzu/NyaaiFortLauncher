@@ -1,5 +1,7 @@
 #include "Activity.h"
 
+#include <queue>
+
 GENERATE_BASE_CPP(NActivity)
 
 void NActivity::Tick(double DeltaTime)
@@ -55,4 +57,45 @@ NActivity* NActivity::StartChildActivity(const TObjectTemplate<NActivity>& Activ
     Activity->FinishConstruction();
     
     return Activity;
+}
+
+std::vector<NActivity*> NActivity::GetChildActivitiesIncludingNested() const
+{
+    std::vector<const NActivity*> Stack{};
+    
+    for (const auto ChildActivity : ChildActivities)
+    {
+        Stack.push_back(ChildActivity);
+    }
+    
+    std::vector<NActivity*> Result{};
+    
+    while (!Stack.empty())
+    {
+        auto Activity = Stack.back();
+        Stack.pop_back();
+        
+        Result.push_back(const_cast<NActivity*>(Activity));
+        
+        for (const auto ChildActivity : Activity->ChildActivities)
+        {
+            Stack.push_back(ChildActivity);
+        }
+    }
+    
+    return Result;
+}
+
+NActivity* NActivity::FindChildActivity(NSubClassOf<NActivity> Class, bool bSearchInNested) const
+{
+    std::vector<NActivity*> Activities = bSearchInNested ? GetChildActivitiesIncludingNested() : GetChildActivities();
+    for (const auto Activity : Activities)
+    {
+        if (Activity->GetClass()->IsSubclassOf(Class))
+        {
+            return Activity;
+        }
+    }
+    
+    return nullptr;
 }

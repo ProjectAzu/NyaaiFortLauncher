@@ -267,6 +267,7 @@ void NDetectFortniteCrashActivity::Tick(double DeltaTime)
         // Wait for fortnite to exit naturally so it can save the crash dump
         WaitForSingleObject(GetLauncher()->GetFortniteProcessHandle(), 5000);
 
+        Log(Info, L"Running on fortnite crash actions");
         for (const auto& ActionTemplate : OnFortniteCrashActions)
         {
             NUniquePtr<NAction> Action = ActionTemplate.NewObject(this);

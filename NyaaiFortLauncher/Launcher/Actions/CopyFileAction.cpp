@@ -4,6 +4,9 @@ GENERATE_BASE_CPP(NCopyFileAction)
 
 void NCopyFileAction::Execute()
 {
+	From = ResolvePossiblyFortniteBuildRelativePath(From);
+	To = ResolvePossiblyFortniteBuildRelativePath(To);
+	
 	if (!std::filesystem::exists(From))
 	{
 		Log(Error, L"Can't copy file \"{}\" as it doesn't exist", From.wstring());

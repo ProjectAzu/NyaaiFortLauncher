@@ -11,7 +11,9 @@ GENERATE_BASE_CPP(NInjectDllIntoFortniteAction)
 void NInjectDllIntoFortniteAction::Execute()
 {
     Super::Execute();
-
+    
+    DllPath = ResolvePossiblyFortniteBuildRelativePath(DllPath);
+    
     if (!exists(DllPath) || !is_regular_file(DllPath) || DllPath.extension().wstring() != L".dll")
     {
         Log(Error, L"NInjectDllIntoFortniteAction failed, bad dll path");

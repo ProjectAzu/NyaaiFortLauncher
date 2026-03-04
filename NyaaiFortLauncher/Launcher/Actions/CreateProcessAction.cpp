@@ -40,6 +40,9 @@ static void InitializeJobObjectIfNeeded()
 void NCreateProcessAction::Execute()
 {
     Super::Execute();
+    
+    FilePath = ResolvePossiblyFortniteBuildRelativePath(FilePath);
+    WorkingDirectory = ResolvePossiblyFortniteBuildRelativePath(WorkingDirectory);
 
     if (!std::filesystem::exists(FilePath) || 
         !std::filesystem::is_regular_file(FilePath) || 

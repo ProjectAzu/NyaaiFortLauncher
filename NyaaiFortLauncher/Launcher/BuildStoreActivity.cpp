@@ -1,0 +1,93 @@
+﻿#include "BuildStoreActivity.h"
+
+#include "CommandManager.h"
+
+GENERATE_BASE_CPP(NBuildStoreActivity)
+
+void NBuildStoreActivity::OnCreated()
+{
+    Super::OnCreated();
+    
+    GetCommandManager().RegisterConsoleCommand(
+        this,
+        L"ListBuilds",
+        L"Lists the builds available in the build store",
+        &ThisClass::ListBuildsCommand
+    );
+    
+    GetCommandManager().RegisterConsoleCommand(
+        this,
+        L"SelectBuild",
+        L"Usage: SelectBuild {Index}",
+        &ThisClass::SelectBuildCommand
+    );
+    
+    GetCommandManager().RegisterConsoleCommand(
+        this,
+        L"QuerySelectedBuild",
+        L"Query the currently selected build",
+        &ThisClass::QuerySelectedBuildCommand
+    );
+    
+    if (FortniteBuildPaths.empty())
+    {
+        Log(Error, L"BuildStore is empty, please add at least one build");
+        return;
+    }
+    
+    Log(Info, L"BuildStore: Default build is: '{}'.", 
+        FortniteBuildPaths.front().wstring());
+    
+    ListBuilds();
+}
+
+std::optional<std::filesystem::path> NBuildStoreActivity::GetSelectedFortniteBuildPath() const
+{
+    if (SelectedBuildIndex < FortniteBuildPaths.size())
+    {
+        return FortniteBuildPaths[SelectedBuildIndex];
+    }
+    
+    return std::nullopt;
+}
+
+void NBuildStoreActivity::ListBuildsCommand(const FCommandArguments& Args)
+{
+    ListBuilds();
+}
+
+void NBuildStoreActivity::QuerySelectedBuildCommand(const FCommandArguments& Args)
+{
+    auto SelectedBuild = GetSelectedFortniteBuildPath();
+    Log(Info, L"Currently selected build: '{}'", SelectedBuild ? SelectedBuild.value().wstring() : L"none");
+}
+
+void NBuildStoreActivity::SelectBuildCommand(const FCommandArguments& Args)
+{
+    uint32 Index = Args.GetArgumentAtIndex<uint32>(0);
+    
+    if (Index >= FortniteBuildPaths.size())
+    {
+        Log(Error, L"Index '{}' is not a valid build index, use the ListBuilds command to list builds", Index);
+        return;
+    }
+    
+    SelectedBuildIndex = Index;
+    Log(Info, L"Selected build '{}'", GetSelectedFortniteBuildPath().value().wstring());
+}
+
+void NBuildStoreActivity::ListBuilds() const
+{
+    Log(Info, L"Available builds in build store:");
+    
+    if (FortniteBuildPaths.empty())
+    {
+        Log(Info, L"There are currently no builds in the build store");
+        return;
+    }
+    
+    for (uint32 i = 0; i < FortniteBuildPaths.size(); i++)
+    {
+        Log(Info, L"{} - '{}'", i, FortniteBuildPaths[i].wstring());
+    }
+}

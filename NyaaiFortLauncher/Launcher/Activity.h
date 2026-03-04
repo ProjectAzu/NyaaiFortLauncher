@@ -17,6 +17,13 @@ public:
     }
     
     const std::vector<NActivity*>& GetChildActivities() const { return ChildActivities; }
+    std::vector<NActivity*> GetChildActivitiesIncludingNested() const;
+    
+    NActivity* FindChildActivity(NSubClassOf<NActivity> Class, bool bSearchInNested = true) const;
+    template<class T> T* FindChildActivity(bool bSearchInNested = true) const
+    {
+        return reinterpret_cast<T*>(FindChildActivity(T::StaticClass(), bSearchInNested));
+    }
     
 private:
     std::vector<NActivity*> ChildActivities{};

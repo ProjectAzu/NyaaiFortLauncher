@@ -3,7 +3,6 @@
 #include "Activity.h"
 #include "CommandManager.h"
 #include "Actions/Action.h"
-#include "Utils/CommandLine/CommandLineImplementation.h"
 
 class NActivity;
 
@@ -12,8 +11,6 @@ class NEngine : public NActivity
     GENERATE_BASE_H(NEngine)
     
 public:
-    NEngine();
-    
     virtual void OnCreated() override;
     virtual void OnDestroyed() override;
     
@@ -29,13 +26,8 @@ public:
     NEngineObject* GetCommandsContextObject() const;
     
     void RequestExit() { bWantsToExit = true; }
-    
-protected:
-    virtual bool ShouldPrintHelpAndExit() const;
-    
+
 private:
-    static void PrintClassesInfo();
-    
     void HelpCommand(const FCommandArguments& Args);
     void PrintLauncherInstancesListCommand(const FCommandArguments& Args);
     void SetCommandsContextLauncherIdCommand(const FCommandArguments& Args);
@@ -51,14 +43,11 @@ public:
     int32 GetNewLauncherId() { return LastUnusedLauncherId++; }
     
 public:
-    NPROPERTY(CommandLineTemplate)
-    TObjectTemplate<NCommandLine> CommandLineTemplate{};
-    
     NPROPERTY(OnEngineInitActions)
     std::vector<TObjectTemplate<NAction>> OnEngineInitActions{};
     
-    NPROPERTY(DefaultActivities)
-    std::vector<TObjectTemplate<NActivity>> DefaultActivities{};
+    NPROPERTY(Activities)
+    std::vector<TObjectTemplate<NActivity>> Activities{};
     
 private:
     FCommandManager CommandManager{};

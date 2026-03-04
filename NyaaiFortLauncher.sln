@@ -8,7 +8,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NyaaiFortLauncher", "NyaaiF
 		{C17D2E17-FB3F-449F-82E8-2854B615CF86} = {C17D2E17-FB3F-449F-82E8-2854B615CF86}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Replxx", "Replxx\Replxx.vcxproj", "{C17D2E17-FB3F-449F-82E8-2854B615CF86}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Replxx", "Dependencies\Replxx\Replxx.vcxproj", "{C17D2E17-FB3F-449F-82E8-2854B615CF86}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

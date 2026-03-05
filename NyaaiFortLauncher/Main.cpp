@@ -153,9 +153,18 @@ static bool RunEngine()
         return false;
     }
     
-    SetConsoleTitleW(ConfigPath.filename().wstring().c_str());
+    std::wstring ConfigFileName = ConfigPath.filename().wstring();
     
-    auto Engine = EngineTemplate.NewObject();
+    SetConsoleTitleW(ConfigFileName.c_str());
+    
+    auto Engine = EngineTemplate.NewObject(nullptr, true);
+    
+    if (Engine->GetSaveRecordsSystem().SaveFileName.empty())
+    {
+        Engine->GetSaveRecordsSystem().SaveFileName = ConfigFileName + L".SaveRecords";   
+    }
+    
+    Engine->FinishConstruction();
     
     Engine->RunTickLoop();
     

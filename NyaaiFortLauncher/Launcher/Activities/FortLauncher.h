@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Actions/Action.h"
+#include "Launcher/Actions/Action.h"
 
 #include <filesystem>
 

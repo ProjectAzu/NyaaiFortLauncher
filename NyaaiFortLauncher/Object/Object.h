@@ -40,7 +40,7 @@ class NClass;
 struct FPropertySetData
 {
     std::wstring PropertyName{};
-    std::wstring SetValue;
+    std::wstring SetValue{};
 };
 
 typedef std::vector<FPropertySetData> FDefaultValueOverrides;
@@ -143,6 +143,8 @@ public:
     void FinishConstruction();
 
     bool SetPropertyValue(const std::wstring& PropertyName, const std::wstring& Value);
+    
+    FDefaultValueOverrides GetDefaultValueOverrides() const;
 
     static NClass* StaticClass();
     virtual NClass* GetClass() const;
@@ -475,34 +477,20 @@ struct TObjectTemplate
 
         TemplateObject.Reset(InClass->template NewObjectRaw<T>(nullptr, true, GetDefaultValueOverrides()));
     }
-
-    NSubClassOf<T> GetClass() const
-    {
-        return TemplateObject ? TemplateObject->GetClass() : nullptr;
-    }
-
+    
     FDefaultValueOverrides GetDefaultValueOverrides() const
     {
         if (!TemplateObject)
         {
             return {};
         }
+        
+        return TemplateObject->GetDefaultValueOverrides();
+    }
 
-        const auto& Properties = TemplateObject->GetPropertiesArrayConstRef();
-
-        FDefaultValueOverrides DefaultValueOverrides{};
-        DefaultValueOverrides.reserve(Properties.size());
-
-        for (const FProperty& Property : Properties)
-        {
-            FPropertySetData PropertySetData{};
-            PropertySetData.PropertyName = Property.GetName();
-            PropertySetData.SetValue = Property.GetAsString(TemplateObject);
-
-            DefaultValueOverrides.emplace_back(std::move(PropertySetData));
-        }
-
-        return DefaultValueOverrides;
+    NSubClassOf<T> GetClass() const
+    {
+        return TemplateObject ? TemplateObject->GetClass() : nullptr;
     }
 
     T* operator->() const

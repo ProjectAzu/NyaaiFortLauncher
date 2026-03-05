@@ -1,7 +1,7 @@
 #include "AzuServerFortLauncher.h"
 
-#include "Launcher/DetectFortniteCrashActivity.h"
-#include "Launcher/ReadFortniteLogActivity.h"
+#include "Launcher/Activities/DetectFortniteCrashActivity.h"
+#include "Launcher/Activities/ReadFortniteLogActivity.h"
 #include "Launcher/Actions/CreateProcessAction.h"
 #include "Launcher/Actions/InjectDllIntoFortniteAction.h"
 #include "Launcher/Actions/PrintLogAction.h"

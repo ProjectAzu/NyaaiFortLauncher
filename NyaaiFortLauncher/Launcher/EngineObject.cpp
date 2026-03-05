@@ -1,7 +1,7 @@
 ﻿#include "EngineObject.h"
 
 #include "Engine.h"
-#include "FortLauncher.h"
+#include "Activities/FortLauncher.h"
 #include "Utils/FileSystem.h"
 #include "Utils/WindowsInclude.h"
 
@@ -36,6 +36,11 @@ NFortLauncher* NEngineObject::GetLauncher() const
 FCommandManager& NEngineObject::GetCommandManager() const
 {
     return GetEngine()->GetCommandManager();
+}
+
+FSaveRecordsSystem& NEngineObject::GetSaveRecordsSystem() const
+{
+    return GetEngine()->GetSaveRecordsSystem();
 }
 
 void NEngineObject::AddChildProcess(FUniqueHandle Handle)

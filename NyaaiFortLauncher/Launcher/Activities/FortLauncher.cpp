@@ -7,9 +7,9 @@
 #include <cwctype>
 
 #include "BuildStoreActivity.h"
-#include "CommandManager.h"
-#include "Engine.h"
-#include "Actions/CreateProcessAction.h"
+#include "Launcher/CommandManager.h"
+#include "Launcher/Engine.h"
+#include "Launcher/Actions/CreateProcessAction.h"
 #include "Utils/FileSystem.h"
 
 GENERATE_BASE_CPP(NFortLauncher)

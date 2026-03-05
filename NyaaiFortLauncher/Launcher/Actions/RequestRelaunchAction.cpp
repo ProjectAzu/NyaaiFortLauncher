@@ -1,6 +1,6 @@
 #include "RequestRelaunchAction.h"
 
-#include "Launcher/FortLauncher.h"
+#include "Launcher/Activities/FortLauncher.h"
 
 GENERATE_BASE_CPP(NRequestRelaunchAction)
 

@@ -7,7 +7,7 @@
 #include "Utils/WindowsInclude.h"
 #include "Utils/TextFileLoader.h"
 
-#include "FortLauncher.h"
+#include "Launcher/Activities/FortLauncher.h"
 
 GENERATE_BASE_CPP(NDetectFortniteCrashActivity)
 

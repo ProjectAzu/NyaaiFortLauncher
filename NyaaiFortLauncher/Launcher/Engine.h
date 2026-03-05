@@ -1,9 +1,11 @@
 ﻿#pragma once
 
-#include "Activity.h"
+#include "Activities/Activity.h"
 #include "CommandManager.h"
+#include "SaveRecord.h"
 #include "Actions/Action.h"
 
+struct FSaveRecordsSystem;
 class NActivity;
 
 class NEngine : public NActivity
@@ -36,6 +38,7 @@ public:
     void NotifyObjectDestroyed(NEngineObject* Object);
     
     FCommandManager& GetCommandManager() const;
+    FSaveRecordsSystem& GetSaveRecordsSystem() const;
     
     std::vector<NFortLauncher*> GetLauncherInstances() const;
     
@@ -47,6 +50,9 @@ public:
     
     NPROPERTY(Activities)
     std::vector<TObjectTemplate<NActivity>> Activities{};
+    
+    NPROPERTY(SaveRecordsSystem)
+    FSaveRecordsSystem SaveRecordsSystem{};
     
 private:
     FCommandManager CommandManager{};

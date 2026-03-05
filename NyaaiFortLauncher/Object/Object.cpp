@@ -233,6 +233,23 @@ bool NObject::SetPropertyValue(const std::wstring& PropertyName, const std::wstr
     return false;
 }
 
+FDefaultValueOverrides NObject::GetDefaultValueOverrides() const
+{
+    FDefaultValueOverrides DefaultValueOverrides{};
+    DefaultValueOverrides.reserve(Properties.size());
+
+    for (const FProperty& Property : Properties)
+    {
+        FPropertySetData PropertySetData{};
+        PropertySetData.PropertyName = Property.GetName();
+        PropertySetData.SetValue = Property.GetAsString(this);
+
+        DefaultValueOverrides.emplace_back(std::move(PropertySetData));
+    }
+
+    return DefaultValueOverrides;
+}
+
 NClass* NObject::StaticClass() { return &NObject_Class; }
 NClass* NObject::GetClass() const { return &NObject_Class; }
 

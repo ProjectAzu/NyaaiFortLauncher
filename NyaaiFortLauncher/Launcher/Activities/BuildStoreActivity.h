@@ -5,7 +5,18 @@
 #include <vector>
 #include <filesystem>
 
+#include "Launcher/SaveRecord.h"
+
 struct FCommandArguments;
+
+class NBuildStoreSaveRecord : public NSaveRecord
+{
+    GENERATE_BASE_H(NBuildStoreSaveRecord)
+    
+public:
+    NPROPERTY(SelectedBuildPath)
+    std::filesystem::path SelectedBuildPath{};
+};
 
 class NBuildStoreActivity : public NActivity
 {
@@ -27,6 +38,11 @@ public:
     NPROPERTY(FortniteBuildPaths)
     std::vector<std::filesystem::path> FortniteBuildPaths{};
     
-    NPROPERTY(SelectedBuildIndex)
+    NPROPERTY(bSaveBuildSelectionToDisk)
+    bool bSaveBuildSelectionToDisk = true;
+    
+private:
     uint32 SelectedBuildIndex = 0;
+    
+    NBuildStoreSaveRecord* SaveRecord = nullptr;
 };

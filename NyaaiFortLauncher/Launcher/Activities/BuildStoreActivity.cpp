@@ -1,12 +1,31 @@
 ﻿#include "BuildStoreActivity.h"
 
-#include "CommandManager.h"
+#include "Launcher/CommandManager.h"
+
+GENERATE_BASE_CPP(NBuildStoreSaveRecord)
 
 GENERATE_BASE_CPP(NBuildStoreActivity)
 
 void NBuildStoreActivity::OnCreated()
 {
     Super::OnCreated();
+    
+    if (bSaveBuildSelectionToDisk)
+    {
+        SaveRecord = GetSaveRecordsSystem().GetSaveRecord<NBuildStoreSaveRecord>(this);
+    
+        if (!SaveRecord->SelectedBuildPath.empty())
+        {
+            for (uint32 i = 0; i < FortniteBuildPaths.size(); i++)
+            {
+                if (FortniteBuildPaths[i] == SaveRecord->SelectedBuildPath)
+                {
+                    SelectedBuildIndex = i;
+                    break;
+                }
+            }   
+        }   
+    }
     
     GetCommandManager().RegisterConsoleCommand(
         this,
@@ -110,7 +129,15 @@ void NBuildStoreActivity::SelectBuildCommand(const FCommandArguments& Args)
         SelectedBuildIndex = Index;
     }
     
-    Log(Info, L"Selected build '{}'", GetSelectedFortniteBuildPath().value().wstring());
+    std::wstring SelectedBuildPath = GetSelectedFortniteBuildPath().value().wstring();
+    
+    if (SaveRecord)
+    {
+        SaveRecord->SelectedBuildPath = SelectedBuildPath;
+        GetSaveRecordsSystem().SaveRecordsToDisk();
+    }
+    
+    Log(Info, L"Selected build '{}'", SelectedBuildPath);
 }
 
 void NBuildStoreActivity::ListBuilds() const

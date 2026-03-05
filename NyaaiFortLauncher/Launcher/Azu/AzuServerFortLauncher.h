@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Launcher/FortLauncher.h"
+#include "Launcher/Activities/FortLauncher.h"
 
 class NAzuServerFortLauncher : public NFortLauncher
 {

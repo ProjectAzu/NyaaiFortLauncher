@@ -3,7 +3,7 @@
 #include <iostream>
 #include <thread>
 
-#include "FortLauncher.h"
+#include "Activities/FortLauncher.h"
 
 GENERATE_BASE_CPP(NEngine)
 
@@ -204,6 +204,11 @@ void NEngine::NotifyObjectDestroyed(NEngineObject* Object)
 FCommandManager& NEngine::GetCommandManager() const
 {
     return const_cast<NEngine*>(this)->CommandManager;
+}
+
+FSaveRecordsSystem& NEngine::GetSaveRecordsSystem() const
+{
+    return const_cast<NEngine*>(this)->SaveRecordsSystem;
 }
 
 std::vector<NFortLauncher*> NEngine::GetLauncherInstances() const

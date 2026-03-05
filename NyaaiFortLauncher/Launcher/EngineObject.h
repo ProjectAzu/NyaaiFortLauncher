@@ -6,6 +6,7 @@
 class NFortLauncher;
 class NEngine;
 struct FCommandManager;
+struct FSaveRecordsSystem;
 
 class NEngineObject : public NObject
 {
@@ -18,6 +19,7 @@ public:
     NFortLauncher* GetLauncher() const;
     
     FCommandManager& GetCommandManager() const;
+    FSaveRecordsSystem& GetSaveRecordsSystem() const;
     
     void AddChildProcess(FUniqueHandle Handle);
     

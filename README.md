@@ -4,6 +4,11 @@ NyaaiFortLauncher is a highly customizable CLI launcher for fortnite.
 
 By default all it will do is start the fortnite process, the rest is to be configured in a config file.
 
+
+## Project patron
+
+<img width="1092" height="1052" alt="image" src="https://github.com/user-attachments/assets/1772e182-5dbd-402c-b64b-cfe5bde2a55a" />
+
 ## Notable features
 
 ### Printing the fortnite log in the same command line as the launcher lives in
@@ -12,6 +17,10 @@ By default all it will do is start the fortnite process, the rest is to be confi
 - Add actions triggered by the contents of the fortnite log.
 
 ![PrintingFortniteLog](Images/PrintingFortniteLog.png)
+
+### Not just Fortnite.
+
+This launcher can be used for other games, I've (parkie) used this to help me waste less time while developing my CS:GO cheat. 
 
 ### Forwarding commands to fortnite
 

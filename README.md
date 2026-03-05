@@ -176,7 +176,7 @@ If you have any errors with the syntax in the config, it should say what it is.
 
 If you can't get it to work or have found a bug open a github issue and I will help.
 
-Remember that you can see the full list of classes by doing `NyaaiFortLauncher.exe --help`
+You can see the full list of classes by doing `NyaaiFortLauncher.exe --help`
 
 
 ## One config for multiple builds

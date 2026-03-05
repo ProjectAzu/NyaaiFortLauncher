@@ -54,10 +54,8 @@ void NBuildStoreActivity::OnCreated()
         return;
     }
     
-    Log(Info, L"BuildStore: Default build is: '{}'.", 
+    Log(Info, L"BuildStore: The selected build: '{}'.", 
         GetSelectedFortniteBuildPath().value().wstring());
-    
-    ListBuilds();
 }
 
 std::optional<std::filesystem::path> NBuildStoreActivity::GetSelectedFortniteBuildPath() const

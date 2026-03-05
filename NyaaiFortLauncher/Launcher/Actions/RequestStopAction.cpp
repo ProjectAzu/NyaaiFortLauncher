@@ -1,6 +1,6 @@
 #include "RequestStopAction.h"
 
-#include "Launcher/Activities/FortLauncher.h"
+#include "Launcher/FortLauncher.h"
 
 GENERATE_BASE_CPP(NRequestStopAction)
 

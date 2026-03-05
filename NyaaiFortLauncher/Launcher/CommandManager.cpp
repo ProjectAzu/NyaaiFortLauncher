@@ -2,7 +2,7 @@
 
 #include <cwctype>
 
-#include "Activities/FortLauncher.h"
+#include "FortLauncher.h"
 #include "Engine.h"
 
 FCommandArguments::FCommandArguments(const std::wstring& RawString) : RawString(RawString)

@@ -14,7 +14,7 @@ static void PrintClassesInfo()
     std::unordered_set<std::wstring> SetOfEncounteredStructTypeNames{};
     std::vector<FInfoOfStructWithPropertiesUsedInType> InfoOfEncounteredStructs{};
     
-    for (const auto Class : NObject::StaticClass()->GetAllDerivedClasses())
+    for (const auto Class : NObject::StaticClass()->GetAllDerivedClasses(true))
     {
         LogRaw(L"\n");
         

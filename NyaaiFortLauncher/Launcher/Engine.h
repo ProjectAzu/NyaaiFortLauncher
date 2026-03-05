@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "Activities/Activity.h"
+#include "Activity.h"
 #include "CommandManager.h"
 #include "SaveRecord.h"
 #include "Actions/Action.h"

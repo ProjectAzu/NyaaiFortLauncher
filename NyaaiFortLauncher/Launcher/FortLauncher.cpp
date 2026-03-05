@@ -6,7 +6,7 @@
 
 #include <cwctype>
 
-#include "BuildStoreActivity.h"
+#include "Activities/BuildStoreActivity.h"
 #include "Launcher/CommandManager.h"
 #include "Launcher/Engine.h"
 #include "Launcher/Actions/CreateProcessAction.h"

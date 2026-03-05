@@ -309,7 +309,7 @@ public:
 
     static NClass* GetClassById(uint16 Id);
     static NClass* GetClassByName(const std::wstring& Name);
-    std::vector<NClass*> GetAllDerivedClasses() const;
+    std::vector<NClass*> GetAllDerivedClasses(bool bIncludeSelf = false) const;
 
 private:
     std::wstring Name;

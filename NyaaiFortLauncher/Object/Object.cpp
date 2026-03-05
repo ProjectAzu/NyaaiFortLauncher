@@ -4,6 +4,7 @@
 #include <ranges>
 #include <algorithm>
 #include <unordered_map>
+#include <string>
 
 static std::vector<NClass*>* AllClassesSortedByHierarchyAndName{};
 static std::unordered_map<std::wstring, NClass*>* AllClassesByByName{};
@@ -28,6 +29,74 @@ bool FStructWithProperties::SetPropertyValue(const std::wstring& PropertyName, c
     return false;
 }
 
+static void SortClassesByHierarchyAndName(std::vector<NClass*>& Classes)
+{
+    std::unordered_map<const NClass*, std::vector<const NClass*>> PathCache;
+    PathCache.reserve(Classes.size());
+
+    std::unordered_map<const NClass*, std::wstring> NameCache;
+    NameCache.reserve(Classes.size());
+
+    const auto GetPath = [&](const NClass* Class) -> const std::vector<const NClass*>&
+    {
+        if (auto It = PathCache.find(Class); It != PathCache.end())
+        {
+            return It->second;
+        }
+
+        std::vector<const NClass*> Path;
+        for (const NClass* It = Class; It; It = It->GetSuper())
+        {
+            Path.push_back(It);
+        }
+        std::reverse(Path.begin(), Path.end());
+
+        return PathCache.emplace(Class, std::move(Path)).first->second;
+    };
+
+    const auto GetName = [&](const NClass* Class) -> const std::wstring&
+    {
+        if (auto It = NameCache.find(Class); It != NameCache.end())
+        {
+            return It->second;
+        }
+        return NameCache.emplace(Class, Class->GetName()).first->second;
+    };
+
+    std::ranges::sort(Classes, [&](const NClass* A, const NClass* B)
+    {
+        if (A == B) return false;
+        if (!A) return true;
+        if (!B) return false;
+
+        const auto& PA = GetPath(A);
+        const auto& PB = GetPath(B);
+
+        const std::size_t N = std::min(PA.size(), PB.size());
+        for (std::size_t i = 0; i < N; ++i)
+        {
+            if (PA[i] == PB[i]) continue;
+
+            const std::wstring& NA = GetName(PA[i]);
+            const std::wstring& NB = GetName(PB[i]);
+
+            if (NA != NB) return NA < NB;
+            return PA[i] < PB[i];
+        }
+
+        if (PA.size() != PB.size())
+        {
+            return PA.size() < PB.size();
+        }
+
+        const std::wstring& NA = GetName(A);
+        const std::wstring& NB = GetName(B);
+
+        if (NA != NB) return NA < NB;
+        return A < B;
+    });
+}
+
 NClass::NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObjectFactory)())
     : Name(Name)
     , SuperClass(SuperClass)
@@ -46,30 +115,7 @@ NClass::NClass(const std::wstring& Name, NClass* SuperClass, NObject*(*NewObject
 
     // Update Ids, Ids are based on the index inside the name sorted array
     AllClassesSortedByHierarchyAndName->push_back(this);
-    std::ranges::sort(*AllClassesSortedByHierarchyAndName, [](const NClass* First, const NClass* Second)
-    {
-        if (!First)
-        {
-            return true;
-        }
-
-        if (!Second)
-        {
-            return false;
-        }
-
-        if (First->IsSubclassOf(Second))
-        {
-            return false;
-        }
-
-        if (Second->IsSubclassOf(First))
-        {
-            return true;
-        }
-        
-        return First->GetName() < Second->GetName();
-    });
+    SortClassesByHierarchyAndName(*AllClassesSortedByHierarchyAndName);
 	
     for(int32 i = 0; i < static_cast<int32>(AllClassesSortedByHierarchyAndName->size()); i++)
     {
@@ -174,13 +220,18 @@ NClass* NClass::GetClassByName(const std::wstring& Name)
     return nullptr;
 }
 
-std::vector<NClass*> NClass::GetAllDerivedClasses() const
+std::vector<NClass*> NClass::GetAllDerivedClasses(bool bIncludeSelf) const
 {
     std::vector<NClass*> Result{};
     
     for (const auto Class : *AllClassesSortedByHierarchyAndName)
     {
-        if (Class != this && Class->IsSubclassOf(this))
+        if (!bIncludeSelf && Class == this)
+        {
+            continue;
+        }
+        
+        if (Class->IsSubclassOf(this))
         {
             Result.push_back(Class);
         }

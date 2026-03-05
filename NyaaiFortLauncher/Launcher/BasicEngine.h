@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "Engine.h"
-#include "Activities/FortLauncher.h"
+#include "FortLauncher.h"
 
 // The basic engine manages only one launcher instance at a time
 class NBasicEngine : public NEngine

@@ -1,7 +1,7 @@
 #include "ReadFortniteLogActivity.h"
 
 #include "Launcher/CommandManager.h"
-#include "Launcher/Activities/FortLauncher.h"
+#include "Launcher/FortLauncher.h"
 
 #include "Utils/WindowsInclude.h"
 

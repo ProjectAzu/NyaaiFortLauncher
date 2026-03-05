@@ -29,16 +29,12 @@ It's really useful cause it prints a clickable link to the folder with the crash
 
 ## Usage
 
+### 1. Download source and compile
+
+### 2. Create a .nfort config file
+
 NyaaiFortLauncher works by launching .nfort config files.
 A config file is a text file that defines a NEngine object (`TObjectTemplate<NEngine>`).
-
-**You can run NyaaiFortLauncher.exe --help to see the list of classes or you can look in the code**
-
-You should associate .nfort config files with NyaaiFortLauncher.exe so you can double click configs to launch them.
-
-In the below example I use NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instanes).
-
-NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during developement, you dont have to close and open a console, you can just keep one open all the times.
 
 Config example:
 ```
@@ -119,6 +115,10 @@ NBasicEngine
 }
 ```
 
+In this example I use NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instanes).
+
+NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during developement, you dont have to close and open a console, you can just keep one open all the times.
+
 The syntax should be quite self-explanatory from the example.
 The syntax for `TObjectTemplate<SomeClass>` (what the config is) is:
 ```
@@ -146,7 +146,7 @@ There is no commas between elements, you can do newlines and spaces as you wish.
 
 **Paths can be relative to the location of the config, or relative to the fortnite build path.**
 
-## Actions
+### Actions
 **Actions are events you can fire (Like a function call).**
 
 In the example config I run two NCreateProcessAction's to create suspended FortniteLauncher.exe and FortniteClient-Win64-Shipping_EAC.exe processes.
@@ -155,12 +155,25 @@ I use the NInjectDllIntoFortniteAction to inject a redirect right after the game
 
 I also set a NInjectDllIntoFortniteAction action to execute when the string "Region " apppears in the fortnite log (This happens when fortnite gets to the logging in screen) to inject my client dll.
 
-## Activities
+### Activities
 **Activities are objects that have a lifetime and are ticked.**
 
 In the example config I add the NReadFortniteLogActivity activity to run on the launcher, which prints the fortnite log and gives me the ability to further bind actions when certain phrases appear in the fortnite log.
 
 I also add the NDetectFortniteCrashActivity, which is prints info about fortnite crashes when they happen.
+
+### 3. Associate NyaaiFortLauncher.exe with .nfort config files
+- Right click on your config file -> Open with -> Choose another app -> More apps -> Scroll Down -> Look for another app on this PC
+- Choose NyaaiFortLauncher.exe
+- Check "Always use this app to open .nfort files"
+- Click OK
+
+### 4. Complete
+
+If you have any errors with the syntax in the config, it should say what it is.
+
+If you can't get it to work or have found a bug open a github issue and I will help.
+
 
 ## One config for multiple builds
 
@@ -191,4 +204,4 @@ You can change the selected build with the `SelectBuild {Name or Index}` command
 
 You might also want to set `bAutoStartLauncher: {false}` on the engine, so it doesn't auto start with the default build.
 
-You can set the default build in the build store by doing `SelectedBuildIndex: {Index}`. By default it's set to 0.
+Build selection is saved on disk

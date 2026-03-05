@@ -32,13 +32,9 @@ static void PrintClassesInfo()
         auto DefaultObject = Class->GetDefaultObject();
         const auto& Properties = DefaultObject->GetPropertiesArrayConstRef();
         
-        if (Properties.empty())
+        for (const auto& Property : Properties)
         {
-            LogRaw(L"\tThis class has no properties\n");
-        }
-        else for (const auto& Property : Properties)
-        {
-            LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
+            LogRaw(std::format(L"    {} {} = {{{}}};\n", 
                 Property.GetTypeName(),
                 Property.GetName(), 
                 Property.GetAsString(DefaultObject))
@@ -75,13 +71,9 @@ static void PrintClassesInfo()
         
         const auto& Properties = StructInfo.SampleObjectHolder->GetPropertiesArrayConstRef();
         
-        if (Properties.empty())
+        for (const auto& Property : Properties)
         {
-            LogRaw(L"\tThis struct has no properties\n");
-        }
-        else for (const auto& Property : Properties)
-        {
-            LogRaw(std::format(L"\t{} {} = {{{}}};\n", 
+            LogRaw(std::format(L"    {} {} = {{{}}};\n", 
                 Property.GetTypeName(),
                 Property.GetName(), 
                 Property.GetAsString(StructInfo.SampleObjectHolder.get()))

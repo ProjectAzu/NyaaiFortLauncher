@@ -122,6 +122,13 @@ void FCommandManager::ProcessCommands(const NEngineObject* ContextObject)
 {
     while (auto RawCommand = GetPendingCommand())
     {
+        {
+            auto It = std::ranges::find_if(*RawCommand,
+                               [](wchar_t c) { return !std::iswspace(c); });
+
+            RawCommand->erase(RawCommand->begin(), It);
+        }
+        
         const auto FirstSpace = std::ranges::find_if(*RawCommand,
             [](wchar_t ch)
             {
@@ -166,6 +173,13 @@ void FCommandManager::ProcessManuallyQueuedCommands(NEngine* Engine)
 {
     for (auto& Entry : ManuallyQueuedCommands)
     {
+        {
+            auto It = std::ranges::find_if(Entry.Command,
+                               [](wchar_t c) { return !std::iswspace(c); });
+
+            Entry.Command.erase(Entry.Command.begin(), It);
+        }
+        
         const auto FirstSpace = std::ranges::find_if(Entry.Command,
             [](wchar_t ch)
             {

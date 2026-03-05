@@ -132,11 +132,14 @@ You specify the class and overrides for its member properties.
 The syntax for arrays is the following:
 ```
 {
-    {Elem1Value}
+	Elem1Value
 }
-{ {Elem2Value} }
+{Elem2Value}
 {
-    {Elem3Value}
+    Elem3Value
+}
+{
+	Elem4Value
 }
 ```
 There is no commas between elements, you can do newlines and spaces as you wish.

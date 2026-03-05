@@ -13,15 +13,15 @@ By default all it will do is start the fortnite process, the rest is to be confi
 
 ![PrintingFortniteLog](Images/PrintingFortniteLog.png)
 
-### Forwarding commands to fortntite
+### Forwarding commands to fortnite
 
 The "fn" command will put everything after fn into the stdin of fortnite. All you have to do in your dll to read commands is to std::cin.
 
 ![ForwardCommandToFortnite](Images/ForwardCommandsToFortnite.png)
 
-### Dectect fortnite crashes
+### Detect fortnite crashes
 
-This works by cheking new entries in FortniteGame\Saved\Crashes\ and checking if the process id inside CrashContext.runtime-xml matches the one started by the launcher.
+This works by checking new entries in FortniteGame\Saved\Crashes\ and checking if the process id inside CrashContext.runtime-xml matches the one started by the launcher.
 
 It's really useful cause it prints a clickable link to the folder with the crash .dmp, so you can open it right away.
 
@@ -117,9 +117,9 @@ NBasicEngine
 
 **To see the full list of classes run `NyaaiFortLauncher.exe --help`** or look in the code
 
-In this example I use NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instanes).
+In this example I use NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instances).
 
-NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during developement, you dont have to close and open a console, you can just keep one open all the times.
+NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during development, you don't have to close and open a console, you can just keep one open all the times.
 
 The syntax should be quite self-explanatory from the example.
 The syntax for `TObjectTemplate<SomeClass>` (what the config is) is:
@@ -155,7 +155,7 @@ In the example config I run two NCreateProcessAction's to create suspended Fortn
 
 I use the NInjectDllIntoFortniteAction to inject a redirect right after the game launches.
 
-I also set a NInjectDllIntoFortniteAction action to execute when the string "Region " apppears in the fortnite log (This happens when fortnite gets to the logging in screen) to inject my client dll.
+I also set a NInjectDllIntoFortniteAction action to execute when the string "Region " appears in the fortnite log (This happens when fortnite gets to the logging in screen) to inject my client dll.
 
 ### Activities
 **Activities are objects that have a lifetime and are ticked.**
@@ -164,17 +164,19 @@ In the example config I add the NReadFortniteLogActivity activity to run on the 
 
 I also add the NDetectFortniteCrashActivity, which is prints info about fortnite crashes when they happen.
 
-### 3. Associate NyaaiFortLauncher.exe with .nfort config files
+### 3. Associate .nfort config files with NyaaiFortLauncher.exe
 - Right click on your config file -> Open with -> Choose another app -> More apps -> Scroll Down -> Look for another app on this PC
 - Choose NyaaiFortLauncher.exe
 - Check "Always use this app to open .nfort files"
 - Click OK
 
-### 4. Complete
+### 4. Use the launcher
 
 If you have any errors with the syntax in the config, it should say what it is.
 
 If you can't get it to work or have found a bug open a github issue and I will help.
+
+Remember that you can see the full list of classes by doing `NyaaiFortLauncher.exe --help`
 
 
 ## One config for multiple builds
@@ -206,4 +208,10 @@ You can change the selected build with the `SelectBuild {Name or Index}` command
 
 You might also want to set `bAutoStartLauncher: {false}` on the engine, so it doesn't auto start with the default build.
 
-Build selection is saved on disk
+Build selection is saved on disk.
+
+## TODO: make a more complete readme
+
+ Ask questions in github issues.
+
+ Contributions are welcome.

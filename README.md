@@ -206,9 +206,11 @@ When a launcher instance starts it will pull the selected build from the build s
 
 You can change the selected build with the `SelectBuild {Name or Index}` command. You can print the list of builds with the `ListBuilds` command.
 
-You might also want to set `bAutoStartLauncher: {false}` on the engine, so it doesn't auto start with the default build.
+You might also want to set `bAutoStartLauncher: {false}` on the engine, so it doesn't auto start before you specify the build.
 
 Build selection is saved on disk (for a specific config).
+
+When doing this you don't specify FortniteBuildPath on the launcher cause it will be overwritten by the selection in NBuildStoreActivity
 
 ## TODO: make a more complete readme
 

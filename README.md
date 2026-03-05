@@ -208,7 +208,7 @@ You can change the selected build with the `SelectBuild {Name or Index}` command
 
 You might also want to set `bAutoStartLauncher: {false}` on the engine, so it doesn't auto start with the default build.
 
-Build selection is saved on disk.
+Build selection is saved on disk (for a specific config).
 
 ## TODO: make a more complete readme
 

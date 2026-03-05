@@ -221,6 +221,10 @@ Build selection is saved on disk (for a specific config).
 
 When doing this you don't specify FortniteBuildPath on the launcher cause it will be overwritten by the selection in NBuildStoreActivity
 
+## **Important**
+- **Do not alloc console in your dlls or redirect stdout in any way cause NReadFortniteLogActivity will not be able to work**
+- **When logging in your dlls do cout.flush or wcout.flush or otherwise logs might not appear instantly**
+
 ## TODO: make a more complete readme
 
  Ask questions in github issues.

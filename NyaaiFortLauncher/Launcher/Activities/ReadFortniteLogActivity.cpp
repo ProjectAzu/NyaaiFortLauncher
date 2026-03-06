@@ -54,7 +54,12 @@ void NReadFortniteLogActivity::ReadAndProcessPipe(void* StdOutReadPipeHandle)
         DWORD BytesAvailable = 0;
         if (!::PeekNamedPipe(StdOutReadPipeHandle, nullptr, 0, nullptr, &BytesAvailable, nullptr))
         {
-            Log(Error, L"PeekNamedPipe failed with error: {}", GetLastError());
+            Log(
+                Error, 
+                L"NReadFortniteLogActivity: PeekNamedPipe failed with error: {}. This is most likely caused be a dll doing AllocConsole or redirecting stdout",
+                GetLastError()
+                );
+            
             return;
         }
 
@@ -71,7 +76,12 @@ void NReadFortniteLogActivity::ReadAndProcessPipe(void* StdOutReadPipeHandle)
 
         if (!ReadFile(StdOutReadPipeHandle, Buffer, BytesToRead, &BytesRead, nullptr) || BytesRead == 0)
         {
-            Log(Error, L"ReadFile failed with error: {}", GetLastError());
+            Log(
+                Error, 
+                L"NReadFortniteLogActivity: ReadFile failed with error: {}. This is most likely caused be a dll doing AllocConsole or redirecting stdout",
+                GetLastError()
+                );
+            
             return;
         }
 

@@ -57,6 +57,13 @@ void NEngine::OnCreated()
         L"Exits the engine",
         &ThisClass::ExitCommand
     );
+
+    GetCommandManager().RegisterConsoleCommand(
+        this,
+        L"ExecuteActionOnEngine",
+        L"Usage: ExecuteActionOnEngine {TObjectTemplate<NAction>}",
+        &ThisClass::ExecuteActionOnEngineCommand
+    );
     
     Log(Info, L"Running on engine init actions");
     
@@ -194,6 +201,19 @@ void NEngine::ExitCommand(const FCommandArguments& Args)
 {
     Log(Info, L"Requested engine exit");
     bWantsToExit = true;
+}
+
+void NEngine::ExecuteActionOnEngineCommand(const FCommandArguments& Args)
+{
+    auto ActionTemplate = Args.GetArgumentAtIndex<TObjectTemplate<NAction>>(0);
+
+    if (!ActionTemplate)
+    {
+        Log(Error, L"Specify an action template");
+        return;
+    }
+
+    auto Action = ActionTemplate.NewObject(this);
 }
 
 void NEngine::NotifyObjectDestroyed(NEngineObject* Object)

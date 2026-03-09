@@ -59,6 +59,13 @@ void NFortLauncher::OnCreated()
         L"Kills the launcher",
         &ThisClass::StopCommand
     );
+
+    GetCommandManager().RegisterConsoleCommand(
+        this,
+        L"ExecuteActionOnLauncher",
+        L"Usage: ExecuteActionOnLauncher {TObjectTemplate<NAction>}",
+        &ThisClass::ExecuteActionOnLauncherCommand
+    );
     
     if (!RunLauncher())
     {
@@ -220,4 +227,17 @@ bool NFortLauncher::LaunchFortniteProcess()
 void NFortLauncher::StopCommand(const FCommandArguments& Args)
 {
     bWantsToStop = true;
+}
+
+void NFortLauncher::ExecuteActionOnLauncherCommand(const FCommandArguments& Args)
+{
+    auto ActionTemplate = Args.GetArgumentAtIndex<TObjectTemplate<NAction>>(0);
+
+    if (!ActionTemplate)
+    {
+        Log(Error, L"Specify an action template");
+        return;
+    }
+
+    auto Action = ActionTemplate.NewObject(this);
 }

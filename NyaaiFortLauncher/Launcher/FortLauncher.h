@@ -34,6 +34,7 @@ private:
     bool LaunchFortniteProcess();
     
     void StopCommand(const FCommandArguments& Args);
+    void ExecuteActionOnLauncherCommand(const FCommandArguments& Args);
 
 public:
     NPROPERTY(FortniteBuildPath)

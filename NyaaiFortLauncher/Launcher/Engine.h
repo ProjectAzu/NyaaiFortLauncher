@@ -33,6 +33,7 @@ private:
     void PrintLauncherInstancesListCommand(const FCommandArguments& Args);
     void SetCommandsContextLauncherIdCommand(const FCommandArguments& Args);
     void ExitCommand(const FCommandArguments& Args);
+    void ExecuteActionOnEngineCommand(const FCommandArguments& Args);
 
 public:
     void NotifyObjectDestroyed(NEngineObject* Object);

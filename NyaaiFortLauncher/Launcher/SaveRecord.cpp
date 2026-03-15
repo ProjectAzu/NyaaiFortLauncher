@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <ranges>
+#include <unordered_set>
 
 GENERATE_BASE_CPP(NSaveRecord)
 
@@ -78,13 +79,29 @@ void FSaveRecordsSystem::Initialize()
         return;
     }
     
+    std::unordered_set<std::wstring> SaveRecordPathsSet{};
+    
     for (const auto& SaveRecordTemplate : SaveRecordTemplates)
     {
-        if (!SaveRecordTemplate->GetRecordPath().ends_with(SaveRecordTemplate->GetClass()->GetName()))
+        if (!SaveRecordTemplate)
         {
-            Log(Error, L"FSaveRecordSystem: Invalid record path");
+            Log(Error, L"FSaveRecordSystem: Save record in save file has an invalid class");
             continue;
         }
+    
+        if (!SaveRecordTemplate->GetRecordPath().ends_with(SaveRecordTemplate->GetClass()->GetName()))
+        {
+            Log(Error, L"FSaveRecordSystem: Invalid record path in save file");
+            continue;
+        }
+        
+        if(SaveRecordPathsSet.contains(SaveRecordTemplate->GetRecordPath()))
+        {
+            Log(Error, L"FSaveRecordSystem: Duplicate save record in save file");
+            continue;
+        }
+        
+        SaveRecordPathsSet.insert(SaveRecordTemplate->GetRecordPath());
         
         SaveRecordObjects.emplace_back(SaveRecordTemplate.NewObject());
     }

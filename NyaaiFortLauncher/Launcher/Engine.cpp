@@ -61,7 +61,7 @@ void NEngine::OnCreated()
     GetCommandManager().RegisterConsoleCommand(
         this,
         L"ExecuteActionOnEngine",
-        L"Usage: ExecuteActionOnEngine {TObjectTemplate<NAction>}",
+        L"Usage: ExecuteActionOnEngine {ActionTemplate}",
         &ThisClass::ExecuteActionOnEngineCommand
     );
     

@@ -13,9 +13,9 @@ struct FCommandArguments
     template<class T>
     inline T GetArgumentAtIndex(uint8 Index) const
     {
-        if constexpr (std::is_same_v<T, std::wstring>)
+        if constexpr (std::is_same_v<T, std::wstring> || std::is_same_v<T, std::filesystem::path>)
         {
-            // TTypeHelpers<std::wstring>::SetFromString expects string in c++ string literal style
+            // TTypeHelpers<std::wstring or std::filesystem::path>::SetFromString expects string in c++ string literal style
             return GetArgumentAtIndex(Index);
         }
         

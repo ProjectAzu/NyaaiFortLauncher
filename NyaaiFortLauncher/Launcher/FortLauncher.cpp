@@ -6,6 +6,7 @@
 
 #include <cwctype>
 
+#include "Actions/InjectDllIntoFortniteAction.h"
 #include "Activities/BuildStoreActivity.h"
 #include "Launcher/CommandManager.h"
 #include "Launcher/Engine.h"
@@ -63,7 +64,7 @@ void NFortLauncher::OnCreated()
     GetCommandManager().RegisterConsoleCommand(
         this,
         L"ExecuteActionOnLauncher",
-        L"Usage: ExecuteActionOnLauncher {TObjectTemplate<NAction>}",
+        L"Usage: ExecuteActionOnLauncher {ActionTemplate}",
         &ThisClass::ExecuteActionOnLauncherCommand
     );
     

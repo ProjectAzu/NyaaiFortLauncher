@@ -43,9 +43,9 @@ private:
     void FlushCurrentLine(bool bForce);
 
     bool ShouldPrintLine(bool bIsGreen) const;
-    bool IsCurrentLineGreen() const;
+    bool IsCurrentLineColored() const;
 
-    std::wstring BuildColoredLine(const std::wstring& Line, bool bIsGreen) const;
+    std::wstring BuildColoredLine(const std::wstring& Line, bool bIsColored) const;
 
     void ForwardCommandToFortniteCommand(const FCommandArguments& Args);
 

@@ -139,11 +139,11 @@ void NReadFortniteLogActivity::FlushCurrentLine(bool bForce)
         return;
     }
 
-    const bool bIsGreen = IsCurrentLineGreen();
+    const bool bIsColored = IsCurrentLineColored();
 
-    if (ShouldPrintLine(bIsGreen))
+    if (ShouldPrintLine(bIsColored))
     {
-        PendingOutput += BuildColoredLine(CurrentLine, bIsGreen);
+        PendingOutput += BuildColoredLine(CurrentLine, bIsColored);
     }
 
     CurrentLine.clear();
@@ -156,7 +156,7 @@ void NReadFortniteLogActivity::FlushCurrentLine(bool bForce)
     }
 }
 
-bool NReadFortniteLogActivity::IsCurrentLineGreen() const
+bool NReadFortniteLogActivity::IsCurrentLineColored() const
 {
     if (ColoredPrintPrefix.empty())
     {
@@ -186,14 +186,51 @@ bool NReadFortniteLogActivity::ShouldPrintLine(bool bIsGreen) const
     return bIsGreen;
 }
 
-std::wstring NReadFortniteLogActivity::BuildColoredLine(const std::wstring& Line, bool bIsGreen) const
+static bool StringContainsCaseInsensitive(std::wstring_view haystack, std::wstring_view needle)
 {
-    const wchar_t* Color = bIsGreen ? L"\x1B[32m" : L"\x1B[90m";
-    std::wstring Out;
+    if (needle.empty()) {
+        return true;
+    }
+
+    auto it = std::ranges::search(
+        haystack,
+        needle,
+        {},
+        [](wchar_t ch) { return std::towlower(ch); },
+        [](wchar_t ch) { return std::towlower(ch); }
+    );
+
+    return !it.empty();
+}
+
+std::wstring NReadFortniteLogActivity::BuildColoredLine(const std::wstring& Line, bool bIsColored) const
+{
+    const wchar_t* Color = L"\x1B[90m"; // gray
+    
+    if (bIsColored)
+    {
+        if (StringContainsCaseInsensitive(Line, L"error"))
+        {
+            Color = L"\x1B[31m"; // red
+        }
+        else if (StringContainsCaseInsensitive(Line, L"warning"))
+        {
+            Color = L"\x1B[33m"; // yellow
+        }
+        else
+        {
+            Color = L"\x1B[32m"; // green
+        }
+    }
+    
+    std::wstring Out{};
+    
     Out.reserve(Line.size() + 16);
+    
     Out += Color;
     Out += Line;
     Out += L"\x1B[0m";
+    
     return Out;
 }
 

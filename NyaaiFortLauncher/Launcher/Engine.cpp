@@ -205,7 +205,7 @@ void NEngine::ExitCommand(const FCommandArguments& Args)
 
 void NEngine::ExecuteActionOnEngineCommand(const FCommandArguments& Args)
 {
-    auto ActionTemplate = Args.GetArgumentAtIndex<TObjectTemplate<NAction>>(0);
+    auto ActionTemplate = Args.GetRawStringAsType<TObjectTemplate<NAction>>();
 
     if (!ActionTemplate)
     {

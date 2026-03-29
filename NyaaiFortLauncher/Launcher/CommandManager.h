@@ -25,6 +25,14 @@ struct FCommandArguments
     }
     
     inline std::wstring GetRawString() const { return RawString; }
+
+    template<class T>
+    inline T GetRawStringAsType() const
+    {
+        T Result{};
+        TTypeHelpers<T>::SetFromString(&Result, GetRawString());
+        return Result;
+    }
     
 private:
     std::vector<std::wstring> Tokens{};

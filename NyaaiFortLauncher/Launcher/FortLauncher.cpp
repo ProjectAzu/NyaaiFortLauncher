@@ -232,7 +232,7 @@ void NFortLauncher::StopCommand(const FCommandArguments& Args)
 
 void NFortLauncher::ExecuteActionOnLauncherCommand(const FCommandArguments& Args)
 {
-    auto ActionTemplate = Args.GetArgumentAtIndex<TObjectTemplate<NAction>>(0);
+    auto ActionTemplate = Args.GetRawStringAsType<TObjectTemplate<NAction>>();
 
     if (!ActionTemplate)
     {

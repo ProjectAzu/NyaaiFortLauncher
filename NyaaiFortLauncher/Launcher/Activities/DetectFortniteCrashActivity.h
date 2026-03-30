@@ -19,6 +19,9 @@ public:
     NPROPERTY(FortniteCrashesFolderPath)
     std::filesystem::path FortniteCrashesFolderPath{L"%localappdata%\\FortniteGame\\Saved\\Crashes"};
     
+    NPROPERTY(bPrintCallstack)
+    bool bPrintCallstack = true;
+    
     NPROPERTY(OnFortniteCrashActions)
     std::vector<TObjectTemplate<NAction>> OnFortniteCrashActions{};
 

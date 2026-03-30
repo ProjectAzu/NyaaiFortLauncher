@@ -249,11 +249,14 @@ void NDetectFortniteCrashActivity::Tick(double DeltaTime)
 
         Log(Error, L"Detected fortnite crash on thread '{}' at address '{}'", CrashThread, CrashOffset);
         Log(Error, L"Crash info folder: 'file:///{}'", CrashContextFilePath.parent_path().generic_wstring());
-
-        Log(Error, L"CallStack:");
-        for (const auto& Frame : Frames)
+        
+        if (bPrintCallstack)
         {
-            Log(Error, L"{}+0x{}", Frame.first, Frame.second);
+            Log(Error, L"CallStack:");
+            for (const auto& Frame : Frames)
+            {
+                Log(Error, L"{}+0x{}", Frame.first, Frame.second);
+            }   
         }
 
         // Wait for fortnite to exit naturally so it can save the crash dump

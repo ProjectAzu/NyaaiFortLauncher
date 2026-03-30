@@ -41,19 +41,14 @@ void NDetectFortniteCrashActivity::OnCreated()
     {
         return;
     }
-
-    wchar_t* Buffer = nullptr;
-    size_t Size = 0;
-
-    if (_wdupenv_s(&Buffer, &Size, L"LOCALAPPDATA") != 0 || !Buffer)
+    
+    FortniteCrashesFolderPath = ResolvePossiblyFortniteBuildRelativePath(FortniteCrashesFolderPath);
+    
+    if (FortniteCrashesFolderPath.empty())
     {
+        Log(Error, L"NDetectFortniteCrashActivity: FortniteCrashesFolderPath is empty");
         return;
     }
-
-    FortniteCrashesFolderPath =
-        std::filesystem::path{ Buffer } / L"FortniteGame" / L"Saved" / L"Crashes";
-
-    free(Buffer);
     
     {
         std::error_code ErrorCode{};
@@ -71,10 +66,7 @@ void NDetectFortniteCrashActivity::OnCreated()
     
     if (!std::filesystem::exists(FortniteCrashesFolderPath))
     {
-        if (!std::filesystem::create_directory(FortniteCrashesFolderPath))
-        {
-            return;
-        }
+        return;
     }
 
     if (!std::filesystem::is_directory(FortniteCrashesFolderPath))

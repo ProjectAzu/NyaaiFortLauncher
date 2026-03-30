@@ -62,5 +62,6 @@ std::filesystem::path NEngineObject::ResolvePossiblyFortniteBuildRelativePath(co
     
     std::filesystem::path Result{};
     Utils::ConvertPathToAbsolutePath(Path.wstring(), AbsoluteSearchRoots, Result);
+    
     return Result;
 }

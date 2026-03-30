@@ -50,7 +50,7 @@ void NFortLauncher::OnCreated()
         return;
     }
     
-    Log(Info, L"Fortnite build path: {}", FortniteBuildPath.wstring());
+    Log(Info, L"Fortnite build path: '{}'", FortniteBuildPath.wstring());
 
     Log(Info, L"Fortnite launch arguments: {}", FortniteLaunchArguments);
     

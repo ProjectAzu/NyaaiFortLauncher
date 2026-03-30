@@ -16,12 +16,14 @@ public:
     
     virtual void Tick(double DeltaTime) override;
     
+    NPROPERTY(FortniteCrashesFolderPath)
+    std::filesystem::path FortniteCrashesFolderPath{L"%localappdata%\\FortniteGame\\Saved\\Crashes"};
+    
     NPROPERTY(OnFortniteCrashActions)
     std::vector<TObjectTemplate<NAction>> OnFortniteCrashActions{};
 
 private:
     uint32 FortniteProcessId = 0;
-    std::filesystem::path FortniteCrashesFolderPath{};
     std::unordered_set<std::filesystem::path> AlreadyCheckedCrashContextFilePaths{};
     std::unordered_set<std::filesystem::path> PendingCrashContextFilePaths{};
     void* CrashDirChangeHandle = nullptr;

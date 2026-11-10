@@ -130,7 +130,7 @@ While the engine is running, use `ListClasses` for the same listing. `ListClasse
 
 In this example I use NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instances).
 
-NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during development, you don't have to close and open a console, you can just keep one open all the times.
+NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during development, you don't have to close and open a console, you can just keep one open at all times.
 
 The syntax should be quite self-explanatory from the example.
 The syntax for `TObjectTemplate<SomeClass>` (what the config is) is:

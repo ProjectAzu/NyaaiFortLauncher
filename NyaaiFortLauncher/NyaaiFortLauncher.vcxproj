@@ -101,7 +101,6 @@
     <Image Include="Resources\NyaaiFortLauncher.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Application.ixx" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="CoreTypes.ixx" />
     <ClCompile Include="Main.cpp" Condition="'$(LauncherTests)'!='true'" />

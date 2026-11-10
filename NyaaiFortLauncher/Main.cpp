@@ -1,7 +1,11 @@
 #include "Utils/WindowsInclude.h"
 #include <conio.h>
 
-import Application;
+import Engine;
+import CommandLine;
+import ConsoleCommandLine;
+import ObjectTemplate;
+import SubClassOf;
 
 static bool RunEngine()
 {

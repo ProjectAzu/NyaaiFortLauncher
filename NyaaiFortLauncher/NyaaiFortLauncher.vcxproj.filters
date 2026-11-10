@@ -19,7 +19,6 @@
     <Image Include="Resources\NyaaiFortLauncher.ico">
       <Filter>Resources</Filter>
     </Image>
-    <ClCompile Include="Application.ixx" />
     <ClCompile Include="Core.ixx" />
     <ClCompile Include="CoreTypes.ixx" />
     <ClCompile Include="Main.cpp" />
@@ -214,12 +213,6 @@
     </ClCompile>
     <ClCompile Include="Utils\CommandLine\Logging.ixx">
       <Filter>Utils\CommandLine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Tests\LauncherTests.cpp">
-      <Filter>Tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Tests\ConsoleTests.cpp">
-      <Filter>Tests</Filter>
     </ClCompile>
     <ClInclude Include="resource.h" />
     <ClInclude Include="Object\ReflectionMacros.h">

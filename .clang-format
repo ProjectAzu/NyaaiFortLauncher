@@ -1,0 +1,28 @@
+BasedOnStyle: Microsoft
+IndentWidth: 4
+UseTab: Never
+PointerAlignment: Left
+ReferenceAlignment: Left
+AccessModifierOffset: -4
+AlignAfterOpenBracket: DontAlign
+AllowShortLambdasOnASingleLine: None
+LambdaBodyIndentation: OuterScope
+Cpp11BracedListStyle: false
+BinPackArguments: false
+BinPackParameters: false
+ColumnLimit: 0
+BreakBeforeBraces: Allman
+InsertBraces: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortBlocksOnASingleLine: Never
+NamespaceIndentation: None
+SortIncludes: Never
+MaxEmptyLinesToKeep: 1
+StatementMacros:
+  - ObjectBase
+  - ReflectedClassBase
+  - CapabilityBase
+  - ReflectedMember
+  - RegisterCapability

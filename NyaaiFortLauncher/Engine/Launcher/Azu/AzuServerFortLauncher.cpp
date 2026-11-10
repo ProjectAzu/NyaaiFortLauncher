@@ -1,0 +1,143 @@
+module AzuLauncher;
+import CreateProcessAction;
+import InjectDllIntoFortniteAction;
+import PrintLogAction;
+import RequestRelaunchAction;
+import RunCommandAction;
+import DetectFortniteCrashActivity;
+import ReadFortniteLogActivity;
+
+void NAzuServerFortLauncher::OnCreated()
+{
+    if (!std::filesystem::exists(FortniteBuildPath))
+    {
+        Log(Error, L"The fortnite path '{}' doesn't exist", FortniteBuildPath.wstring());
+
+        return;
+    }
+
+    if (!std::filesystem::is_directory(FortniteBuildPath))
+    {
+        Log(Error, L"The fortnite path '{}' isn't a directory", FortniteBuildPath.wstring());
+
+        return;
+    }
+
+    // += so stuff can still be added in the config
+    FortniteLaunchArguments +=
+        L" -epicapp=Fortnite -epicenv=Prod -epiclocale=en-us -epicportal -skippatchcheck -nobe -fromfl=eac -fltoken=3db3ba5dcbd2e16703f3978d"
+        L" -AUTH_TYPE=epic -nosplash -nullrhi -nosound";
+
+    FortniteLaunchArguments += std::format(L" -AUTH_LOGIN={} -AUTH_PASSWORD={}", Login, Password);
+
+    {
+        TObjectTemplate<NCreateProcessAction> Template{ NCreateProcessAction::StaticClass() };
+
+        Template->FilePath = FortniteBuildPath / L"FortniteGame\\Binaries\\Win64\\FortniteLauncher.exe";
+        Template->bCreateSuspended = true;
+
+        PreFortniteLaunchActions.emplace_back(Template);
+    }
+
+    {
+        TObjectTemplate<NCreateProcessAction> Template{ NCreateProcessAction::StaticClass() };
+
+        Template->FilePath = FortniteBuildPath / L"FortniteGame\\Binaries\\Win64\\FortniteClient-Win64-Shipping_EAC.exe";
+        Template->bCreateSuspended = true;
+
+        PreFortniteLaunchActions.emplace_back(Template);
+    }
+
+    {
+        TObjectTemplate<NInjectDllIntoFortniteAction> Template{ NInjectDllIntoFortniteAction::StaticClass() };
+
+        Template->DllPath = RedirectDllPath;
+        Template->DllThreadDescription = RedirectDllThreadDescription;
+
+        PostFortniteLaunchActions.emplace_back(Template);
+    }
+
+    {
+        TObjectTemplate<NInjectDllIntoFortniteAction> Template{ NInjectDllIntoFortniteAction::StaticClass() };
+
+        Template->DllPath = GameServerDllPath;
+        Template->DllThreadDescription = AzuGameModeClass;
+
+        PostFortniteLaunchActions.emplace_back(Template);
+    }
+
+    {
+        TObjectTemplate<NReadFortniteLogActivity> ActivityTemplate{ NReadFortniteLogActivity::StaticClass() };
+
+        ActivityTemplate->bPrintFortniteLog = true;
+        ActivityTemplate->ColoredPrintPrefix = L"[Azu";
+        ActivityTemplate->bOnlyPrintLogWithColoredPrintPrefix = false;
+
+        {
+            FLogTriggeredAction LogTriggeredAction{};
+
+            LogTriggeredAction.TriggerString = L"[UFortOnlineAccount::LoginStepUpdated] CreatingParty --> Completed";
+            LogTriggeredAction.bTriggerOnlyOnce = true;
+
+            TObjectTemplate<NRunCommandAction> ActionTemplate{ NRunCommandAction::StaticClass() };
+            ActionTemplate->Command = L"fn NotifyFortniteHasLoaded";
+
+            LogTriggeredAction.Action = ActionTemplate;
+
+            ActivityTemplate->LogTriggeredActions.emplace_back(LogTriggeredAction);
+        }
+
+        {
+            FLogTriggeredAction LogTriggeredAction{};
+
+            LogTriggeredAction.TriggerString = L"[UOnlineAccountCommon::ForceLogout] ForceLogout";
+            LogTriggeredAction.bTriggerOnlyOnce = true;
+
+            {
+                TObjectTemplate<NPrintLogAction> ActionTemplate{ NPrintLogAction::StaticClass() };
+                ActionTemplate->LogLevel = L"Error";
+                ActionTemplate->Message = L"Fortnite forced logout, relaunching";
+
+                LogTriggeredAction.Actions.emplace_back(ActionTemplate);
+            }
+
+            LogTriggeredAction.Actions.emplace_back(NRequestRelaunchAction::StaticClass());
+
+            ActivityTemplate->LogTriggeredActions.emplace_back(LogTriggeredAction);
+        }
+
+        {
+            FLogTriggeredAction LogTriggeredAction{};
+
+            LogTriggeredAction.TriggerString = L"errors.com.epicgames.account.invalid_account_credentials";
+
+            TObjectTemplate<NPrintLogAction> ActionTemplate{ NPrintLogAction::StaticClass() };
+            ActionTemplate->LogLevel = L"Error";
+            ActionTemplate->Message = L"Invalid fortnite account credentials";
+
+            LogTriggeredAction.Action = ActionTemplate;
+
+            ActivityTemplate->LogTriggeredActions.emplace_back(LogTriggeredAction);
+        }
+
+        {
+            FLogTriggeredAction LogTriggeredAction{};
+
+            LogTriggeredAction.TriggerString = L"request failed, libcurl error: 7 (Couldn't connect to server)";
+
+            TObjectTemplate<NPrintLogAction> ActionTemplate{ NPrintLogAction::StaticClass() };
+            ActionTemplate->LogLevel = L"Error";
+            ActionTemplate->Message = L"Fortnite could not connect to the backend";
+
+            LogTriggeredAction.Action = ActionTemplate;
+
+            ActivityTemplate->LogTriggeredActions.emplace_back(LogTriggeredAction);
+        }
+
+        Activities.emplace_back(ActivityTemplate);
+    }
+
+    Activities.emplace_back(NDetectFortniteCrashActivity::StaticClass());
+
+    Super::OnCreated();
+}

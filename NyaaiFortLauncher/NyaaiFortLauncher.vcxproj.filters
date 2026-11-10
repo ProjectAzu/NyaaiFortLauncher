@@ -1,208 +1,232 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
+    <Filter Include="Engine" />
+    <Filter Include="Engine\Actions" />
+    <Filter Include="Engine\Activities" />
+    <Filter Include="Engine\Launcher" />
+    <Filter Include="Engine\Launcher\Actions" />
+    <Filter Include="Engine\Launcher\Activities" />
+    <Filter Include="Engine\Launcher\Azu" />
+    <Filter Include="Object" />
+    <Filter Include="Resources" />
+    <Filter Include="Tests" />
+    <Filter Include="Utils" />
+    <Filter Include="Utils\CommandLine" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\Action.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\CopyFileAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\CreateProcessAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\InjectDllIntoFortniteAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\PrintLogAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\RequestRelaunchAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\RunCommandAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Activity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\CommandManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\DetectFortniteCrashActivity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Engine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\EngineObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\FortLauncher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\ReadFortniteLogActivity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Object\IntegerTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Object\Object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Object\TypeHelpers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\TextFileLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\Utf8.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\WindowsInclude.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Actions\RequestStopAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\UniqueHandle.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\Azu\AzuServerFortLauncher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\BuildStoreActivity.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Launcher\BasicEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\CommandLine\CommandLine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\CommandLine\CommandLineImplementation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\CommandLine\CoutCommandLine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\CommandLine\ReplxxCommandLine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils\FileSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="NyaaiFortLauncher.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
+    <ResourceCompile Include="NyaaiFortLauncher.rc" />
     <Image Include="Resources\NyaaiFortLauncher.ico">
-      <Filter>Resource Files</Filter>
+      <Filter>Resources</Filter>
     </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Launcher\Actions\Action.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Application.ixx" />
+    <ClCompile Include="Core.ixx" />
+    <ClCompile Include="CoreTypes.ixx" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Engine\Activity.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Actions\CopyFileAction.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\Activity.ixx">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Actions\CreateProcessAction.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\BasicEngine.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Actions\InjectDllIntoFortniteAction.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\BasicEngine.ixx">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Actions\PrintLogAction.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\CommandManager.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Actions\RequestRelaunchAction.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\CommandManager.ixx">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Actions\RunCommandAction.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\Engine.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Activity.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\Engine.ixx">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\CommandManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\EngineObject.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\DetectFortniteCrashActivity.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\EngineObject.ixx">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\Engine.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\Launcher\FortLauncher.cpp">
+      <Filter>Engine\Launcher</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\EngineObject.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\Launcher\FortLauncher.ixx">
+      <Filter>Engine\Launcher</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\FortLauncher.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\SaveRecord.cpp">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Launcher\ReadFortniteLogActivity.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Engine\SaveRecord.ixx">
+      <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Object\Object.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Object\Cast.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\IntegerTypes.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Reflection.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\TypeHelpers.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\UniqueObjectPtr.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\SubClassOf.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\ObjectTemplate.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Property.ixx">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Reflection.ixx">
+      <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Object\TypeHelpers.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\TextFileLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\Utf8.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\Actions\RequestStopAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\UniqueHandle.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\Azu\AzuServerFortLauncher.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\BuildStoreActivity.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Launcher\BasicEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\CommandLine\CoutCommandLine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils\CommandLine\ReplxxCommandLine.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Object</Filter>
     </ClCompile>
     <ClCompile Include="Utils\FileSystem.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Utils\FileSystem.ixx">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TextFileLoader.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\TextFileLoader.ixx">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\UniqueHandle.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\UniqueHandle.ixx">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Utf8.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Utf8.ixx">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Action.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Action.ixx">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\CopyFileAction.cpp">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\CopyFileAction.ixx">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\CreateProcessAction.cpp">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\CreateProcessAction.ixx">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Actions\InjectDllIntoFortniteAction.cpp">
+      <Filter>Engine\Launcher\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Actions\InjectDllIntoFortniteAction.ixx">
+      <Filter>Engine\Launcher\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\PrintLogAction.cpp">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\PrintLogAction.ixx">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\RequestRelaunchAction.cpp">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\RequestRelaunchAction.ixx">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\RequestStopAction.cpp">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\RequestStopAction.ixx">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\RunCommandAction.cpp">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Actions\RunCommandAction.ixx">
+      <Filter>Engine\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Activities\BuildStoreActivity.cpp">
+      <Filter>Engine\Activities</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Activities\BuildStoreActivity.ixx">
+      <Filter>Engine\Activities</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Activities\DetectFortniteCrashActivity.cpp">
+      <Filter>Engine\Launcher\Activities</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Activities\DetectFortniteCrashActivity.ixx">
+      <Filter>Engine\Launcher\Activities</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Activities\ReadFortniteLogActivity.cpp">
+      <Filter>Engine\Launcher\Activities</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Activities\ReadFortniteLogActivity.ixx">
+      <Filter>Engine\Launcher\Activities</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Azu\AzuServerFortLauncher.cpp">
+      <Filter>Engine\Launcher\Azu</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Launcher\Azu\AzuServerFortLauncher.ixx">
+      <Filter>Engine\Launcher\Azu</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.cpp">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.ixx">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\ConsoleCommandLine.cpp">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\ConsoleCommandLine.ixx">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\CoutCommandLine.cpp">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\CoutCommandLine.ixx">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\Logging.cpp">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CommandLine\Logging.ixx">
+      <Filter>Utils\CommandLine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Tests\LauncherTests.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Tests\ConsoleTests.cpp">
+      <Filter>Tests</Filter>
+    </ClCompile>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Object\ReflectionMacros.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\WindowsInclude.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

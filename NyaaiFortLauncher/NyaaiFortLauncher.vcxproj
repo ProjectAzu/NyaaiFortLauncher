@@ -21,13 +21,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -43,21 +43,28 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(LauncherTests)'=='true'">
+    <TargetName>NyaaiFortLauncherTests</TargetName>
+    <IntDir>$(Platform)\$(Configuration)\Tests\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CURL_STATICLIB;REPLXX_STATIC</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\Replxx\include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <BuildStlModules>true</BuildStlModules>
+      <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Replxx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
       <ShowProgress>NotSet</ShowProgress>
     </Link>
@@ -68,10 +75,13 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);CURL_STATICLIB;REPLXX_STATIC</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\Replxx\include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <BuildStlModules>true</BuildStlModules>
+      <ScanSourceForModuleDependencies>true</ScanSourceForModuleDependencies>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>None</DebugInformationFormat>
     </ClCompile>
@@ -81,43 +91,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Replxx.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="Launcher\Actions\Action.h" />
-    <ClInclude Include="Launcher\Actions\CopyFileAction.h" />
-    <ClInclude Include="Launcher\Actions\CreateProcessAction.h" />
-    <ClInclude Include="Launcher\Actions\InjectDllIntoFortniteAction.h" />
-    <ClInclude Include="Launcher\Actions\PrintLogAction.h" />
-    <ClInclude Include="Launcher\Actions\RequestStopAction.h" />
-    <ClInclude Include="Launcher\Actions\RequestRelaunchAction.h" />
-    <ClInclude Include="Launcher\Actions\RunCommandAction.h" />
-    <ClInclude Include="Launcher\Activities\BuildStoreActivity.h" />
-    <ClInclude Include="Launcher\Activities\DetectFortniteCrashActivity.h" />
-    <ClInclude Include="Launcher\Activities\ReadFortniteLogActivity.h" />
-    <ClInclude Include="Launcher\Activity.h" />
-    <ClInclude Include="Launcher\Azu\AzuServerFortLauncher.h" />
-    <ClInclude Include="Launcher\CommandManager.h" />
-    <ClInclude Include="Launcher\BasicEngine.h" />
-    <ClInclude Include="Launcher\Engine.h" />
-    <ClInclude Include="Launcher\EngineObject.h" />
-    <ClInclude Include="Launcher\FortLauncher.h" />
-    <ClInclude Include="Launcher\SaveRecord.h" />
-    <ClInclude Include="Object\IntegerTypes.h" />
-    <ClInclude Include="Object\Object.h" />
-    <ClInclude Include="Object\TypeHelpers.h" />
-    <ClInclude Include="resource.h" />
-    <ClInclude Include="Utils\CommandLine\CommandLine.h" />
-    <ClInclude Include="Utils\CommandLine\CommandLineImplementation.h" />
-    <ClInclude Include="Utils\CommandLine\CoutCommandLine.h" />
-    <ClInclude Include="Utils\CommandLine\ReplxxCommandLine.h" />
-    <ClInclude Include="Utils\FileSystem.h" />
-    <ClInclude Include="Utils\TextFileLoader.h" />
-    <ClInclude Include="Utils\UniqueHandle.h" />
-    <ClInclude Include="Utils\Utf8.h" />
-    <ClInclude Include="Utils\WindowsInclude.h" />
-  </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="NyaaiFortLauncher.rc" />
   </ItemGroup>
@@ -125,35 +101,79 @@
     <Image Include="Resources\NyaaiFortLauncher.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Launcher\Actions\Action.cpp" />
-    <ClCompile Include="Launcher\Actions\CopyFileAction.cpp" />
-    <ClCompile Include="Launcher\Actions\CreateProcessAction.cpp" />
-    <ClCompile Include="Launcher\Actions\InjectDllIntoFortniteAction.cpp" />
-    <ClCompile Include="Launcher\Actions\PrintLogAction.cpp" />
-    <ClCompile Include="Launcher\Actions\RequestStopAction.cpp" />
-    <ClCompile Include="Launcher\Actions\RequestRelaunchAction.cpp" />
-    <ClCompile Include="Launcher\Actions\RunCommandAction.cpp" />
-    <ClCompile Include="Launcher\Activities\BuildStoreActivity.cpp" />
-    <ClCompile Include="Launcher\Activities\DetectFortniteCrashActivity.cpp" />
-    <ClCompile Include="Launcher\Activities\ReadFortniteLogActivity.cpp" />
-    <ClCompile Include="Launcher\Activity.cpp" />
-    <ClCompile Include="Launcher\Azu\AzuServerFortLauncher.cpp" />
-    <ClCompile Include="Launcher\CommandManager.cpp" />
-    <ClCompile Include="Launcher\BasicEngine.cpp" />
-    <ClCompile Include="Launcher\Engine.cpp" />
-    <ClCompile Include="Launcher\EngineObject.cpp" />
-    <ClCompile Include="Launcher\FortLauncher.cpp" />
-    <ClCompile Include="Launcher\SaveRecord.cpp" />
-    <ClCompile Include="Main.cpp" />
-    <ClCompile Include="Object\Object.cpp" />
+    <ClCompile Include="Application.ixx" />
+    <ClCompile Include="Core.ixx" />
+    <ClCompile Include="CoreTypes.ixx" />
+    <ClCompile Include="Main.cpp" Condition="'$(LauncherTests)'!='true'" />
+    <ClCompile Include="Engine\Activity.cpp" />
+    <ClCompile Include="Engine\Activity.ixx" />
+    <ClCompile Include="Engine\BasicEngine.cpp" />
+    <ClCompile Include="Engine\BasicEngine.ixx" />
+    <ClCompile Include="Engine\CommandManager.cpp" />
+    <ClCompile Include="Engine\CommandManager.ixx" />
+    <ClCompile Include="Engine\Engine.cpp" />
+    <ClCompile Include="Engine\Engine.ixx" />
+    <ClCompile Include="Engine\EngineObject.cpp" />
+    <ClCompile Include="Engine\EngineObject.ixx" />
+    <ClCompile Include="Engine\Launcher\FortLauncher.cpp" />
+    <ClCompile Include="Engine\Launcher\FortLauncher.ixx" />
+    <ClCompile Include="Engine\SaveRecord.cpp" />
+    <ClCompile Include="Engine\SaveRecord.ixx" />
+    <ClCompile Include="Object\Cast.ixx" />
+    <ClCompile Include="Object\IntegerTypes.ixx" />
+    <ClCompile Include="Object\Reflection.cpp" />
+    <ClCompile Include="Object\TypeHelpers.ixx" />
+    <ClCompile Include="Object\UniqueObjectPtr.ixx" />
+    <ClCompile Include="Object\SubClassOf.ixx" />
+    <ClCompile Include="Object\ObjectTemplate.ixx" />
+    <ClCompile Include="Object\Property.ixx" />
+    <ClCompile Include="Object\Reflection.ixx" />
     <ClCompile Include="Object\TypeHelpers.cpp" />
-    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.cpp" />
-    <ClCompile Include="Utils\CommandLine\CoutCommandLine.cpp" />
-    <ClCompile Include="Utils\CommandLine\ReplxxCommandLine.cpp" />
     <ClCompile Include="Utils\FileSystem.cpp" />
+    <ClCompile Include="Utils\FileSystem.ixx" />
     <ClCompile Include="Utils\TextFileLoader.cpp" />
+    <ClCompile Include="Utils\TextFileLoader.ixx" />
     <ClCompile Include="Utils\UniqueHandle.cpp" />
+    <ClCompile Include="Utils\UniqueHandle.ixx" />
     <ClCompile Include="Utils\Utf8.cpp" />
+    <ClCompile Include="Utils\Utf8.ixx" />
+    <ClCompile Include="Engine\Action.cpp" />
+    <ClCompile Include="Engine\Action.ixx" />
+    <ClCompile Include="Engine\Actions\CopyFileAction.cpp" />
+    <ClCompile Include="Engine\Actions\CopyFileAction.ixx" />
+    <ClCompile Include="Engine\Actions\CreateProcessAction.cpp" />
+    <ClCompile Include="Engine\Actions\CreateProcessAction.ixx" />
+    <ClCompile Include="Engine\Launcher\Actions\InjectDllIntoFortniteAction.cpp" />
+    <ClCompile Include="Engine\Launcher\Actions\InjectDllIntoFortniteAction.ixx" />
+    <ClCompile Include="Engine\Actions\PrintLogAction.cpp" />
+    <ClCompile Include="Engine\Actions\PrintLogAction.ixx" />
+    <ClCompile Include="Engine\Actions\RequestRelaunchAction.cpp" />
+    <ClCompile Include="Engine\Actions\RequestRelaunchAction.ixx" />
+    <ClCompile Include="Engine\Actions\RequestStopAction.cpp" />
+    <ClCompile Include="Engine\Actions\RequestStopAction.ixx" />
+    <ClCompile Include="Engine\Actions\RunCommandAction.cpp" />
+    <ClCompile Include="Engine\Actions\RunCommandAction.ixx" />
+    <ClCompile Include="Engine\Activities\BuildStoreActivity.cpp" />
+    <ClCompile Include="Engine\Activities\BuildStoreActivity.ixx" />
+    <ClCompile Include="Engine\Launcher\Activities\DetectFortniteCrashActivity.cpp" />
+    <ClCompile Include="Engine\Launcher\Activities\DetectFortniteCrashActivity.ixx" />
+    <ClCompile Include="Engine\Launcher\Activities\ReadFortniteLogActivity.cpp" />
+    <ClCompile Include="Engine\Launcher\Activities\ReadFortniteLogActivity.ixx" />
+    <ClCompile Include="Engine\Launcher\Azu\AzuServerFortLauncher.cpp" />
+    <ClCompile Include="Engine\Launcher\Azu\AzuServerFortLauncher.ixx" />
+    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.cpp" />
+    <ClCompile Include="Utils\CommandLine\CommandLineImplementation.ixx" />
+    <ClCompile Include="Utils\CommandLine\ConsoleCommandLine.cpp" />
+    <ClCompile Include="Utils\CommandLine\ConsoleCommandLine.ixx" />
+    <ClCompile Include="Utils\CommandLine\CoutCommandLine.cpp" />
+    <ClCompile Include="Utils\CommandLine\CoutCommandLine.ixx" />
+    <ClCompile Include="Utils\CommandLine\Logging.cpp" />
+    <ClCompile Include="Utils\CommandLine\Logging.ixx" />
+    <ClCompile Include="..\Tests\LauncherTests.cpp" Condition="'$(LauncherTests)'=='true'" />
+    <ClCompile Include="..\Tests\ConsoleTests.cpp" Condition="'$(LauncherTests)'=='true'" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="Object\ReflectionMacros.h" />
+    <ClInclude Include="Utils\WindowsInclude.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

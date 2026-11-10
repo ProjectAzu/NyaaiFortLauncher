@@ -1,0 +1,69 @@
+module;
+#include "Object/ReflectionMacros.h"
+
+export module Engine;
+
+export import SaveRecords;
+export import ObjectTemplate;
+export import :EngineObject;
+export import :Activity;
+export import :CommandManager;
+export import :Action;
+export import :FortLauncher;
+
+export class NEngine : public NActivity
+{
+    ObjectBase(NEngine)
+
+public:
+    virtual void OnCreated() override;
+
+    void RunTickLoop();
+
+    virtual void Tick(double DeltaTime) override;
+
+    virtual bool ShouldEngineExit() const;
+
+    virtual void NotifyLauncherBeingDestroyed(NFortLauncher* Launcher);
+
+    NFortLauncher* GetCommandsContextLauncher() const;
+    NEngineObject* GetCommandsContextObject() const;
+
+    void RequestExit() { bWantsToExit = true; }
+
+private:
+    void HelpCommand(const FCommandArguments& Args);
+    void PrintLauncherInstancesListCommand(const FCommandArguments& Args);
+    void SetCommandsContextLauncherIdCommand(const FCommandArguments& Args);
+    void ExitCommand(const FCommandArguments& Args);
+    void ExecuteActionOnEngineCommand(const FCommandArguments& Args);
+
+public:
+    void NotifyObjectDestroyed(NEngineObject* Object);
+
+    FCommandManager& GetCommandManager() const;
+    FSaveRecordsSystem& GetSaveRecordsSystem() const;
+
+    std::vector<NFortLauncher*> GetLauncherInstances() const;
+
+    int32 GetNewLauncherId() { return LastUnusedLauncherId++; }
+
+public:
+    ReflectedMember(OnEngineInitActions)
+    std::vector<TObjectTemplate<NAction>> OnEngineInitActions{};
+
+    ReflectedMember(Activities)
+    std::vector<TObjectTemplate<NActivity>> Activities{};
+
+    ReflectedMember(SaveRecordsSystem)
+    FSaveRecordsSystem SaveRecordsSystem{};
+
+private:
+    FCommandManager CommandManager{};
+
+    int32 LastUnusedLauncherId = 0;
+
+    int32 CommandsContextLauncherId = -1;
+
+    bool bWantsToExit = false;
+};

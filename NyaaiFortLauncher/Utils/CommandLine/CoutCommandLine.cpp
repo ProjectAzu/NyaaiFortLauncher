@@ -1,8 +1,4 @@
-﻿#include "CoutCommandLine.h"
-
-#include <iostream>
-
-GENERATE_BASE_CPP(NCoutCommandLine)
+module CoutCommandLine;
 
 void NCoutCommandLine::Log(const std::wstring& Message)
 {

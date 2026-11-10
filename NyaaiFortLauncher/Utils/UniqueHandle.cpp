@@ -1,6 +1,7 @@
-﻿#include "UniqueHandle.h"
+module;
+#include "Utils/WindowsInclude.h"
 
-#include "WindowsInclude.h"
+module UniqueHandle;
 
 bool FUniqueHandle::IsValid() const noexcept
 {

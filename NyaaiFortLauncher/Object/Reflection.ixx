@@ -395,6 +395,7 @@ export struct FCapabilityRegistrationNode
 };
 
 export void InitReflection();
+export void PrintClassesInfo(const NClass* BaseClass = nullptr);
 
 template <typename T>
 struct TTypeHelpers<T, std::enable_if_t<IsReflectedType<T> && !std::derived_from<T, NObject>>>

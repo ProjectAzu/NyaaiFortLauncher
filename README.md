@@ -126,6 +126,8 @@ NBasicEngine
 
 **To see the full list of classes run `NyaaiFortLauncher.exe --help`** or look in the code
 
+While the engine is running, use `ListClasses` for the same listing. `ListClasses NAction` lists `NAction` and its descendants, with their properties and default values.
+
 In this example I use NBasicEngine, which is an engine that manages one launcher instance (The program supports multiple instances).
 
 NyaaiFortLauncher is not bound to a specific launcher instance. In NBasicEngine you can use the stop command to stop a launcher instance, and then when you are ready to start a new one, you can use the start command. This is useful when frequently recompiling dlls during development, you don't have to close and open a console, you can just keep one open all the times.

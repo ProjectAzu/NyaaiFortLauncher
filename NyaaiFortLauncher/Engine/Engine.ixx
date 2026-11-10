@@ -33,6 +33,7 @@ public:
 
 private:
     void HelpCommand(const FCommandArguments& Args);
+    void ListClassesCommand(const FCommandArguments& Args);
     void PrintLauncherInstancesListCommand(const FCommandArguments& Args);
     void SetCommandsContextLauncherIdCommand(const FCommandArguments& Args);
     void ExitCommand(const FCommandArguments& Args);

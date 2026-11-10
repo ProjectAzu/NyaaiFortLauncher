@@ -3,26 +3,6 @@
 
 import Application;
 
-static void PrintClassesInfo()
-{
-    Log(Info, L"Printing reflected classes and their properties with default values:");
-
-    for (NClass* Class : NClass::GetAllClasses())
-    {
-        LogRaw(L"\n");
-        LogRaw(std::format(L"class {}{}\n{{\n", Class->GetName(), Class->GetSuper() ? L" : " + Class->GetSuper()->GetName() : L""));
-
-        for (const auto& Property : Class->GetProperties())
-        {
-            LogRaw(std::format(L"    {} {} = {{{}}};\n", Property.GetTypeName(), Property.GetName(), Property.GetDefaultValue().value_or(L"<no default constructor>")));
-        }
-
-        LogRaw(L"}\n");
-    }
-
-    LogRaw(L"\n");
-}
-
 static bool RunEngine()
 {
     static constexpr auto ConfigFileExtension = L".nfort";

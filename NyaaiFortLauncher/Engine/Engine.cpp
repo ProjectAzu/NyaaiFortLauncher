@@ -34,6 +34,12 @@ void NEngine::OnCreated()
 
     GetCommandManager().RegisterConsoleCommand(
         this,
+        L"ListClasses",
+        L"Usage: ListClasses [opt BaseClass]",
+        &ThisClass::ListClassesCommand);
+
+    GetCommandManager().RegisterConsoleCommand(
+        this,
         L"ListLauncherInstances",
         L"List all running launcher instances",
         &ThisClass::PrintLauncherInstancesListCommand);
@@ -161,6 +167,26 @@ void NEngine::HelpCommand(const FCommandArguments& Args)
             RegisteredCommand.Command,
             RegisteredCommand.Description);
     }
+}
+
+void NEngine::ListClassesCommand(const FCommandArguments& Args)
+{
+    const std::wstring ClassName = RemoveUnnecessaryCharsFromString(Args.GetRawString());
+
+    if (ClassName.empty())
+    {
+        PrintClassesInfo();
+        return;
+    }
+
+    NClass* BaseClass = NClass::GetClassByName(ClassName);
+
+    if (!BaseClass)
+    {
+        return;
+    }
+
+    PrintClassesInfo(BaseClass);
 }
 
 void NEngine::PrintLauncherInstancesListCommand(const FCommandArguments& Args)
